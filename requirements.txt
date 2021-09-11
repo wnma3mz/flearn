@@ -1,0 +1,11 @@
+wheel
+ipython
+tqdm
+flask
+flask_login
+aiohttp
+requests
+psutil
+sklearn
+torchvision
+python-dotenv
