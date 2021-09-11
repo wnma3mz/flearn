@@ -123,7 +123,7 @@ if __name__ == "__main__":
         trainloader_idx_lst = iid_f(trainset, N_clients)
         testloader_idx_lst = iid_f(testset, N_clients)
     else:
-        shard_per_user = 10
+        shard_per_user = 2
         if dataset_name == "cifar100":
             shard_per_user = 20
         trainloader_idx_lst, rand_set_all = noniid(trainset, N_clients, shard_per_user)
