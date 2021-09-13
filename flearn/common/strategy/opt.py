@@ -23,7 +23,7 @@ class OPT(AVG):
     """
 
     def client_revice(self, model_trainer, w_glob_b, method="Adagrad"):
-        w_local = model_trainer.model
+        w_local = model_trainer.weight
         method = method.lower()
         assert method in ["adagrad", "yogi", "adam"]
         self.eta = 1e-1

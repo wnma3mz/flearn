@@ -4,7 +4,7 @@
 
 ### Quickstart
 
-1. 下载最新的[release版本][https://github.com/wnma3mz/flearn/releases/latest] 并使用pip安装
+1. 下载最新的[release版本](https://github.com/wnma3mz/flearn/releases/latest) 并使用pip安装
 2. 切换至运行目录`cd example/mnist_cifar/`
 3. 运行`python main.py --strategy_name avg --dataset_name mnist dataset_fpath 数据集路径`
 

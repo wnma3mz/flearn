@@ -18,18 +18,18 @@ class LG(Strategy):
         super(LG, self).__init__(model_fpath)
         self.shared_key_layers = shared_key_layers
 
-    def client_revice(self, model_trainer, w_glob_b):
-        w_local = model_trainer.weight
-        w_glob = pickle.loads(w_glob_b)
-        for k in self.shared_key_layers:
-            w_local[k] = w_glob[k]
-        return w_local
-
     def client(self, model_trainer, agg_weight=1.0):
         w_local = model_trainer.weight
         w_shared = {"params": {}, "agg_weight": agg_weight}
         for k in self.shared_key_layers:
             w_shared["params"][k] = w_local[k].cpu()
+        return w_shared
+
+    def client_revice(self, model_trainer, w_glob_b):
+        w_local = model_trainer.weight
+        w_glob = pickle.loads(w_glob_b)
+        for k in self.shared_key_layers:
+            w_local[k] = w_glob[k]
         model_trainer.model.load_state_dict(w_local)
         return model_trainer.model
 

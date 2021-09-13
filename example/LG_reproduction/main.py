@@ -1,27 +1,35 @@
 # coding: utf-8
-import os
-
 import argparse
 import copy
+import os
 import random
 
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from flearn.client import Client
-from flearn.client.datasets import get_datasets, get_split_loader
+from flearn.client.datasets import get_dataloader, get_datasets, get_split_loader
+from flearn.client.utils import get_free_gpu_id
+from flearn.common.strategy import LG, LG_R
 from flearn.server import Communicate as sc
 
-from models import LeNet5
-from resnet import ResNet_cifar
+from LGClient import LGClient
+from models import MLP, CNNCifar, CNNMnist
 from split_data import iid as iid_f
 from split_data import noniid
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+# 自动选择空闲显存最大的GPU
+idx = get_free_gpu_id()
+print("使用{}号GPU".format(idx))
+if idx != -1:
+    os.environ["CUDA_VISIBLE_DEVICES"] = str(idx)
+    torch.cuda.current_device()
+    torch.cuda._initialized = True
+else:
+    raise SystemError("No Free GPU Device")
 
 parser = argparse.ArgumentParser(description="Please input strategy_name")
-parser.add_argument("--strategy_name", dest="strategy_name")
+parser.add_argument("--strategy_name", dest="strategy_name", choices=["lg", "lg_r"])
 parser.add_argument("--local_epoch", dest="local_epoch", default=1, type=int)
 parser.add_argument("--frac", dest="frac", default=1, type=float)
 parser.add_argument("--suffix", dest="suffix", default="", type=str)
@@ -47,20 +55,24 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 dataset_name = args.dataset_name
 dataset_fpath = args.dataset_fpath
 num_classes = 10
-batch_size = 128
+batch_size = 50
 trainset, testset = get_datasets(dataset_name, dataset_fpath)
+# 全局测试集，所有客户端模型在此数据集上进行测试取平均。
+_, glob_testloader = get_dataloader(trainset, testset, 100, pin_memory=True)
 
 # 设置模型
 if dataset_name == "mnist":
-    model_base = LeNet5(num_classes=num_classes)
+    model_base = MLP(dim_in=784, dim_hidden=256, dim_out=10)
+    shared_key_layers_lst = model_base.weight_keys[2:]
 elif "cifar" in dataset_name:
-    model_base = ResNet_cifar(
-        dataset=args.dataset_name,
-        resnet_size=8,
-        group_norm_num_groups=None,
-        freeze_bn=False,
-        freeze_bn_affine=False,
-    )
+    model_base = CNNCifar(num_classes=10)
+    shared_key_layers_lst = model_base.weight_keys[3:]
+
+shared_key_layers = []
+for x in shared_key_layers_lst:
+    shared_key_layers += x
+print("共享层：", shared_key_layers)
+
 
 model_fpath = "./client_checkpoint"
 if not os.path.isdir(model_fpath):
@@ -78,7 +90,10 @@ def setup_seed(seed):
 
 def inin_single_client(client_id, trainloader_idx_lst, testloader_idx_lst):
     model_ = copy.deepcopy(model_base)
-    optim_ = optim.SGD(model_.parameters(), lr=1e-1)
+    if dataset_name == "mnist":
+        optim_ = optim.SGD(model_.parameters(), lr=0.05)
+    elif "cifar" in dataset_name:
+        optim_ = optim.SGD(model_.parameters(), lr=0.1)
 
     trainloader, testloader = get_split_loader(
         trainset,
@@ -94,7 +109,7 @@ def inin_single_client(client_id, trainloader_idx_lst, testloader_idx_lst):
         "criterion": nn.CrossEntropyLoss(),
         "optimizer": optim_,
         "trainloader": trainloader,
-        "testloader": testloader,
+        "testloader": [testloader, glob_testloader],
         "model_fname": "client{}_round_{}.pth".format(client_id, "{}"),
         "client_id": client_id,
         "device": device,
@@ -102,6 +117,7 @@ def inin_single_client(client_id, trainloader_idx_lst, testloader_idx_lst):
         "epoch": args.local_epoch,
         "dataset_name": dataset_name,
         "strategy_name": args.strategy_name,
+        "shared_key_layers": shared_key_layers,
         "save": False,
         "display": False,
         "log": False,
@@ -114,7 +130,7 @@ if __name__ == "__main__":
     setup_seed(0)
 
     # 客户端数量，及每轮上传客户端数量
-    N_clients = 20
+    N_clients = 100
     k = int(N_clients * args.frac)
     print("客户端总数: {}; 每轮上传客户端数量: {}".format(N_clients, k))
 
@@ -135,21 +151,20 @@ if __name__ == "__main__":
     print("初始化客户端")
     client_lst = []
     for client_id in range(N_clients):
-        c_conf = inin_single_client(
-            client_id, trainloader_idx_lst, testloader_idx_lst
-        )
-        client_lst.append(Client(c_conf))
+        c_conf = inin_single_client(client_id, trainloader_idx_lst, testloader_idx_lst)
+        client_lst.append(LGClient(c_conf))
 
     s_conf = {
-        "Round": 1000,
+        "Round": 200,
         "N_clients": N_clients,
         "model_fpath": model_fpath,
         "iid": iid,
         "dataset_name": dataset_name,
         "strategy_name": args.strategy_name,
+        "shared_key_layers": shared_key_layers,
         "log_suffix": args.suffix,
     }
     server_o = sc(conf=s_conf, **{"client_lst": client_lst})
-    server_o.max_workers = min(20, N_clients)
+    server_o.max_workers = 1
     for ri in range(s_conf["Round"]):
         loss, train_acc, test_acc = server_o.run(ri, k=k)
