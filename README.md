@@ -22,6 +22,12 @@
 
 见[README.md](https://github.com/wnma3mz/flearn/tree/master/example/Prox)
 
+### 进阶3——复现FedPAV
+
+- 修改客户端以及服务器端，以适用于FedPAV策略
+
+见[README.md](https://github.com/wnma3mz/flearn/tree/master/example/PAV_reproduction)
+
 
 ### 支持策略
 
