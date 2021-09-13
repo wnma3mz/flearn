@@ -2,10 +2,6 @@
 
 原项目：https://github.com/pliang279/LG-FedAvg/tree/master
 
-
-
-本地快速切割MNIST/CIFAR-10/CIAFR-100数据集，模拟联邦学习设置
-
 ### 运行
 
 ```bash
@@ -34,5 +30,5 @@ python3 main.py --strategy_name lg --frac 0.1 --dataset_name mnist --dataset_fpa
 ### main.py解释
 
 - line 22-29: 自动选择最空闲的GPU
-- line 120, 164: 配置共享模型中的部分层
+- line 120, 164: 配置模型中的共享层
 - line 164: 由于客户端数量较多，因此改为单个线程进行，即串行执行。
