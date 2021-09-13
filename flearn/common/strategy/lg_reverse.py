@@ -39,10 +39,7 @@ class LG_R(Strategy):
 
     def server(self, agg_weight_lst, w_local_lst, round_):
         try:
-            key_lst = reduce(lambda x, y: set(x.keys()) & set(y.keys()), w_local_lst)
-            key_lst = [k for k in key_lst if k not in self.shared_key_layers]
-
-            w_glob = self.server_ensemble(agg_weight_lst, w_local_lst, key_lst=key_lst)
+            w_glob = self.server_ensemble(agg_weight_lst, w_local_lst)
         except Exception as e:
             return self.server_exception(e)
         return self.server_post_processing(w_glob, round_)

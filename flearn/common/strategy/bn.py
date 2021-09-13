@@ -23,8 +23,10 @@ class BN(AVG):
 
     def server(self, agg_weight_lst, w_local_lst, round_):
         try:
-            key_lst = reduce(lambda x, y: set(x.keys()) & set(y.keys()), w_local_lst)
+            all_local_key_lst = [set(w_local.keys()) for w_local in w_local_lst]
+            key_lst = reduce(lambda x, y: x & y, all_local_key_lst)
             key_lst = [k for k in key_lst if "bn" not in k]
+
             w_glob = self.server_ensemble(agg_weight_lst, w_local_lst, key_lst=key_lst)
         except Exception as e:
             return self.server_exception(e)

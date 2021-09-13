@@ -35,10 +35,6 @@ class LG(Strategy):
 
     def server(self, agg_weight_lst, w_local_lst, round_):
         try:
-            # if len(self.shared_key_layers) == 1:
-            #     self.shared_key_layers = reduce(
-            #         lambda x, y: set(x.keys()) & set(y.keys()), w_local_lst
-            #     )
             w_glob = self.server_ensemble(
                 agg_weight_lst, w_local_lst, key_lst=self.shared_key_layers
             )

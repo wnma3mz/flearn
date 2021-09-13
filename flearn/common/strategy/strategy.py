@@ -49,14 +49,13 @@ class Strategy(ABC):
         return self.encrypt.encode(w_glob_b)
 
     @staticmethod
-    def cdw_feature_distance(
-        old_model, old_classifier, new_model, device, train_loader
-    ):
+    def cdw_feature_distance(old_model, new_model, device, train_loader):
         """cosine distance weight (cdw): calculate feature distance of
         the features of a batch of data by cosine distance.
+        old_classifier, 
         """
         old_model = old_model.to(device)
-        old_classifier = old_classifier.to(device)
+        # old_classifier = old_classifier.to(device)
 
         for data in train_loader:
             inputs, _ = data
