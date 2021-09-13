@@ -20,7 +20,7 @@
 
 - 修改训练器，以运用至更多任务与模型
 
-
+见[README.md](https://github.com/wnma3mz/flearn/tree/master/example/Prox)
 
 
 ### 支持策略
@@ -33,7 +33,7 @@
 - [x] FedOPT
 - [x] FedPAV
 
-split-learning可见`example/split_learning`
+split-learning可见[README.md](https://github.com/wnma3mz/flearn/tree/master/example/split_learning)，尚存在loss爆炸问题。
 
 
 ### 框架图
