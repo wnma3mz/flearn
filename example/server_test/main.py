@@ -1,15 +1,17 @@
 # coding: utf-8
-import os
-
 import argparse
 import copy
+import os
 import random
 
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from flearn.client.datasets import get_datasets, get_split_loader, get_dataloader
+from torch.utils import data
+from flearn.client import Client
+from flearn.server import Server
+from flearn.client.datasets import get_dataloader, get_datasets, get_split_loader
 from flearn.client.utils import get_free_gpu_id
 from flearn.server import Communicate as sc
 
@@ -17,9 +19,8 @@ from models import LeNet5
 from resnet import ResNet_cifar
 from split_data import iid as iid_f
 from split_data import noniid
-from ProxClient import ProxClient
-from ProxTrainer import ProxTrainer
 
+# 自动选择空闲显存最大的GPU
 idx = get_free_gpu_id()
 print("使用{}号GPU".format(idx))
 if idx != -1:
@@ -35,6 +36,7 @@ parser.add_argument("--local_epoch", dest="local_epoch", default=1, type=int)
 parser.add_argument("--frac", dest="frac", default=1, type=float)
 parser.add_argument("--suffix", dest="suffix", default="", type=str)
 parser.add_argument("--iid", dest="iid", action="store_true")
+parser.add_argument("--dataset_fpath", dest="dataset_fpath", type=str)
 parser.add_argument(
     "--dataset_name",
     dest="dataset_name",
@@ -42,13 +44,9 @@ parser.add_argument(
     choices=["mnist", "cifar10", "cifar100"],
     type=str,
 )
-parser.add_argument(
-    "--dataset_fpath",
-    dest="dataset_fpath",
-    type=str,
-)
 
 args = parser.parse_args()
+
 iid = args.iid
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -105,7 +103,7 @@ def inin_single_client(client_id, trainloader_idx_lst, testloader_idx_lst):
         "criterion": nn.CrossEntropyLoss(),
         "optimizer": optim_,
         "trainloader": trainloader,
-        "testloader": [testloader, glob_testloader],
+        "testloader": testloader,
         "model_fname": "client{}_round_{}.pth".format(client_id, "{}"),
         "client_id": client_id,
         "device": device,
@@ -113,11 +111,21 @@ def inin_single_client(client_id, trainloader_idx_lst, testloader_idx_lst):
         "epoch": args.local_epoch,
         "dataset_name": dataset_name,
         "strategy_name": args.strategy_name,
-        "trainer": ProxTrainer,
         "save": False,
         "display": False,
         "log": False,
     }
+
+
+class MyServer(Server):
+    def evaluate(self, data_lst, is_select=False):
+        # 仅测试一个客户端，因为每个客户端模型一致
+        if is_select == True:
+            return [data_lst[0]]
+
+        test_acc_lst = np.mean(list(map(lambda x: x["test_acc"], data_lst)), axis=0)
+        test_acc = "; ".join("{:.4f}".format(x) for x in test_acc_lst)
+        return test_acc
 
 
 if __name__ == "__main__":
@@ -148,7 +156,7 @@ if __name__ == "__main__":
     client_lst = []
     for client_id in range(N_clients):
         c_conf = inin_single_client(client_id, trainloader_idx_lst, testloader_idx_lst)
-        client_lst.append(ProxClient(c_conf))
+        client_lst.append(Client(c_conf))
 
     s_conf = {
         "Round": 1000,
@@ -159,7 +167,8 @@ if __name__ == "__main__":
         "strategy_name": args.strategy_name,
         "log_suffix": args.suffix,
     }
-    server_o = sc(conf=s_conf, **{"client_lst": client_lst})
+    server_o = sc(conf=s_conf, Server=MyServer, **{"client_lst": client_lst})
     server_o.max_workers = min(20, N_clients)
+
     for ri in range(s_conf["Round"]):
         loss, train_acc, test_acc = server_o.run(ri, k=k)

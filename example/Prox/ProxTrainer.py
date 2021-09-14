@@ -3,11 +3,11 @@ import torch
 from flearn.client.train import Trainer
 
 
-class FedProxTrainer(Trainer):
+class ProxTrainer(Trainer):
     """"搭配ProxClient使用"""
 
     def __init__(self, model, optimizer, criterion, device, display=True):
-        super(FedProxTrainer, self).__init__(
+        super(ProxTrainer, self).__init__(
             model, optimizer, criterion, device, display
         )
         self.server_model = None
