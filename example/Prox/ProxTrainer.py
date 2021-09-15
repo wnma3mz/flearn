@@ -7,9 +7,7 @@ class ProxTrainer(Trainer):
     """"搭配ProxClient使用"""
 
     def __init__(self, model, optimizer, criterion, device, display=True):
-        super(ProxTrainer, self).__init__(
-            model, optimizer, criterion, device, display
-        )
+        super(ProxTrainer, self).__init__(model, optimizer, criterion, device, display)
         self.server_model = None
         self.mu = 1e-2
 
@@ -23,10 +21,8 @@ class ProxTrainer(Trainer):
         for data, target in data_loader:
             data, target = data.to(self.device), target.to(self.device)
             output = self.model(data)
-            loss = self.criterion(output, target)
-            if self.display:
-                data_loader.postfix = "loss: {:.4f}".format(loss.data.item())
-            loop_loss.append(loss.data.item() / len(data_loader))
+            loss1 = self.criterion(output, target)
+
             accuracy.append((output.data.max(1)[1] == target.data).sum().item())
             if is_train:
                 self.optimizer.zero_grad()
@@ -37,8 +33,15 @@ class ProxTrainer(Trainer):
                         self.server_model.parameters(), self.model.parameters()
                     ):
                         w_diff += torch.pow(torch.norm(w - w_t), 2)
-                    loss += self.mu / 2.0 * w_diff
+                    loss2 = self.mu / 2.0 * w_diff
+                    loss += loss1 + loss2
 
                 loss.backward()
                 self.optimizer.step()
+            else:
+                loss = loss1
+            if self.display:
+                data_loader.postfix = "loss: {:.4f}".format(loss.data.item())
+            loop_loss.append(loss.data.item() / len(data_loader))
+
         return loop_loss, accuracy
