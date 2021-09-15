@@ -10,8 +10,8 @@ import torch.nn as nn
 import torch.optim as optim
 from flearn.client.utils import get_free_gpu_id
 from flearn.server import Communicate as sc
-
-from FedMOON import MOONClient, MOONServer, MOONTrainer
+from flearn.client import Client, Trainer
+from flearn.server import Server
 from model import ModelFedCon
 from utils import get_dataloader, partition_data
 
@@ -111,6 +111,36 @@ if not os.path.isdir(model_fpath):
     os.mkdir(model_fpath)
 
 
+class MyServer(Server):
+    def evaluate(self, data_lst, is_select=False):
+        # 仅测试一个客户端，因为每个客户端模型一致
+        if is_select == True:
+            return [data_lst[0]]
+
+        test_acc_lst = np.mean(list(map(lambda x: x["test_acc"], data_lst)), axis=0)
+        test_acc = "; ".join("{:.4f}".format(x) for x in test_acc_lst)
+        return test_acc
+
+
+class MyTrainer(Trainer):
+    def _display_iteration(self, data_loader, is_train=True):
+        loop_loss = []
+        accuracy = []
+        for data, target in data_loader:
+            data, target = data.to(self.device), target.to(self.device)
+            _, _, output = self.model(data)
+            loss = self.criterion(output, target)
+            if self.display:
+                data_loader.postfix = "loss: {:.4f}".format(loss.data.item())
+            loop_loss.append(loss.data.item() / len(data_loader))
+            accuracy.append((output.data.max(1)[1] == target.data).sum().item())
+            if is_train:
+                self.optimizer.zero_grad()
+                loss.backward()
+                self.optimizer.step()
+        return loop_loss, accuracy
+
+
 def inin_single_client(client_id):
     model_ = copy.deepcopy(model_base)
     optim_ = optim.SGD(model_.parameters(), lr=1e-2, momentum=0.9, weight_decay=1e-5)
@@ -118,6 +148,7 @@ def inin_single_client(client_id):
     trainloader, testloader, _, _ = get_dataloader(
         dataset_name, dataset_fpath, batch_size, batch_size, net_dataidx_map[client_id]
     )
+    
     return {
         "model": model_,
         "criterion": nn.CrossEntropyLoss(),
@@ -132,7 +163,7 @@ def inin_single_client(client_id):
         "epoch": args.local_epoch,
         "dataset_name": dataset_name,
         "strategy_name": args.strategy_name,
-        "trainer": MOONTrainer,
+        "trainer": MyTrainer,
         "save": False,
         "display": False,
         "log": False,
@@ -145,7 +176,7 @@ if __name__ == "__main__":
     client_lst = []
     for client_id in range(N_clients):
         c_conf = inin_single_client(client_id)
-        client_lst.append(MOONClient(c_conf))
+        client_lst.append(Client(c_conf))
 
     s_conf = {
         "Round": 100,
@@ -156,7 +187,7 @@ if __name__ == "__main__":
         "strategy_name": args.strategy_name,
         "log_suffix": args.suffix,
     }
-    server_o = sc(conf=s_conf, Server=MOONServer, **{"client_lst": client_lst})
+    server_o = sc(conf=s_conf, Server=MyServer, **{"client_lst": client_lst})
     server_o.max_workers = min(20, N_clients)
     # server_o.max_workers = 20
     for ri in range(s_conf["Round"]):

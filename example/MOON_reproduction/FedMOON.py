@@ -51,6 +51,7 @@ class MOONTrainer(Trainer):
                 self.optimizer.zero_grad()
                 if self.global_model != None:
                     with torch.no_grad():
+                        self.global_model.eval()
                         # 全局与本地的对比损失，越小越好
                         self.global_model.to(self.device)
                         _, pro2, _ = self.global_model(data)
@@ -59,13 +60,14 @@ class MOONTrainer(Trainer):
 
                         # 当前轮与上一轮的对比损失，越大越好
                         for previous_net in self.previous_model_lst:
+                            previous_net.eval()
                             previous_net.to(self.device)
                             _, pro3, _ = previous_net(data)
                             nega = self.cos(pro1, pro3)
                             logits = torch.cat((logits, nega.reshape(-1, 1)), dim=1)
 
                     logits /= self.temperature
-                    labels = torch.zeros(data.size(0)).cuda().long()
+                    labels = torch.zeros(data.size(0)).to(self.device).long()
                     loss += self.mu * self.criterion(logits, labels)
 
                 loss.backward()
