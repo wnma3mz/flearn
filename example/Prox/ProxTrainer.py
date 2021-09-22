@@ -34,7 +34,7 @@ class ProxTrainer(Trainer):
                     ):
                         w_diff += torch.pow(torch.norm(w - w_t), 2)
                     loss2 = self.mu / 2.0 * w_diff
-                    loss += loss1 + loss2
+                    loss = loss1 + loss2
 
                 loss.backward()
                 self.optimizer.step()

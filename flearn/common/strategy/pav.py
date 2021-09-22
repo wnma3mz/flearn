@@ -21,7 +21,8 @@ class Distillation:
 
     def kd_generate_soft_label(self, model, data):
         """knowledge distillation (kd): generate soft labels."""
-        result = model(data)
+        with torch.no_grad():
+            result = model(data)
         if self.regularization:
             # 对输出进行标准化
             result = F.normalize(result, dim=1, p=2)

@@ -28,7 +28,7 @@ class MOONTrainer(Trainer):
 
     def __init__(self, model, optimizer, criterion, device, display=True):
         super(MOONTrainer, self).__init__(model, optimizer, criterion, device, display)
-        self.global_model = copy.deepcopy(self.model)
+        self.global_model = None
         self.previous_model_lst = []
         self.cos = nn.CosineSimilarity(dim=-1)
         # CIFAR-10, CIFAR-100, and Tiny-Imagenet are 0.5, 1, and 0.5
@@ -41,8 +41,9 @@ class MOONTrainer(Trainer):
             previous_net.eval()
             previous_net.to(self.device)
 
-        self.global_model.eval()
-        self.global_model.to(self.device)
+        if self.global_model != None:
+            self.global_model.eval()
+            self.global_model.to(self.device)
 
         loop_loss = []
         accuracy = []
@@ -55,28 +56,32 @@ class MOONTrainer(Trainer):
             if is_train:
                 self.optimizer.zero_grad()
 
-                # 全局与本地的对比损失，越小越好
-                with torch.no_grad():
-                    _, pro2, _ = self.global_model(data)
-                posi = self.cos(pro1, pro2)
-                logits = posi.reshape(-1, 1)
-
-                # 当前轮与上一轮的对比损失，越大越好
-                for previous_net in self.previous_model_lst:
+                if self.global_model != None:
+                    # 全局与本地的对比损失，越小越好
                     with torch.no_grad():
-                        _, pro3, _ = previous_net(data)
-                    nega = self.cos(pro1, pro3)
-                    logits = torch.cat((logits, nega.reshape(-1, 1)), dim=1)
+                        _, pro2, _ = self.global_model(data)
+                    posi = self.cos(pro1, pro2)
+                    logits = posi.reshape(-1, 1)
 
-                logits /= self.temperature
-                labels = torch.zeros(data.size(0)).to(self.device).long()
-                loss2 = self.mu * self.criterion(logits, labels)
-                loss = loss1 + loss2
+                    # 当前轮与上一轮的对比损失，越大越好
+                    for previous_net in self.previous_model_lst:
+                        with torch.no_grad():
+                            _, pro3, _ = previous_net(data)
+                        nega = self.cos(pro1, pro3)
+                        logits = torch.cat((logits, nega.reshape(-1, 1)), dim=1)
 
+                    logits /= self.temperature
+                    labels = torch.zeros(data.size(0)).to(self.device).long()
+                    loss2 = self.mu * self.criterion(logits, labels)
+
+                    loss = loss1 + loss2
+                else:
+                    loss = loss1
                 loss.backward()
                 self.optimizer.step()
             else:
                 loss = loss1
+
             if self.display:
                 data_loader.postfix = "loss: {:.4f}".format(loss.data.item())
 
@@ -92,14 +97,18 @@ class MOONTrainer(Trainer):
 
 
 class MOONClient(Client):
-    """FedMOONClient"""
+    """MOONClient"""
 
     def __init__(self, conf, pre_buffer_size=1):
+        super(MOONClient, self).__init__(conf)
         # 保存以前模型的大小
         self.pre_buffer_size = pre_buffer_size
-        super(MOONClient, self).__init__(conf)
+        # 记录运行轮数
+        self.ci = -1
 
     def train(self, i):
+        # 每轮训练+1
+        self.ci += 1
         self.train_loss, self.train_acc = self.model_trainer.loop(
             self.epoch, self.trainloader
         )
@@ -126,7 +135,14 @@ class MOONClient(Client):
         if self.scheduler != None:
             self.scheduler.step()
         self.model_trainer.model = update_model
-        self.model_trainer.global_model = copy.deepcopy(update_model)
+
+        # 如果该客户端训练轮数不等于服务器端的训练轮数，则表示该客户端的模型本轮没有训练，则不做对比学习，并且同步进度轮数。
+        if self.ci != i:
+            self.model_trainer.global_model = None
+            self.model_trainer.previous_model_lst = []
+            self.ci = i - 1
+        else:
+            self.model_trainer.global_model = copy.deepcopy(update_model)
 
         return {
             "code": 200,
