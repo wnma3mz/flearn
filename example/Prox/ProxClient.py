@@ -19,6 +19,7 @@ class ProxClient(Client):
         # self.model_trainer.model.load_state_dict(self.w_local_bak)
         self.model_trainer.model = update_model
         self.model_trainer.server_model = copy.deepcopy(update_model)
+        self.model_trainer.server_model.eval()
         return {
             "code": 200,
             "msg": "Model update completed",
