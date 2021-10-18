@@ -8,10 +8,20 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from flearn.client import Client
 from flearn.client.utils import get_free_gpu_id
 from flearn.server import Communicate as sc
 
-from FedMOON import MOONClient, MOONServer, MOONTrainer
+from FedMOON import (
+    AVGTrainer,
+    LSDClient,
+    LSDTrainer,
+    MOONClient,
+    MOONTrainer,
+    ProxClient,
+    ProxTrainer,
+    SSDClient,
+)
 from model import ModelFedCon
 from utils import get_dataloader, partition_data
 
@@ -45,6 +55,11 @@ parser.add_argument(
 
 args = parser.parse_args()
 iid = args.iid
+if args.strategy_name.lower() in ["moon", "lsd", "ssd", "lsdn", "prox"]:
+    strategy_name = "avg"
+else:
+    strategy_name = args.strategy_name.lower()
+
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 # 设置数据集
@@ -110,6 +125,17 @@ model_fpath = "./client_checkpoint"
 if not os.path.isdir(model_fpath):
     os.mkdir(model_fpath)
 
+if args.strategy_name.lower() == "avg":
+    trainer = AVGTrainer
+elif args.strategy_name.lower() == "moon":
+    trainer = MOONTrainer
+elif args.strategy_name.lower() == "prox":
+    trainer = ProxTrainer
+elif args.strategy_name.lower() in ["lsd", "ssd", "lsdn"]:
+    trainer = LSDTrainer
+else:
+    trainer = None
+
 
 def inin_single_client(client_id):
     model_ = copy.deepcopy(model_base)
@@ -118,6 +144,7 @@ def inin_single_client(client_id):
     trainloader, testloader, _, _ = get_dataloader(
         dataset_name, dataset_fpath, batch_size, batch_size, net_dataidx_map[client_id]
     )
+
     return {
         "model": model_,
         "criterion": nn.CrossEntropyLoss(),
@@ -131,10 +158,10 @@ def inin_single_client(client_id):
         "model_fpath": model_fpath,
         "epoch": args.local_epoch,
         "dataset_name": dataset_name,
-        "strategy_name": args.strategy_name,
-        "trainer": MOONTrainer,
+        "strategy_name": strategy_name,
+        "trainer": trainer,
         "save": False,
-        "display": False,
+        "display": True,
         "log": False,
     }
 
@@ -145,7 +172,16 @@ if __name__ == "__main__":
     client_lst = []
     for client_id in range(N_clients):
         c_conf = inin_single_client(client_id)
-        client_lst.append(MOONClient(c_conf))
+        if args.strategy_name.lower() == "avg":
+            client_lst.append(Client(c_conf))
+        elif args.strategy_name.lower() == "moon":
+            client_lst.append(MOONClient(c_conf))
+        elif args.strategy_name.lower() == "prox":
+            client_lst.append(ProxClient(c_conf))
+        elif args.strategy_name.lower() == "lsd":
+            client_lst.append(LSDClient(c_conf))
+        elif args.strategy_name.lower() == "ssd":
+            client_lst.append(SSDClient(c_conf))
 
     s_conf = {
         "Round": 100,
@@ -153,10 +189,11 @@ if __name__ == "__main__":
         "model_fpath": model_fpath,
         "iid": iid,
         "dataset_name": dataset_name,
-        "strategy_name": args.strategy_name,
+        "strategy_name": strategy_name,
         "log_suffix": args.suffix,
     }
-    server_o = sc(conf=s_conf, Server=MOONServer, **{"client_lst": client_lst})
+    # server_o = sc(conf=s_conf, Server=MOONServer, **{"client_lst": client_lst})
+    server_o = sc(conf=s_conf, **{"client_lst": client_lst})
     server_o.max_workers = min(20, N_clients)
     # server_o.max_workers = 20
     for ri in range(s_conf["Round"]):
