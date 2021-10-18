@@ -45,48 +45,102 @@ class Trainer(ABC):
         self.criterion = criterion
         self.display = display
         self.model.to(self.device)
-        self.model_o = copy.deepcopy(self.weight)
 
-    def _display_iteration(self, data_loader, is_train=True):
-        loop_loss, accuracy = [], []
-        for data, target in data_loader:
+    def fed_loss(self):
+        """联邦学习中，客户端可能需要自定义其他的损失函数"""
+        return 0
+
+    def _key_iteration(self, loader, is_train=True):
+        """模型训练/测试的核心函数
+
+        Args:
+            loader    : torch.utils.data
+                        数据集
+
+            is_train  : bool
+                        训练还是测试
+
+        Returns:
+            list :  loop_loss
+                    每个batch的损失值
+
+            list :  loop_accuracy
+                    每个batch的准确率
+        """
+        loop_loss, loop_accuracy = [], []
+        for data, target in loader:
             data, target = data.to(self.device), target.to(self.device)
             output = self.model(data)
             loss = self.criterion(output, target)
-            if self.display:
-                data_loader.postfix = "loss: {:.4f}".format(loss.data.item())
-            loop_loss.append(loss.data.item() / len(data_loader))
-            accuracy.append((output.data.max(1)[1] == target.data).sum().item())
             if is_train:
+                loss += self.fed_loss()
                 self.optimizer.zero_grad()
                 loss.backward()
                 self.optimizer.step()
-        return loop_loss, accuracy
+
+            iter_loss = loss.data.item()
+            iter_acc = (
+                (output.data.max(1)[1] == target.data).sum().item() / len(data) * 100
+            )
+            loop_accuracy.append(iter_acc)
+            loop_loss.append(iter_loss)
+
+            if self.display:
+                loader.postfix = "loss: {:.4f}; acc: {:.2f}".format(iter_loss, iter_acc)
+
+        return loop_loss, loop_accuracy
 
     def _iteration(self, data_loader, is_train=True):
-        if self.display:
-            with tqdm(data_loader, ncols=80, postfix="loss: *.****") as t:
-                loop_loss, accuracy = self._display_iteration(t, is_train)
-        else:
-            loop_loss, accuracy = self._display_iteration(data_loader, is_train)
+        """模型训练/测试的入口函数, 控制输出显示
 
-        return np.sum(loop_loss), np.sum(accuracy) / len(data_loader.dataset) * 100
+        Args:
+            data_loader : torch.utils.data
+                          数据集
+
+            is_train    : bool
+                          训练还是测试
+
+        Returns:
+            float :
+                    每个epoch的loss求和
+
+            float :
+                    每个epoch的accuracy取平均
+        """
+        if self.display:
+            with tqdm(data_loader, ncols=80, postfix="loss: *.****; acc: *.**") as t:
+                loop_loss, loop_accuracy = self._key_iteration(t, is_train)
+        else:
+            loop_loss, loop_accuracy = self._key_iteration(data_loader, is_train)
+
+        return np.mean(loop_loss), np.mean(loop_accuracy)
 
     def train(self, data_loader):
-        self.model_o = copy.deepcopy(self.weight)
+        """模型训练的入口
+        Args:
+            data_loader :  torch.utils.data
+                           训练集
+
+        Returns:
+            float : loss
+                    损失值
+
+            float : accuracy
+                    准确率
+        """
         self.model.train()
         with torch.enable_grad():
-            loop_loss, accuracy = self._iteration(data_loader)
-        return loop_loss, accuracy
+            loss, accuracy = self._iteration(data_loader)
+        return loss, accuracy
 
     def test(self, data_loader):
-        """
+        """模型测试的初始入口，由于只有一轮，所以不需要loop
         Args:
             data_loader :  torch.utils.data
                            测试集
 
         Returns:
-            float : loop_loss
+            float : loss
                     损失值
 
             float : accuracy
@@ -94,11 +148,11 @@ class Trainer(ABC):
         """
         self.model.eval()
         with torch.no_grad():
-            loop_loss, accuracy = self._iteration(data_loader, is_train=False)
-        return loop_loss, accuracy
+            loss, accuracy = self._iteration(data_loader, is_train=False)
+        return loss, accuracy
 
     def loop(self, epochs, train_data):
-        """
+        """模型训练的初始入口，由于可能存在多轮，所以额外套一层函数，便于其他操作
         Args:
             epochs :        int
                             本地训练轮数
@@ -107,11 +161,11 @@ class Trainer(ABC):
                             训练集
 
         Returns:
-            float : loop_loss
-                    损失值
+            float :
+                    N个epoch的loss取平均
 
-            float : accuracy
-                    准确率
+            float :
+                    N个epoch的accuracy取平均
         """
         epoch_loss, epoch_accuracy = [], []
         for ep in range(1, epochs + 1):
