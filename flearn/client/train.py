@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 
+import copy
 import os
 from abc import ABC, abstractmethod
+from collections import OrderedDict
+from functools import wraps
 
 import numpy as np
 import torch
@@ -10,8 +13,22 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 from tqdm import tqdm
-from collections import OrderedDict
-import copy
+
+
+def show_f():
+    """显示训练/测试过程"""
+
+    def inner_fn(fn):
+        @wraps(fn)
+        def wrapper(self, loader):
+            if self.display == True:
+                with tqdm(loader, ncols=80, postfix="loss: *.****; acc: *.**") as t:
+                    return fn(self, t)
+            return fn(self, loader)
+
+        return wrapper
+
+    return inner_fn
 
 
 class Trainer(ABC):
@@ -45,74 +62,70 @@ class Trainer(ABC):
         self.criterion = criterion
         self.display = display
         self.model.to(self.device)
+        self.is_train = None
 
     def fed_loss(self):
         """联邦学习中，客户端可能需要自定义其他的损失函数"""
         return 0
 
-    def _key_iteration(self, loader, is_train=True):
-        """模型训练/测试的核心函数
+    @staticmethod
+    def metrics(output, target):
+        return (output.data.max(1)[1] == target.data).sum().item() / len(target) * 100
+
+    def batch(self, data, target):
+        """训练/测试每个batch的数据
 
         Args:
-            loader    : torch.utils.data
-                        数据集
+            data   : torch.tensor
+                     训练数据
 
-            is_train  : bool
-                        训练还是测试
+            target : torch.tensor
+                     训练标签
 
         Returns:
-            list :  loop_loss
-                    每个batch的损失值
+            float : iter_loss
+                    对应batch的loss
 
-            list :  loop_accuracy
-                    每个batch的准确率
+            float : iter_acc
+                    对应batch的accuracy
         """
-        loop_loss, loop_accuracy = [], []
-        for data, target in loader:
-            data, target = data.to(self.device), target.to(self.device)
-            output = self.model(data)
-            loss = self.criterion(output, target)
-            if is_train:
-                loss += self.fed_loss()
-                self.optimizer.zero_grad()
-                loss.backward()
-                self.optimizer.step()
+        output = self.model(data)
+        loss = self.criterion(output, target)
 
-            iter_loss = loss.data.item()
-            iter_acc = (
-                (output.data.max(1)[1] == target.data).sum().item() / len(data) * 100
-            )
-            loop_accuracy.append(iter_acc)
-            loop_loss.append(iter_loss)
+        if self.is_train:
+            loss += self.fed_loss()
+            self.optimizer.zero_grad()
+            loss.backward()
+            self.optimizer.step()
 
-            if self.display:
-                loader.postfix = "loss: {:.4f}; acc: {:.2f}".format(iter_loss, iter_acc)
+        iter_loss = loss.data.item()
+        iter_acc = self.metrics(output, target)
+        return iter_loss, iter_acc
 
-        return loop_loss, loop_accuracy
-
-    def _iteration(self, data_loader, is_train=True):
+    @show_f()
+    def _iteration(self, loader):
         """模型训练/测试的入口函数, 控制输出显示
 
         Args:
             data_loader : torch.utils.data
                           数据集
 
-            is_train    : bool
-                          训练还是测试
-
         Returns:
             float :
-                    每个epoch的loss求和
+                    每个epoch的loss取平均
 
             float :
                     每个epoch的accuracy取平均
         """
-        if self.display:
-            with tqdm(data_loader, ncols=80, postfix="loss: *.****; acc: *.**") as t:
-                loop_loss, loop_accuracy = self._key_iteration(t, is_train)
-        else:
-            loop_loss, loop_accuracy = self._key_iteration(data_loader, is_train)
+        loop_loss, loop_accuracy = [], []
+        for data, target in loader:
+            data, target = data.to(self.device), target.to(self.device)
+            iter_loss, iter_acc = self.batch(data, target)
+            loop_accuracy.append(iter_acc)
+            loop_loss.append(iter_loss)
 
+            if self.display:
+                loader.postfix = "loss: {:.4f}; acc: {:.2f}".format(iter_loss, iter_acc)
         return np.mean(loop_loss), np.mean(loop_accuracy)
 
     def train(self, data_loader):
@@ -129,6 +142,7 @@ class Trainer(ABC):
                     准确率
         """
         self.model.train()
+        self.is_train = True
         with torch.enable_grad():
             loss, accuracy = self._iteration(data_loader)
         return loss, accuracy
@@ -147,8 +161,9 @@ class Trainer(ABC):
                     准确率
         """
         self.model.eval()
+        self.is_train = False
         with torch.no_grad():
-            loss, accuracy = self._iteration(data_loader, is_train=False)
+            loss, accuracy = self._iteration(data_loader)
         return loss, accuracy
 
     def loop(self, epochs, train_data):
@@ -197,16 +212,19 @@ class Trainer(ABC):
 
     @property
     def weight(self):
+        """当前模型的参数"""
         return self.model.state_dict()
 
     @property
     def grads(self):
+        """当前模型的梯度"""
         d = self.weight
         for k, v in d.items():
             d[k] = v - self.model_o[k]
         return d
 
     def add_grad(self, grads):
+        """权重更新"""
         d = self.weight
         for k, v in d.items():
             d[k] = v + grads[k]
