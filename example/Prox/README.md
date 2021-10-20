@@ -17,11 +17,10 @@ python3 main.py --strategy_name avg --suffix prox --dataset_name mnist --dataset
 
 ### ProxClient.py
 
-在更新时，需要额外保存服务器端发回的模型，故line 20，额外复制模型至训练器中的`server_model`
+在更新时，需要额外保存服务器端发回的模型，故line 20，额外复制模型至训练器中的 `server_model`
 
 ### FedProxTrainer.py
 
-训练主函数为`_display_iteration`。line 34-40: 增加服务器端模型与本地训练模型的损失，$\frac{\mu}{2}||w-w^t||^2$。
+line 14-21: 增加服务器端模型与本地训练模型的损失，$\frac{\mu}{2}||w-w^t||^2$。
 
-其中，$\mu$在`init`函数中进行初始化，第一轮不存在`server_model`，所以不计算第一轮的损失。
-
+其中，$\mu$在 `init`函数中进行初始化，第一轮不存在 `server_model`，所以不计算第一轮的损失。

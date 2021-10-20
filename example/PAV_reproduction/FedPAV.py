@@ -49,5 +49,5 @@ class PAVClient(Client):
         w_upload = self.strategy.client(
             self.model_trainer, old_model, self.device, self.trainloader
         )
-        
+
         return super(PAVClient, self)._pickle_model(w_upload)

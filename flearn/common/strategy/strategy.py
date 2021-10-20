@@ -52,7 +52,7 @@ class Strategy(ABC):
     def cdw_feature_distance(old_model, new_model, device, train_loader):
         """cosine distance weight (cdw): calculate feature distance of
         the features of a batch of data by cosine distance.
-        old_classifier, 
+        old_classifier,
         """
         old_model = old_model.to(device)
         # old_classifier = old_classifier.to(device)

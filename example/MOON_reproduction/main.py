@@ -161,7 +161,8 @@ def inin_single_client(client_id):
         "strategy_name": strategy_name,
         "trainer": trainer,
         "save": False,
-        "display": True,
+        # "display": True,
+        "display": False,
         "log": False,
     }
 

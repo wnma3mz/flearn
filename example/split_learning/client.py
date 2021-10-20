@@ -163,7 +163,7 @@ if __name__ == "__main__":
         client_lst.append(conf_params)
 
     Round = 1000
-    
+
     import concurrent.futures
 
     for ri in range(Round):
@@ -176,7 +176,6 @@ if __name__ == "__main__":
                 trainloader = client["trainloader"]
                 testloader = client["testloader"]
                 # testloader = glob_testloader
-
 
                 model_.to(device)
                 model_.train()
@@ -246,7 +245,9 @@ if __name__ == "__main__":
                     test_loop_loss.append(loss / len(trainloader))
 
                 round_loss_lst.append(np.sum(loop_loss)),
-                round_trainacc_lst.append(np.sum(accuracy) / len(trainloader.dataset) * 100)
+                round_trainacc_lst.append(
+                    np.sum(accuracy) / len(trainloader.dataset) * 100
+                )
                 round_testacc_lst.append(
                     np.sum(test_accuracy) / len(testloader.dataset) * 100
                 )

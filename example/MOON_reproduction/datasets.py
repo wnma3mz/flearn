@@ -2,17 +2,38 @@ import torch.utils.data as data
 from PIL import Image
 import numpy as np
 import torchvision
-from torchvision.datasets import MNIST, EMNIST, CIFAR10, CIFAR100, SVHN, FashionMNIST, ImageFolder, DatasetFolder, utils
+from torchvision.datasets import (
+    MNIST,
+    EMNIST,
+    CIFAR10,
+    CIFAR100,
+    SVHN,
+    FashionMNIST,
+    ImageFolder,
+    DatasetFolder,
+    utils,
+)
 
 import os
 import os.path
+
 # import logging
 
 # logging.basicConfig()
 # logger = logging.getLogger()
 # logger.setLevel(logging.INFO)
 
-IMG_EXTENSIONS = ('.jpg', '.jpeg', '.png', '.ppm', '.bmp', '.pgm', '.tif', '.tiff', '.webp')
+IMG_EXTENSIONS = (
+    ".jpg",
+    ".jpeg",
+    ".png",
+    ".ppm",
+    ".bmp",
+    ".pgm",
+    ".tif",
+    ".tiff",
+    ".webp",
+)
 
 
 def mkdirs(dirpath):
@@ -22,10 +43,16 @@ def mkdirs(dirpath):
         pass
 
 
-
 class CIFAR10_truncated(data.Dataset):
-
-    def __init__(self, root, dataidxs=None, train=True, transform=None, target_transform=None, download=False):
+    def __init__(
+        self,
+        root,
+        dataidxs=None,
+        train=True,
+        transform=None,
+        target_transform=None,
+        download=False,
+    ):
 
         self.root = root
         self.dataidxs = dataidxs
@@ -38,13 +65,19 @@ class CIFAR10_truncated(data.Dataset):
 
     def __build_truncated_dataset__(self):
 
-        cifar_dataobj = CIFAR10(self.root, self.train, self.transform, self.target_transform, self.download)
+        cifar_dataobj = CIFAR10(
+            self.root, self.train, self.transform, self.target_transform, self.download
+        )
 
-        if torchvision.__version__ == '0.2.1':
+        if torchvision.__version__ == "0.2.1":
             if self.train:
-                data, target = cifar_dataobj.train_data, np.array(cifar_dataobj.train_labels)
+                data, target = cifar_dataobj.train_data, np.array(
+                    cifar_dataobj.train_labels
+                )
             else:
-                data, target = cifar_dataobj.test_data, np.array(cifar_dataobj.test_labels)
+                data, target = cifar_dataobj.test_data, np.array(
+                    cifar_dataobj.test_labels
+                )
         else:
             data = cifar_dataobj.data
             target = np.array(cifar_dataobj.targets)
@@ -87,8 +120,15 @@ class CIFAR10_truncated(data.Dataset):
 
 
 class CIFAR100_truncated(data.Dataset):
-
-    def __init__(self, root, dataidxs=None, train=True, transform=None, target_transform=None, download=False):
+    def __init__(
+        self,
+        root,
+        dataidxs=None,
+        train=True,
+        transform=None,
+        target_transform=None,
+        download=False,
+    ):
 
         self.root = root
         self.dataidxs = dataidxs
@@ -101,13 +141,19 @@ class CIFAR100_truncated(data.Dataset):
 
     def __build_truncated_dataset__(self):
 
-        cifar_dataobj = CIFAR100(self.root, self.train, self.transform, self.target_transform, self.download)
+        cifar_dataobj = CIFAR100(
+            self.root, self.train, self.transform, self.target_transform, self.download
+        )
 
-        if torchvision.__version__ == '0.2.1':
+        if torchvision.__version__ == "0.2.1":
             if self.train:
-                data, target = cifar_dataobj.train_data, np.array(cifar_dataobj.train_labels)
+                data, target = cifar_dataobj.train_data, np.array(
+                    cifar_dataobj.train_labels
+                )
             else:
-                data, target = cifar_dataobj.test_data, np.array(cifar_dataobj.test_labels)
+                data, target = cifar_dataobj.test_data, np.array(
+                    cifar_dataobj.test_labels
+                )
         else:
             data = cifar_dataobj.data
             target = np.array(cifar_dataobj.targets)
@@ -143,10 +189,10 @@ class CIFAR100_truncated(data.Dataset):
         return len(self.data)
 
 
-
-
 class ImageFolder_custom(DatasetFolder):
-    def __init__(self, root, dataidxs=None, train=True, transform=None, target_transform=None):
+    def __init__(
+        self, root, dataidxs=None, train=True, transform=None, target_transform=None
+    ):
         self.root = root
         self.dataidxs = dataidxs
         self.train = train

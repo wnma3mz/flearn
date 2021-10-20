@@ -135,9 +135,7 @@ if __name__ == "__main__":
     print("初始化客户端")
     client_lst = []
     for client_id in range(N_clients):
-        c_conf = inin_single_client(
-            client_id, trainloader_idx_lst, testloader_idx_lst
-        )
+        c_conf = inin_single_client(client_id, trainloader_idx_lst, testloader_idx_lst)
         client_lst.append(Client(c_conf))
 
     s_conf = {

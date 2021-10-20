@@ -36,7 +36,9 @@ class KDLoss(nn.Module):
         # print(loss)
         return loss
 
+
 import torch.optim as optim
+
 
 class FMLTrainer(Trainer):
     """"搭配FMLClient使用"""
@@ -44,7 +46,9 @@ class FMLTrainer(Trainer):
     def __init__(self, model, optimizer, criterion, device, display=True):
         super(FMLTrainer, self).__init__(model, optimizer, criterion, device, display)
         self.local_model = copy.deepcopy(self.model)
-        self.local_optimizer = optim.SGD(self.local_model.parameters(), lr=1e-2, momentum=0.9, weight_decay=1e-5)
+        self.local_optimizer = optim.SGD(
+            self.local_model.parameters(), lr=1e-2, momentum=0.9, weight_decay=1e-5
+        )
         self.local_model.to(self.device)
         self.kd_loss = KDLoss(2)
         self.mu = 2

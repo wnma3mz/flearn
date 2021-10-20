@@ -12,6 +12,20 @@ from flearn.client.train import Trainer
 from flearn.server import Server
 
 
+class KDLoss(nn.Module):
+    def __init__(self, temp_factor):
+        super(KDLoss, self).__init__()
+        self.temp_factor = temp_factor
+        self.kl_div = nn.KLDivLoss(reduction="sum")
+
+    def forward(self, input, target):
+        log_p = torch.log_softmax(input / self.temp_factor, dim=1)
+        q = torch.softmax(target / self.temp_factor, dim=1)
+        loss = self.kl_div(log_p, q) * (self.temp_factor ** 2) / input.size(0)
+        # print(loss)
+        return loss
+
+
 class MOONServer(Server):
     def evaluate(self, data_lst, is_select=False):
         # 仅测试一个客户端，因为每个客户端模型一致
@@ -24,79 +38,18 @@ class MOONServer(Server):
 
 
 class AVGTrainer(Trainer):
-    def _key_iteration(self, loader, is_train=True):
-        loop_loss = []
-        loop_accuracy = []
+    def batch(self, data, target):
+        _, _, output = self.model(data)
+        loss = self.criterion(output, target)
 
-        for data, target in loader:
-            data, target = data.to(self.device), target.to(self.device)
-            _, _, output = self.model(data)
-            loss1 = self.criterion(output, target)
-            if is_train:
-                self.optimizer.zero_grad()
-                loss = loss1
-                loss.backward()
-                self.optimizer.step()
-            else:
-                loss = loss1
+        if self.is_train:
+            self.optimizer.zero_grad()
+            loss.backward()
+            self.optimizer.step()
 
-            iter_loss = loss.data.item()
-            iter_acc = (
-                (output.data.max(1)[1] == target.data).sum().item() / len(data) * 100
-            )
-            loop_accuracy.append(iter_acc)
-            loop_loss.append(iter_loss)
-
-            if self.display:
-                loader.postfix = "loss: {:.4f}; acc: {:.2f}".format(iter_loss, iter_acc)
-
-        return loop_loss, loop_accuracy
-
-
-class ProxTrainer(Trainer):
-    def __init__(self, model, optimizer, criterion, device, display=True):
-        super(ProxTrainer, self).__init__(model, optimizer, criterion, device, display)
-        self.global_model = None
-        #  CIFAR-10, CIFAR-100, and Tiny-Imagenet are 0.01, 0.001, and 0.001
-        self.prox_mu = 0.01
-
-    def fed_loss(self):
-        if self.global_model != None:
-            w_diff = torch.tensor(0.0, device=self.device)
-            for w, w_t in zip(self.model.parameters(), self.global_model.parameters()):
-                w_diff += torch.pow(torch.norm(w - w_t), 2)
-            return self.prox_mu / 2.0 * w_diff
-        else:
-            return 0
-
-    def _key_iteration(self, loader, is_train=True):
-        if is_train and self.global_model != None:
-            self.global_model.eval()
-            self.global_model.to(self.device)
-
-        loop_loss, loop_accuracy = [], []
-
-        for data, target in loader:
-            data, target = data.to(self.device), target.to(self.device)
-            _, pro1, output = self.model(data)
-            loss = self.criterion(output, target)
-            if is_train:
-                loss += self.fed_loss()
-                self.optimizer.zero_grad()
-                loss.backward()
-                self.optimizer.step()
-
-            iter_loss = loss.data.item()
-            iter_acc = (
-                (output.data.max(1)[1] == target.data).sum().item() / len(data) * 100
-            )
-            loop_accuracy.append(iter_acc)
-            loop_loss.append(iter_loss)
-
-            if self.display:
-                loader.postfix = "loss: {:.4f}; acc: {:.2f}".format(iter_loss, iter_acc)
-
-        return loop_loss, loop_accuracy
+        iter_loss = loss.data.item()
+        iter_acc = self.metrics(output, target)
+        return iter_loss, iter_acc
 
 
 class MOONTrainer(Trainer):
@@ -134,7 +87,7 @@ class MOONTrainer(Trainer):
         else:
             return 0
 
-    def _key_iteration(self, loader, is_train=True):
+    def train(self, data_loader):
         for previous_net in self.previous_model_lst:
             previous_net.eval()
             previous_net.to(self.device)
@@ -142,52 +95,20 @@ class MOONTrainer(Trainer):
         if self.global_model != None:
             self.global_model.eval()
             self.global_model.to(self.device)
+        return super(MOONTrainer, self).train(data_loader)
 
-        loop_loss = []
-        loop_accuracy = []
+    def batch(self, data, target):
+        _, pro1, output = self.model(data)
+        loss = self.criterion(output, target)
+        if self.is_train:
+            loss += self.fed_loss(data, pro1)
+            self.optimizer.zero_grad()
+            loss.backward()
+            self.optimizer.step()
 
-        for data, target in loader:
-            data, target = data.to(self.device), target.to(self.device)
-            _, pro1, output = self.model(data)
-            loss1 = self.criterion(output, target)
-            if is_train:
-                loss += self.fed_loss(data, pro1)
-                self.optimizer.zero_grad()
-                loss.backward()
-                self.optimizer.step()
-            else:
-                loss = loss1
-
-            iter_loss = loss.data.item()
-            iter_acc = (
-                (output.data.max(1)[1] == target.data).sum().item() / len(data) * 100
-            )
-            loop_accuracy.append(iter_acc)
-            loop_loss.append(iter_loss)
-            if self.display:
-                loader.postfix = "loss: {:.4f}; acc: {:.2f}".format(iter_loss, iter_acc)
-
-        return loop_loss, loop_accuracy
-
-
-class ProxClient(Client):
-    def revice(self, i, glob_params):
-        # decode
-        data_glob_b = self.encrypt.decode(glob_params)
-
-        # update
-        update_model = self.strategy.client_revice(self.model_trainer, data_glob_b)
-        if self.scheduler != None:
-            self.scheduler.step()
-        self.model_trainer.model = update_model
-        self.model_trainer.global_model = copy.deepcopy(update_model)
-
-        return {
-            "code": 200,
-            "msg": "Model update completed",
-            "client_id": self.client_id,
-            "round": str(i),
-        }
+        iter_loss = loss.data.item()
+        iter_acc = self.metrics(output, target)
+        return iter_loss, iter_acc
 
 
 class MOONClient(Client):
@@ -246,18 +167,61 @@ class MOONClient(Client):
         }
 
 
-class KDLoss(nn.Module):
-    def __init__(self, temp_factor):
-        super(KDLoss, self).__init__()
-        self.temp_factor = temp_factor
-        self.kl_div = nn.KLDivLoss(reduction="sum")
+class ProxTrainer(Trainer):
+    def __init__(self, model, optimizer, criterion, device, display=True):
+        super(ProxTrainer, self).__init__(model, optimizer, criterion, device, display)
+        self.global_model = None
+        #  CIFAR-10, CIFAR-100, and Tiny-Imagenet are 0.01, 0.001, and 0.001
+        self.prox_mu = 0.01
 
-    def forward(self, input, target):
-        log_p = torch.log_softmax(input / self.temp_factor, dim=1)
-        q = torch.softmax(target / self.temp_factor, dim=1)
-        loss = self.kl_div(log_p, q) * (self.temp_factor ** 2) / input.size(0)
-        # print(loss)
-        return loss
+    def fed_loss(self):
+        if self.global_model != None:
+            w_diff = torch.tensor(0.0, device=self.device)
+            for w, w_t in zip(self.model.parameters(), self.global_model.parameters()):
+                w_diff += torch.pow(torch.norm(w - w_t), 2)
+            return self.prox_mu / 2.0 * w_diff
+        else:
+            return 0
+
+    def batch(self, data, target):
+        _, _, output = self.model(data)
+        loss = self.criterion(output, target)
+
+        if self.is_train:
+            loss += self.fed_loss()
+            self.optimizer.zero_grad()
+            loss.backward()
+            self.optimizer.step()
+
+        iter_loss = loss.data.item()
+        iter_acc = self.metrics(output, target)
+        return iter_loss, iter_acc
+
+    def train(self, data_loader):
+        if self.global_model != None:
+            self.global_model.eval()
+            self.global_model.to(self.device)
+        return super(ProxTrainer, self).train(data_loader)
+
+
+class ProxClient(Client):
+    def revice(self, i, glob_params):
+        # decode
+        data_glob_b = self.encrypt.decode(glob_params)
+
+        # update
+        update_model = self.strategy.client_revice(self.model_trainer, data_glob_b)
+        if self.scheduler != None:
+            self.scheduler.step()
+        self.model_trainer.model = update_model
+        self.model_trainer.global_model = copy.deepcopy(update_model)
+
+        return {
+            "code": 200,
+            "msg": "Model update completed",
+            "client_id": self.client_id,
+            "round": str(i),
+        }
 
 
 class LSDTrainer(Trainer):
@@ -268,43 +232,29 @@ class LSDTrainer(Trainer):
         # self.mu_kd = 0.5
         self.kd_loss = KDLoss(2)
 
-    def _key_iteration(self, loader, is_train=True):
-        if is_train and self.teacher_model != None:
+    def train(self, data_loader):
+        if self.teacher_model != None:
             self.teacher_model.eval()
             self.teacher_model.to(self.device)
+        return super(LSDTrainer, self).train(data_loader)
 
-        loop_loss, loop_accuracy = [], []
-        for data, target in loader:
-            data, target = data.to(self.device), target.to(self.device)
-            _, _, output = self.model(data)
-            loss1 = self.criterion(output, target)
-            if is_train:
-                self.optimizer.zero_grad()
-                if self.teacher_model != None:
-                    with torch.no_grad():
-                        _, _, t_output = self.teacher_model(data)
+    def batch(self, data, target):
+        _, _, output = self.model(data)
+        loss = self.criterion(output, target)
+        if self.is_train:
+            self.optimizer.zero_grad()
+            if self.teacher_model != None:
+                with torch.no_grad():
+                    _, _, t_output = self.teacher_model(data)
+                loss2 = self.mu_kd * self.kd_loss(output, t_output.detach())
+                loss += loss2
 
-                    loss2 = self.mu_kd * self.kd_loss(output, t_output.detach())
-                    loss = loss1 + loss2
-                else:
-                    loss = loss1
+            loss.backward()
+            self.optimizer.step()
 
-                loss.backward()
-                self.optimizer.step()
-            else:
-                loss = loss1
-
-            iter_loss = loss.data.item()
-            iter_acc = (
-                (output.data.max(1)[1] == target.data).sum().item() / len(data) * 100
-            )
-            loop_accuracy.append(iter_acc)
-            loop_loss.append(iter_loss)
-
-            if self.display:
-                loader.postfix = "loss: {:.4f}; acc: {:.2f}".format(iter_loss, iter_acc)
-
-        return loop_loss, loop_accuracy
+        iter_loss = loss.data.item()
+        iter_acc = self.metrics(output, target)
+        return iter_loss, iter_acc
 
 
 class LSDClient(Client):
