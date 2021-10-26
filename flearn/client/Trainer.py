@@ -15,20 +15,15 @@ import torch.optim as optim
 from tqdm import tqdm
 
 
-def show_f():
-    """显示训练/测试过程"""
+# 显示训练/测试过程
+def show_f(fn):
+    def wrapper(self, loader):
+        if self.display == True:
+            with tqdm(loader, ncols=80, postfix="loss: *.****; acc: *.**") as t:
+                return fn(self, t)
+        return fn(self, loader)
 
-    def inner_fn(fn):
-        @wraps(fn)
-        def wrapper(self, loader):
-            if self.display == True:
-                with tqdm(loader, ncols=80, postfix="loss: *.****; acc: *.**") as t:
-                    return fn(self, t)
-            return fn(self, loader)
-
-        return wrapper
-
-    return inner_fn
+    return wrapper
 
 
 class Trainer(ABC):
@@ -102,7 +97,7 @@ class Trainer(ABC):
         iter_acc = self.metrics(output, target)
         return iter_loss, iter_acc
 
-    @show_f()
+    @show_f
     def _iteration(self, loader):
         """模型训练/测试的入口函数, 控制输出显示
 

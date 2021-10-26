@@ -12,7 +12,7 @@ from flearn.common import Logger
 from .Server import Server
 
 
-class Communicate(object):
+class Communicator(object):
     def __init__(self, conf_fpath=None, conf=None, Server=Server, **kwargs):
         """服务端的通信模块，用于发送指令
 

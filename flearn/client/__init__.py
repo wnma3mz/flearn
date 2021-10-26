@@ -1,10 +1,10 @@
 from .Client import Client
-from .communicate import Communicate
-from .train import Trainer
+from .Communicator import Communicator
+from .Trainer import Trainer
 from .DLClient import DLClient
 
 __all__ = [
     "Client",
-    "Communicate",
+    "Communicator",
     "Trainer",
 ]

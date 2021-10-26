@@ -1,4 +1,4 @@
 from .Server import Server
-from .communicate import Communicate
+from .Communicator import Communicator
 
-__all__ = ["Server", "Communicate"]
+__all__ = ["Server", "Communicator"]

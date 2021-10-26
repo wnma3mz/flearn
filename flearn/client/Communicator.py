@@ -18,7 +18,7 @@ class EndpointAction(object):
         return jsonify(answer)
 
 
-class Communicate(object):
+class Communicator(object):
     app = None
 
     def __init__(self, **conf):
