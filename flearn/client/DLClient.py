@@ -9,7 +9,7 @@ import torch
 import torch.nn as nn
 
 from flearn.common import Logger
-from .train import Trainer
+from .Trainer import Trainer
 from .utils import bool_key_lst, listed_keys, str_key_lst
 
 

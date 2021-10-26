@@ -11,7 +11,7 @@ import torch.nn as nn
 
 from flearn.common import Encrypt, Logger
 from flearn.common.utils import init_strategy
-from .train import Trainer
+from .Trainer import Trainer
 from .utils import bool_key_lst, listed_keys, str_key_lst
 
 
