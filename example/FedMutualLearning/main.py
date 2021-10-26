@@ -9,9 +9,9 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from flearn.client.utils import get_free_gpu_id
-from flearn.server import Communicate as sc
+from flearn.server import Communicator as sc
 
-from FML import FMLClient, FMLServer, FMLTrainer
+from FML import FMLClient, FMLTrainer
 from model import ModelFedCon
 from utils import get_dataloader, partition_data
 
@@ -156,7 +156,7 @@ if __name__ == "__main__":
         "strategy_name": args.strategy_name,
         "log_suffix": args.suffix,
     }
-    server_o = sc(conf=s_conf, Server=FMLServer, **{"client_lst": client_lst})
+    server_o = sc(conf=s_conf, **{"client_lst": client_lst})
     server_o.max_workers = min(20, N_clients)
     # server_o.max_workers = 20
     for ri in range(s_conf["Round"]):

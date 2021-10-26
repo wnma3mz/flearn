@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import torch
-from flearn.client.train import Trainer
+from flearn.client import Trainer
 
 
 class ProxTrainer(Trainer):

@@ -11,7 +11,7 @@ import torch.optim as optim
 from flearn.client.datasets import get_dataloader, get_datasets, get_split_loader
 from flearn.client.utils import get_free_gpu_id
 from flearn.common.strategy import LG, LG_R
-from flearn.server import Communicate as sc
+from flearn.server import Communicator as sc
 
 from LGClient import LGClient
 from models import MLP, CNNCifar, CNNMnist

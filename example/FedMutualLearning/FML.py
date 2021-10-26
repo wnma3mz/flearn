@@ -3,24 +3,11 @@
 import base64
 import copy
 import pickle
+
 import numpy as np
-
-import torch.nn as nn
-from flearn.client import Client
-from flearn.server import Server
-from flearn.client.train import Trainer
 import torch
-
-
-class FMLServer(Server):
-    def evaluate(self, data_lst, is_select=False):
-        # 仅测试一个客户端，因为每个客户端模型一致
-        if is_select == True:
-            return [data_lst[0]]
-
-        test_acc_lst = np.mean(list(map(lambda x: x["test_acc"], data_lst)), axis=0)
-        test_acc = "; ".join("{:.4f}".format(x) for x in test_acc_lst)
-        return test_acc
+import torch.nn as nn
+from flearn.client import Client, Trainer
 
 
 class KDLoss(nn.Module):
@@ -53,48 +40,42 @@ class FMLTrainer(Trainer):
         self.kd_loss = KDLoss(2)
         self.mu = 2
 
-    def _key_iteration(self, data_loader, is_train=True):
-        loop_loss, loop_accuracy = [], []
+    def train(self, data_loader):
+        self.local_model.train()
+        return super(FMLTrainer, self).train(data_loader)
 
-        for data, target in data_loader:
-            data, target = data.to(self.device), target.to(self.device)
-            _, _, output = self.model(data)
-            loss = self.criterion(output, target)
+    # def test(self, data_loader):
+    #     self.local_model.eval()
+    #     return super(FMLTrainer, self).test(data_loader)
 
-            if is_train:
-                _, _, local_output = self.local_model(data)
-                local_loss = self.criterion(local_output, target)
+    def batch(self, data, target):
+        _, _, output = self.model(data)
+        loss = self.criterion(output, target)
+        if self.is_train:
+            _, _, local_output = self.local_model(data)
+            local_loss = self.criterion(local_output, target)
 
-                loss += self.mu * self.kd_loss(output, local_output.detach())
-                local_loss += self.mu * self.kd_loss(local_output, output.detach())
+            loss += self.mu * self.kd_loss(output, local_output.detach())
+            local_loss += self.mu * self.kd_loss(local_output, output.detach())
 
-                self.optimizer.zero_grad()
-                loss.backward()
-                self.optimizer.step()
+            self.optimizer.zero_grad()
+            loss.backward()
+            self.optimizer.step()
 
-                self.local_optimizer.zero_grad()
-                local_loss.backward()
-                self.local_optimizer.step()
+            self.local_optimizer.zero_grad()
+            local_loss.backward()
+            self.local_optimizer.step()
 
-            if self.display:
-                data_loader.postfix = "loss: {:.4f}".format(loss.data.item())
-            iter_loss = loss.data.item()
-            iter_acc = (
-                (output.data.max(1)[1] == target.data).sum().item() / len(data) * 100
-            )
-            loop_accuracy.append(iter_acc)
-            loop_loss.append(iter_loss)
-
-        return loop_loss, loop_accuracy
+        iter_loss = loss.data.item()
+        iter_acc = self.metrics(output, target)
+        return iter_loss, iter_acc
 
 
 class FMLClient(Client):
     """FMLClient"""
 
-    def __init__(self, conf, pre_buffer_size=1):
+    def __init__(self, conf):
         super(FMLClient, self).__init__(conf)
-        # 保存以前模型的大小
-        self.pre_buffer_size = pre_buffer_size
         # 记录运行轮数
         self.ci = -1
 
@@ -119,14 +100,6 @@ class FMLClient(Client):
         if self.scheduler != None:
             self.scheduler.step()
         self.model_trainer.model = update_model
-
-        # 如果该客户端训练轮数不等于服务器端的训练轮数，则表示该客户端的模型本轮没有训练，则不做对比学习，并且同步进度轮数。
-        # if self.ci != i:
-        #     self.model_trainer.global_model = None
-        #     self.model_trainer.previous_model_lst = []
-        #     self.ci = i - 1
-        # else:
-        #     self.model_trainer.global_model = copy.deepcopy(update_model)
 
         return {
             "code": 200,

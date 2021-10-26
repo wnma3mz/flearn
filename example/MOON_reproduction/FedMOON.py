@@ -7,8 +7,8 @@ import pickle
 import numpy as np
 import torch
 import torch.nn as nn
-from flearn.client import Client
-from flearn.client.train import Trainer
+import torch.nn.functional as F
+from flearn.client import Client, Trainer
 from flearn.server import Server
 
 
@@ -24,17 +24,6 @@ class KDLoss(nn.Module):
         loss = self.kl_div(log_p, q) * (self.temp_factor ** 2) / input.size(0)
         # print(loss)
         return loss
-
-
-class MOONServer(Server):
-    def evaluate(self, data_lst, is_select=False):
-        # 仅测试一个客户端，因为每个客户端模型一致
-        if is_select == True:
-            return [data_lst[0]]
-
-        test_acc_lst = np.mean(list(map(lambda x: x["test_acc"], data_lst)), axis=0)
-        test_acc = "; ".join("{:.4f}".format(x) for x in test_acc_lst)
-        return test_acc
 
 
 class AVGTrainer(Trainer):
@@ -57,7 +46,7 @@ class MOONTrainer(Trainer):
 
     def __init__(self, model, optimizer, criterion, device, display=True):
         super(MOONTrainer, self).__init__(model, optimizer, criterion, device, display)
-        self.global_model = None
+        self.global_model = copy.deepcopy(self.model)
         self.previous_model_lst = []
         self.cos = nn.CosineSimilarity(dim=-1)
         # CIFAR-10, CIFAR-100, and Tiny-Imagenet are 0.5, 1, and 0.5
@@ -239,14 +228,18 @@ class LSDTrainer(Trainer):
         return super(LSDTrainer, self).train(data_loader)
 
     def batch(self, data, target):
-        _, _, output = self.model(data)
+        h, _, output = self.model(data)
         loss = self.criterion(output, target)
         if self.is_train:
             self.optimizer.zero_grad()
             if self.teacher_model != None:
                 with torch.no_grad():
-                    _, _, t_output = self.teacher_model(data)
-                loss2 = self.mu_kd * self.kd_loss(output, t_output.detach())
+                    t_h, _, t_output = self.teacher_model(data)
+                h = F.normalize(h, dim=-1, p=2)
+                t_h = F.normalize(h, dim=-1, p=2)
+                loss2 = self.mu_kd * self.kd_loss(
+                    output, t_output.detach()
+                ) + self.mu_kd * self.kd_loss(h, t_h.detach())
                 loss += loss2
 
             loss.backward()

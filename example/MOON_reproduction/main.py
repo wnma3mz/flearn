@@ -10,7 +10,7 @@ import torch.nn as nn
 import torch.optim as optim
 from flearn.client import Client
 from flearn.client.utils import get_free_gpu_id
-from flearn.server import Communicate as sc
+from flearn.server import Communicator as sc
 
 from FedMOON import (
     AVGTrainer,
