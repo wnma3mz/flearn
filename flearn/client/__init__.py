@@ -7,4 +7,5 @@ __all__ = [
     "Client",
     "Communicator",
     "Trainer",
+    "DLClient",
 ]

@@ -394,9 +394,15 @@ def get_dataloader(dataset, datadir, train_bs, test_bs, dataidxs=None, noise_lev
         test_ds = dl_obj(datadir, train=False, transform=transform_test, download=True)
 
         train_dl = data.DataLoader(
-            dataset=train_ds, batch_size=train_bs, drop_last=True, shuffle=True
+            dataset=train_ds,
+            batch_size=train_bs,
+            drop_last=True,
+            shuffle=True,
+            num_workers=32,
         )
-        test_dl = data.DataLoader(dataset=test_ds, batch_size=test_bs, shuffle=False)
+        test_dl = data.DataLoader(
+            dataset=test_ds, batch_size=test_bs, shuffle=False, num_workers=32
+        )
 
     elif dataset == "tinyimagenet":
         dl_obj = ImageFolder_custom

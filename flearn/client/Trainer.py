@@ -2,13 +2,11 @@
 
 import copy
 import os
-from abc import ABC, abstractmethod
 from collections import OrderedDict
 from functools import wraps
 
 import numpy as np
 import torch
-import torch.backends.cudnn as cudnn
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
@@ -26,7 +24,7 @@ def show_f(fn):
     return wrapper
 
 
-class Trainer(ABC):
+class Trainer:
     # this flag allows you to enable the inbuilt cudnn auto-tuner
     # to find the best algorithm to use for your hardware.
     torch.backends.cudnn.benchmark = True

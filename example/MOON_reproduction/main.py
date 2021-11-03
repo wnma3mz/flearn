@@ -195,7 +195,7 @@ if __name__ == "__main__":
     }
     # server_o = sc(conf=s_conf, Server=MOONServer, **{"client_lst": client_lst})
     server_o = sc(conf=s_conf, **{"client_lst": client_lst})
-    server_o.max_workers = min(20, N_clients)
-    # server_o.max_workers = 20
+    # server_o.max_workers = min(20, N_clients)
+    server_o.max_workers = 1
     for ri in range(s_conf["Round"]):
         loss, train_acc, test_acc = server_o.run(ri, k=k)

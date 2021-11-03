@@ -231,17 +231,14 @@ class LSDTrainer(Trainer):
         h, _, output = self.model(data)
         loss = self.criterion(output, target)
         if self.is_train:
-            self.optimizer.zero_grad()
             if self.teacher_model != None:
                 with torch.no_grad():
                     t_h, _, t_output = self.teacher_model(data)
-                h = F.normalize(h, dim=-1, p=2)
-                t_h = F.normalize(h, dim=-1, p=2)
-                loss2 = self.mu_kd * self.kd_loss(
-                    output, t_output.detach()
-                ) + self.mu_kd * self.kd_loss(h, t_h.detach())
+
+                loss2 = self.mu_kd * self.kd_loss(output, t_output.detach())
                 loss += loss2
 
+            self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
 
