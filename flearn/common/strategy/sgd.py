@@ -2,10 +2,10 @@
 import copy
 import pickle
 
-from .strategy import Strategy
+from .avg import AVG
 
 
-class SGD(Strategy):
+class SGD(AVG):
     """
     Federated SGD
 
@@ -29,10 +29,3 @@ class SGD(Strategy):
             w_local[k] = v.cpu() + g_glob[k]
         model_trainer.model.load_state_dict(w_local)
         return model_trainer.model
-
-    def server(self, agg_weight_lst, w_local_lst, round_):
-        try:
-            w_glob = self.server_ensemble(agg_weight_lst, w_local_lst)
-        except Exception as e:
-            return self.server_exception(e)
-        return self.server_post_processing(w_glob, round_)

@@ -107,9 +107,7 @@ class Server(ABC):
                                 状态消息,
             }
         """
-        agg_weight_lst = []
-        w_local_lst = []
-        client_id_lst = []
+        ensemble_params_lst, client_id_lst = [], []
         for item in data_lst:
             if int(round_) != int(item["round"]):
                 continue
@@ -118,8 +116,8 @@ class Server(ABC):
             model_data = pickle.loads(model_params_b)
 
             client_id_lst.append(item["client_id"])
-            agg_weight_lst.append(model_data["agg_weight"])
-            w_local_lst.append(model_data["params"])
+            ensemble_params_lst.append(model_data)
+
             # 存储发送过来的参数
             # with open(os.path.join(self.model_fpath, item["fname"]), "wb") as f:
             #     f.write(model_params_b)
@@ -127,7 +125,7 @@ class Server(ABC):
         # if k != 0:
         #     idxs_users = sorted(range(N), key=lambda x: agg_weight_lst[x])[:m]
 
-        return self.strategy.server(agg_weight_lst, w_local_lst, round_)
+        return self.strategy.server(ensemble_params_lst, round_)
 
     def revice(self):
         pass

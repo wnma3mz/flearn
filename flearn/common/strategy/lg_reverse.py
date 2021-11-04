@@ -37,7 +37,8 @@ class LG_R(Strategy):
         model_trainer.model.load_state_dict(w_local)
         return model_trainer.model
 
-    def server(self, agg_weight_lst, w_local_lst, round_):
+    def server(self, ensemble_params_lst, round_):
+        agg_weight_lst, w_local_lst = self.server_pre_processing(ensemble_params_lst)
         try:
             w_glob = self.server_ensemble(agg_weight_lst, w_local_lst)
         except Exception as e:

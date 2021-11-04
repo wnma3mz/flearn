@@ -21,7 +21,8 @@ class BN(AVG):
                 w_shared["params"][k] = w_local[k].cpu()
         return w_shared
 
-    def server(self, agg_weight_lst, w_local_lst, round_):
+    def server(self, ensemble_params_lst, round_):
+        agg_weight_lst, w_local_lst = self.server_pre_processing(ensemble_params_lst)
         try:
             all_local_key_lst = [set(w_local.keys()) for w_local in w_local_lst]
             key_lst = reduce(lambda x, y: x & y, all_local_key_lst)

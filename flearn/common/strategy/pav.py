@@ -140,7 +140,7 @@ class PAV(Strategy):
                 glob_w[k] = w_dict[k]
         return glob_w
 
-    def server(self, agg_weight_lst, w_local_lst, round_, **kwargs):
+    def server(self, ensemble_params_lst, round_, **kwargs):
         """服务端聚合客户端模型并蒸馏
 
         Args:
@@ -168,6 +168,7 @@ class PAV(Strategy):
                                 状态消息,
             }
         """
+        agg_weight_lst, w_local_lst = self.server_pre_processing(ensemble_params_lst)
         # 同FedAVG一样先进行聚合，获得全局模型
         try:
             # 由于权重值过小，因此*100处理

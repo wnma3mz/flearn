@@ -22,6 +22,26 @@ class Strategy(ABC):
         self.model_fpath = model_fpath
         self.encrypt = Encrypt()
 
+    def server_pre_processing(self, ensemble_params_lst):
+        """提取服务器端收到的的参数
+        
+        Args:
+            ensemble_params_lst :   list
+                                    每个客户端发送的参数组成的列表
+
+        Returns:
+            tuple : (
+                list            : 每个模型分配的聚合权重
+
+                list            : 每个模型的参数
+            )
+        """
+        agg_weight_lst, w_local_lst = [], []
+        for p in ensemble_params_lst:
+            agg_weight_lst.append(p["agg_weight"])            
+            w_local_lst.append(p["params"])
+        return agg_weight_lst, w_local_lst
+
     def server_post_processing(self, w_glob, round_):
         """服务端后处理函数
 
@@ -150,18 +170,15 @@ class Strategy(ABC):
         return NotImplemented
 
     @abstractmethod
-    def server(self, agg_weight_lst, w_local_lst, round_):
+    def server(self, ensemble_params_lst, round_):
         """服务端聚合客户端模型
 
         Args:
-            agg_weight_lst :    list
-                                模型参数所占权重组成的list（该客户端聚合所占权重）
+            ensemble_params_lst :   list
+                                    每个客户端发送的参数组成的列表
 
-            w_local_lst :       list
-                                模型参数组成的list，model.state_dict()
-
-            round_ :            int or float
-                                第x轮
+            round_ :                int or float
+                                    第x轮
 
         Returns:
             dict : Dict {
@@ -175,7 +192,8 @@ class Strategy(ABC):
                                 状态消息,
             }
         """
-        N, idxs_users, w_glob = self.server_pre_processing(w_local_lst)
+        agg_weight_lst, w_local_lst = self.server_pre_processing(ensemble_params_lst)
+        # N, idxs_users, w_glob = self.server_pre_processing(w_local_lst)
         try:
             return NotImplemented
         except Exception as e:
