@@ -27,5 +27,4 @@ class SGD(AVG):
         w_local = model_trainer.weight
         for k, v in w_local.items():
             w_local[k] = v.cpu() + g_glob[k]
-        model_trainer.model.load_state_dict(w_local)
-        return model_trainer.model
+        return w_local

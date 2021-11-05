@@ -36,5 +36,4 @@ class AVGM(AVG):
 
         for k in w_glob.keys():
             w_local[k] = w_local[k].cpu() + self.v_t[k]
-        model_trainer.model.load_state_dict(w_local)
-        return model_trainer.model
+        return w_local

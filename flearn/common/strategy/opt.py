@@ -80,5 +80,4 @@ class OPT(AVG):
             w_local[k] = w_local[k].cpu() + self.eta * self.delta_t[k] / (
                 np.sqrt(self.v_t[k]) + self.tau
             )
-        model_trainer.model.load_state_dict(w_local)
-        return model_trainer.model
+        return w_local

@@ -30,8 +30,7 @@ class LG(Strategy):
         w_glob = pickle.loads(w_glob_b)
         for k in self.shared_key_layers:
             w_local[k] = w_glob[k]
-        model_trainer.model.load_state_dict(w_local)
-        return model_trainer.model
+        return w_local
 
     def server(self, ensemble_params_lst, round_):
         agg_weight_lst, w_local_lst = self.server_pre_processing(ensemble_params_lst)

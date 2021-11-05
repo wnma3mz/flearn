@@ -130,8 +130,7 @@ class PAV(Strategy):
         for k in w_glob.keys():
             if k not in self.shared_key_layers:
                 w_local[k] = w_glob[k]
-        model_trainer.model.load_state_dict(w_local)
-        return model_trainer.model
+        return w_local
 
     @staticmethod
     def load_model(glob_w, w_dict):

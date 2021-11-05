@@ -165,8 +165,8 @@ class Client(object):
                               模型在训练集上的精度
             }
         """
-        self.train_loss, self.train_acc = self.model_trainer.loop(
-            self.epoch, self.trainloader
+        self.train_loss, self.train_acc = self.model_trainer.train(
+            self.trainloader, self.epoch
         )
         data_upload = self.strategy.client(self.model_trainer, agg_weight=1.0)
         return self._pickle_model(data_upload)
@@ -253,10 +253,10 @@ class Client(object):
         data_glob_b = self.encrypt.decode(glob_params)
 
         # update
-        update_model = self.strategy.client_revice(self.model_trainer, data_glob_b)
+        update_w = self.strategy.client_revice(self.model_trainer, data_glob_b)
         if self.scheduler != None:
             self.scheduler.step()
-        self.model_trainer.model = update_model
+        self.model_trainer.model.load_state_dict(update_w)
 
         return {
             "code": 200,

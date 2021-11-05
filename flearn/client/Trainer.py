@@ -177,11 +177,11 @@ class Trainer:
 
     def restore(self, model_file, include_epoch=False):
         self.say("\n***** restore from {} *****\n".format(model_file))
-        model = torch.load(model_file)
+        w = torch.load(model_file)
         if include_epoch:
-            self.epoch = model["epoch"]
+            self.epoch = w["epoch"]
         # self.model.load_state_dict(model["weight"])
-        self.model.load_state_dict(model)
+        self.model.load_state_dict(w)
 
     def get_lr(self):
         return self.optimizer.state_dict()["param_groups"][0]["lr"]
