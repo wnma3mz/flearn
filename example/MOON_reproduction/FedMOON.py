@@ -1,29 +1,10 @@
 # coding: utf-8
 
-import base64
 import copy
-import pickle
 
-import numpy as np
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 from flearn.client import Client, Trainer
-from flearn.server import Server
-
-
-class KDLoss(nn.Module):
-    def __init__(self, temp_factor):
-        super(KDLoss, self).__init__()
-        self.temp_factor = temp_factor
-        self.kl_div = nn.KLDivLoss(reduction="sum")
-
-    def forward(self, input, target):
-        log_p = torch.log_softmax(input / self.temp_factor, dim=1)
-        q = torch.softmax(target / self.temp_factor, dim=1)
-        loss = self.kl_div(log_p, q) * (self.temp_factor ** 2) / input.size(0)
-        # print(loss)
-        return loss
 
 
 class AVGTrainer(Trainer):
@@ -113,8 +94,8 @@ class MOONClient(Client):
     def train(self, i):
         # 每轮训练+1
         self.ci += 1
-        self.train_loss, self.train_acc = self.model_trainer.loop(
-            self.epoch, self.trainloader
+        self.train_loss, self.train_acc = self.model_trainer.train(
+            self.trainloader, self.epoch
         )
         # 权重为本地数据大小
         data_upload = self.strategy.client(
@@ -135,10 +116,10 @@ class MOONClient(Client):
         data_glob_b = self.encrypt.decode(glob_params)
 
         # update
-        update_model = self.strategy.client_revice(self.model_trainer, data_glob_b)
+        update_w = self.strategy.client_revice(self.model_trainer, data_glob_b)
         if self.scheduler != None:
             self.scheduler.step()
-        self.model_trainer.model = update_model
+        self.model_trainer.model.load_state_dict(update_w)
 
         # 如果该客户端训练轮数不等于服务器端的训练轮数，则表示该客户端的模型本轮没有训练，则不做对比学习，并且同步进度轮数。
         if self.ci != i:
@@ -146,7 +127,8 @@ class MOONClient(Client):
             self.model_trainer.previous_model_lst = []
             self.ci = i - 1
         else:
-            self.model_trainer.global_model = copy.deepcopy(update_model)
+            self.model_trainer.global_model = copy.deepcopy(self.model_trainer.model)
+            self.model_trainer.global_model.load_state_dict(update_w)
 
         return {
             "code": 200,
@@ -199,89 +181,12 @@ class ProxClient(Client):
         data_glob_b = self.encrypt.decode(glob_params)
 
         # update
-        update_model = self.strategy.client_revice(self.model_trainer, data_glob_b)
+        update_w = self.strategy.client_revice(self.model_trainer, data_glob_b)
         if self.scheduler != None:
             self.scheduler.step()
-        self.model_trainer.model = update_model
-        self.model_trainer.global_model = copy.deepcopy(update_model)
-
-        return {
-            "code": 200,
-            "msg": "Model update completed",
-            "client_id": self.client_id,
-            "round": str(i),
-        }
-
-
-class LSDTrainer(Trainer):
-    def __init__(self, model, optimizer, criterion, device, display=True):
-        super(LSDTrainer, self).__init__(model, optimizer, criterion, device, display)
-        self.teacher_model = None
-        self.mu_kd = 2
-        # self.mu_kd = 0.5
-        self.kd_loss = KDLoss(2)
-
-    def train(self, data_loader):
-        if self.teacher_model != None:
-            self.teacher_model.eval()
-            self.teacher_model.to(self.device)
-        return super(LSDTrainer, self).train(data_loader)
-
-    def batch(self, data, target):
-        h, _, output = self.model(data)
-        loss = self.criterion(output, target)
-        if self.is_train:
-            if self.teacher_model != None:
-                with torch.no_grad():
-                    t_h, _, t_output = self.teacher_model(data)
-
-                loss2 = self.mu_kd * self.kd_loss(output, t_output.detach())
-                loss += loss2
-
-            self.optimizer.zero_grad()
-            loss.backward()
-            self.optimizer.step()
-
-        iter_loss = loss.data.item()
-        iter_acc = self.metrics(output, target)
-        return iter_loss, iter_acc
-
-
-class LSDClient(Client):
-    def revice(self, i, glob_params):
-        # decode
-        data_glob_b = self.encrypt.decode(glob_params)
-
-        # update
-        update_model = self.strategy.client_revice(self.model_trainer, data_glob_b)
-        if self.scheduler != None:
-            self.scheduler.step()
-        self.model_trainer.model = update_model
-
-        self.model_trainer.teacher_model = copy.deepcopy(update_model)
-
-        return {
-            "code": 200,
-            "msg": "Model update completed",
-            "client_id": self.client_id,
-            "round": str(i),
-        }
-
-
-class SSDClient(Client):
-    def revice(self, i, glob_params):
-        # decode
-        data_glob_b = self.encrypt.decode(glob_params)
-
-        # update
-        bak_model = copy.deepcopy(self.model_trainer.model)
-        update_model = self.strategy.client_revice(self.model_trainer, data_glob_b)
-        if self.scheduler != None:
-            self.scheduler.step()
-        # 不直接覆盖本地模型
-        self.model_trainer.model = update_model
-
-        self.model_trainer.teacher_model = copy.deepcopy(bak_model)
+        self.model_trainer.model.load_state_dict(update_w)
+        self.model_trainer.global_model = copy.deepcopy(self.model_trainer.model)
+        self.model_trainer.global_model.load_state_dict(update_w)
 
         return {
             "code": 200,

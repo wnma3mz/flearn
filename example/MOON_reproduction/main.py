@@ -12,16 +12,9 @@ from flearn.client import Client
 from flearn.client.utils import get_free_gpu_id
 from flearn.server import Communicator as sc
 
-from FedMOON import (
-    AVGTrainer,
-    LSDClient,
-    LSDTrainer,
-    MOONClient,
-    MOONTrainer,
-    ProxClient,
-    ProxTrainer,
-    SSDClient,
-)
+from FedMOON import AVGTrainer, MOONClient, MOONTrainer, ProxClient, ProxTrainer
+from FedKD import LSDClient, LSDTrainer, SSDClient, DynClient, DynTrainer, Dyn
+
 from model import ModelFedCon
 from utils import get_dataloader, partition_data
 
@@ -55,7 +48,7 @@ parser.add_argument(
 
 args = parser.parse_args()
 iid = args.iid
-if args.strategy_name.lower() in ["moon", "lsd", "ssd", "lsdn", "prox"]:
+if args.strategy_name.lower() in ["moon", "lsd", "ssd", "lsdn", "prox", "dyn", "dane"]:
     strategy_name = "avg"
 else:
     strategy_name = args.strategy_name.lower()
@@ -125,16 +118,20 @@ model_fpath = "./client_checkpoint"
 if not os.path.isdir(model_fpath):
     os.mkdir(model_fpath)
 
-if args.strategy_name.lower() == "avg":
-    trainer = AVGTrainer
-elif args.strategy_name.lower() == "moon":
-    trainer = MOONTrainer
-elif args.strategy_name.lower() == "prox":
-    trainer = ProxTrainer
-elif args.strategy_name.lower() in ["lsd", "ssd", "lsdn"]:
-    trainer = LSDTrainer
-else:
-    trainer = None
+trainer_d = {
+    "avg": AVGTrainer,
+    "moon": MOONTrainer,
+    "prox": ProxTrainer,
+    "lsd": LSDTrainer,
+    "ssd": LSDTrainer,
+    "lsdn": LSDTrainer,
+    "dyn": DynTrainer,
+}
+
+trainer = None
+s_name = args.strategy_name.lower()
+if s_name in trainer_d.keys():
+    trainer = trainer_d[s_name]
 
 
 def inin_single_client(client_id):
@@ -183,7 +180,11 @@ if __name__ == "__main__":
             client_lst.append(LSDClient(c_conf))
         elif args.strategy_name.lower() == "ssd":
             client_lst.append(SSDClient(c_conf))
-
+        elif args.strategy_name.lower() == "dyn":
+            c_conf["strategy"] = Dyn(
+                model_fpath, copy.deepcopy(model_base).state_dict()
+            )
+            client_lst.append(DynClient(c_conf))
     s_conf = {
         "Round": 100,
         "N_clients": N_clients,
@@ -193,6 +194,8 @@ if __name__ == "__main__":
         "strategy_name": strategy_name,
         "log_suffix": args.suffix,
     }
+    if args.strategy_name.lower() == "dyn":
+        s_conf["strategy"] = Dyn(model_fpath, copy.deepcopy(model_base).state_dict())
     # server_o = sc(conf=s_conf, Server=MOONServer, **{"client_lst": client_lst})
     server_o = sc(conf=s_conf, **{"client_lst": client_lst})
     # server_o.max_workers = min(20, N_clients)

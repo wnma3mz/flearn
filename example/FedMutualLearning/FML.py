@@ -100,7 +100,7 @@ class FMLClient(Client):
         if self.scheduler != None:
             self.scheduler.step()
         self.model_trainer.model.load_state_dict(update_w)
-        
+
         return {
             "code": 200,
             "msg": "Model update completed",
