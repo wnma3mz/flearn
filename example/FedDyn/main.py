@@ -17,7 +17,7 @@ from models import LeNet5
 from resnet import ResNet_cifar
 from split_data import iid as iid_f
 from split_data import noniid
-from FedDyn import DynTrainer, DynClient
+from FedDyn import DynTrainer, DynClient, Dyn
 
 idx = get_free_gpu_id()
 print("使用{}号GPU".format(idx))
@@ -112,6 +112,7 @@ def inin_single_client(client_id, trainloader_idx_lst, testloader_idx_lst):
         "epoch": args.local_epoch,
         "dataset_name": dataset_name,
         "strategy_name": args.strategy_name,
+        "strategy": Dyn(model_fpath, h=copy.deepcopy(model_base).state_dict()),
         "trainer": DynTrainer,
         "save": False,
         "display": False,
@@ -156,6 +157,7 @@ if __name__ == "__main__":
         "iid": iid,
         "dataset_name": dataset_name,
         "strategy_name": args.strategy_name,
+        "strategy": Dyn(model_fpath, copy.deepcopy(model_base).state_dict()),
         "log_suffix": args.suffix,
     }
     server_o = sc(conf=s_conf, **{"client_lst": client_lst})

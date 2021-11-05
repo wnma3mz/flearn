@@ -13,12 +13,14 @@ class ProxClient(Client):
         # decode
         w_glob_b = self.encrypt.decode(glob_params)
         # update
-        update_model = self.strategy.client_revice(self.model_trainer, w_glob_b)
+        update_w = self.strategy.client_revice(self.model_trainer, w_glob_b)
         if self.scheduler != None:
             self.scheduler.step()
         # self.model_trainer.model.load_state_dict(self.w_local_bak)
-        self.model_trainer.model = update_model
-        self.model_trainer.server_model = copy.deepcopy(update_model)
+        self.model_trainer.model.load_state_dict(update_w)
+        self.model_trainer.server_model = copy.deepcopy(self.model_trainer.model)
+        self.model_trainer.server_model.load_state_dict(update_w)
+
         self.model_trainer.server_model.eval()
         return {
             "code": 200,

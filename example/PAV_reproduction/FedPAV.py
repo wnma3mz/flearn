@@ -11,21 +11,7 @@ from flearn.server import Server
 
 class PAVServer(Server):
     def ensemble(self, data_lst, round_, k=-1, **kwargs):
-        agg_weight_lst = []
-        w_local_lst = []
-        client_id_lst = []
-        for item in data_lst:
-            if int(round_) != int(item["round"]):
-                continue
-            model_params_encode = item["datas"].encode()
-            model_params_b = base64.b64decode(model_params_encode)
-            model_data = pickle.loads(model_params_b)
-
-            client_id_lst.append(item["client_id"])
-            agg_weight_lst.append(model_data["agg_weight"])
-            w_local_lst.append(model_data["params"])
-
-        return self.strategy.server(agg_weight_lst, w_local_lst, round_, **kwargs)
+        return super(PAVServer, self).ensemble(data_lst, round_, k=-1, **kwargs)
 
 
 class PAVClient(Client):
@@ -43,8 +29,8 @@ class PAVClient(Client):
         #     old_classifier = copy.deepcopy(self.model_trainer.model.fc)
         # 在原项目中存在old_classifier这个变量，但这里已经合并进old_model中
         old_model = copy.deepcopy(self.model_trainer.model)
-        self.train_loss, self.train_acc = self.model_trainer.loop(
-            self.epoch, self.trainloader
+        self.train_loss, self.train_acc = self.model_trainer.train(
+            self.trainloader, self.epoch
         )
         w_upload = self.strategy.client(
             self.model_trainer, old_model, self.device, self.trainloader
