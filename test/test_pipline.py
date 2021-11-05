@@ -1,10 +1,14 @@
 # coding: utf-8
 import os
+import pickle
+import base64
 
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from flearn.client import DLClient
+from flearn.client import Client
+from flearn.server import Server
+from flearn.server.Communicator import Communicator as sc
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
@@ -55,5 +59,25 @@ if __name__ == "__main__":
         "log": False,
     }
 
-    c = DLClient(c_conf)
-    c.run(0)
+    c = Client(c_conf)
+    client_lst = [c]
+    i = 0
+    train_res = c.train(i)
+    upload_res = c.upload(i)
+ 
+    s_conf = {
+        "Round": 1,
+        "N_clients": 1,
+        "model_fpath": ".",
+        "dataset_name": dataset_name,
+        "strategy_name": strategy_name,
+    }
+    
+    s_model = Server(s_conf)
+    data_lst = [
+        upload_res
+    ]
+    model_b64_str = s_model.ensemble(data_lst, 0)
+    revice_res = c.revice(i, model_b64_str)
+
+    evaluate_res = c.evaluate(i)
