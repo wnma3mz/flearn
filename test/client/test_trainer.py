@@ -31,7 +31,7 @@ if __name__ == "__main__":
     print(iter_loss, iter_acc)
 
     loader = ((input_, target), (input_, target))
-    epoch_loss, epoch_acc = t.loop(5, loader)
+    epoch_loss, epoch_acc = t.train(loader, 5)
     print(epoch_loss, epoch_acc)
 
     display = True

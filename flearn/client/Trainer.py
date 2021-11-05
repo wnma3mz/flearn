@@ -121,24 +121,33 @@ class Trainer:
                 loader.postfix = "loss: {:.4f}; acc: {:.2f}".format(iter_loss, iter_acc)
         return np.mean(loop_loss), np.mean(loop_accuracy)
 
-    def train(self, data_loader):
+    def train(self, data_loader, epochs=1):
         """模型训练的入口
         Args:
             data_loader :  torch.utils.data
                            训练集
 
-        Returns:
-            float : loss
-                    损失值
+            epochs :       int
+                           本地训练轮数
 
-            float : accuracy
-                    准确率
+        Returns:
+            float :
+                    N个epoch的loss取平均
+
+            float :
+                    N个epoch的accuracy取平均
         """
         self.model.train()
         self.is_train = True
-        with torch.enable_grad():
-            loss, accuracy = self._iteration(data_loader)
-        return loss, accuracy
+        epoch_loss, epoch_accuracy = [], []
+        for ep in range(1, epochs + 1):
+            # if ep < self.epoch + 1:
+            #     continue
+            with torch.enable_grad():
+                loss, accuracy = self._iteration(data_loader)
+            epoch_loss.append(loss)
+            epoch_accuracy.append(accuracy)
+        return np.mean(epoch_loss), np.mean(epoch_accuracy)
 
     def test(self, data_loader):
         """模型测试的初始入口，由于只有一轮，所以不需要loop
@@ -158,31 +167,6 @@ class Trainer:
         with torch.no_grad():
             loss, accuracy = self._iteration(data_loader)
         return loss, accuracy
-
-    def loop(self, epochs, train_data):
-        """模型训练的初始入口，由于可能存在多轮，所以额外套一层函数，便于其他操作
-        Args:
-            epochs :        int
-                            本地训练轮数
-
-            train_data :    torch.utils.data
-                            训练集
-
-        Returns:
-            float :
-                    N个epoch的loss取平均
-
-            float :
-                    N个epoch的accuracy取平均
-        """
-        epoch_loss, epoch_accuracy = [], []
-        for ep in range(1, epochs + 1):
-            # if ep < self.epoch + 1:
-            #     continue
-            loop_loss, accuracy = self.train(train_data)
-            epoch_loss.append(loop_loss)
-            epoch_accuracy.append(accuracy)
-        return np.mean(epoch_loss), np.mean(epoch_accuracy)
 
     def save(self, fpath):
         # if self.save_dir is not None:

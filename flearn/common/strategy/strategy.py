@@ -24,7 +24,7 @@ class Strategy(ABC):
 
     def server_pre_processing(self, ensemble_params_lst):
         """提取服务器端收到的的参数
-        
+
         Args:
             ensemble_params_lst :   list
                                     每个客户端发送的参数组成的列表
@@ -38,7 +38,7 @@ class Strategy(ABC):
         """
         agg_weight_lst, w_local_lst = [], []
         for p in ensemble_params_lst:
-            agg_weight_lst.append(p["agg_weight"])            
+            agg_weight_lst.append(p["agg_weight"])
             w_local_lst.append(p["params"])
         return agg_weight_lst, w_local_lst
 
