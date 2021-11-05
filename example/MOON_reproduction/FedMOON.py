@@ -57,7 +57,7 @@ class MOONTrainer(Trainer):
         else:
             return 0
 
-    def train(self, data_loader):
+    def train(self, data_loader, epochs=1):
         for previous_net in self.previous_model_lst:
             previous_net.eval()
             previous_net.to(self.device)
@@ -65,7 +65,7 @@ class MOONTrainer(Trainer):
         if self.global_model != None:
             self.global_model.eval()
             self.global_model.to(self.device)
-        return super(MOONTrainer, self).train(data_loader)
+        return super(MOONTrainer, self).train(data_loader, epochs)
 
     def batch(self, data, target):
         _, pro1, output = self.model(data)
@@ -168,11 +168,11 @@ class ProxTrainer(Trainer):
         iter_acc = self.metrics(output, target)
         return iter_loss, iter_acc
 
-    def train(self, data_loader):
+    def train(self, data_loader, epochs=1):
         if self.global_model != None:
             self.global_model.eval()
             self.global_model.to(self.device)
-        return super(ProxTrainer, self).train(data_loader)
+        return super(ProxTrainer, self).train(data_loader, epochs)
 
 
 class ProxClient(Client):

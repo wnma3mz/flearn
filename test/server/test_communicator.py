@@ -69,9 +69,8 @@ if __name__ == "__main__":
         "dataset_name": dataset_name,
         "strategy_name": strategy_name,
     }
-    
+
     server_o = sc(conf=s_conf, **{"client_lst": client_lst})
     server_o.max_workers = 1
     for ri in range(s_conf["Round"]):
         loss, train_acc, test_acc = server_o.run(ri, k=1)
-

@@ -31,11 +31,11 @@ class LSDTrainer(Trainer):
         # self.mu_kd = 0.5
         self.kd_loss = KDLoss(2)
 
-    def train(self, data_loader):
+    def train(self, data_loader, epochs=1):
         if self.teacher_model != None:
             self.teacher_model.eval()
             self.teacher_model.to(self.device)
-        return super(LSDTrainer, self).train(data_loader)
+        return super(LSDTrainer, self).train(data_loader, epochs)
 
     def batch(self, data, target):
         h, _, output = self.model(data)

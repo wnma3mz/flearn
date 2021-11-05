@@ -40,9 +40,9 @@ class FMLTrainer(Trainer):
         self.kd_loss = KDLoss(2)
         self.mu = 2
 
-    def train(self, data_loader):
+    def train(self, data_loader, epochs=1):
         self.local_model.train()
-        return super(FMLTrainer, self).train(data_loader)
+        return super(FMLTrainer, self).train(data_loader, epochs)
 
     # def test(self, data_loader):
     #     self.local_model.eval()
