@@ -1,15 +1,14 @@
 # coding: utf-8
 import base64
-import os
 import pickle
-from abc import ABC, abstractmethod
 
 import numpy as np
 from flearn.common.utils import init_strategy
+from flearn.client import Trainer
 
 
-class Server(ABC):
-    def __init__(self, conf):
+class Server(object):
+    def __init__(self, conf, **strategy_p):
         """服务端
 
         Args:
@@ -25,24 +24,49 @@ class Server(ABC):
 
                     "strategy_name": str
                                      联邦学习策略名称
+
+                    "strategy":      , default: None
+                                     联邦学习策略
+
+                    "eval_conf":     dict, defaul: None
+                                     测试模型配置参数。
+                                     {
+                                         "model":      全局模型结构,
+
+                                         "criterion":  损失函数,
+
+                                         "device":     gpu or cpu,
+
+                                         "display":    False,
+
+                                         "dataloader", 测试数据集
+                                     }
             } 服务端配置文件
+
+            strategy_p: dict
+                        联邦学习策略配置文件。
+                        {"shared_key_layers": 共享的参数名称}
         """
-        listed_keys = ["model_fpath", "Round", "N_clients", "strategy_name", "strategy"]
+        listed_keys = [
+            "model_fpath",
+            "Round",
+            "N_clients",
+            "strategy_name",
+            "strategy",
+            "eval_conf",
+        ]
         # 设置属性，两种方法均可
         for k in conf.keys():
             if k in listed_keys:
                 self.__dict__[k] = conf[k]
                 # self.__setattr__(k, kwargs[k])
 
-        # if self.strategy == None:
-        shared_key_layers = (
-            conf["shared_key_layers"] if "shared_key_layers" in conf.keys() else None
-        )
         self.strategy = conf["strategy"] if "strategy" in conf.keys() else None
+        self.eval_conf = conf["eval_conf"] if "eval_conf" in conf.keys() else None
+
+        strategy_p["model_fpath"] = self.model_fpath
         if self.strategy == None:
-            self.strategy = init_strategy(
-                self.strategy_name, self.model_fpath, shared_key_layers
-            )
+            self.strategy = init_strategy(self.strategy_name, **strategy_p)
 
     @staticmethod
     def active_client(lst, k):
@@ -143,9 +167,31 @@ class Server(ABC):
         Returns:
             list or str:
         """
+        if self.eval_conf != None:
+            if is_select == True:
+                return []
+            _, acc = self.server_eval()
+            return acc
+
         if is_select == True:
             return data_lst
 
         test_acc_lst = np.mean(list(map(lambda x: x["test_acc"], data_lst)), axis=0)
         test_acc = "; ".join("{:.4f}".format(x) for x in test_acc_lst)
         return test_acc
+
+    def server_eval(self):
+        """在服务器端对模型进行评估
+        Returns:
+            tuple:
+                loss, acc
+        """
+        trainer = Trainer(
+            self.eval_conf["model"],
+            None,
+            self.eval_conf["criterion"],
+            self.eval_conf["device"],
+            self.eval_conf["display"],
+        )
+
+        return trainer.test(self.eval_conf["dataloader"])

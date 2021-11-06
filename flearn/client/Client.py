@@ -16,7 +16,7 @@ from .utils import bool_key_lst, listed_keys, str_key_lst
 
 
 class Client(object):
-    def __init__(self, conf):
+    def __init__(self, conf, **strategy_p):
         """初始化客户端对象.
 
         Args:
@@ -79,6 +79,10 @@ class Client(object):
                                     自定义客户端日志名称
             }
             客户端设置参数
+
+            strategy_p: dict
+                        联邦学习策略配置文件。
+                        {"shared_key_layers": 共享的参数名称}
         """
         # 设置属性，两种方法均可
         for k in conf.keys():
@@ -97,9 +101,8 @@ class Client(object):
         self.fname_fmt = ospj(self.model_fpath, self.model_fname)
 
         if self.strategy == None:
-            self.strategy = init_strategy(
-                self.strategy_name, self.model_fpath, self.shared_key_layers
-            )
+            strategy_p["model_fpath"] = self.model_fpath
+            self.strategy = init_strategy(self.strategy_name, **strategy_p)
 
         if self.restore_path != None:
             self.model.load_state_dict(torch.load(self.restore_path))
@@ -258,6 +261,9 @@ class Client(object):
             self.scheduler.step()
         self.model_trainer.model.load_state_dict(update_w)
 
+        if self.save:
+            self.model_trainer.save(self.agg_fpath)
+
         return {
             "code": 200,
             "msg": "Model update completed",
@@ -269,9 +275,6 @@ class Client(object):
         test_acc_lst = [
             self.model_trainer.test(loader)[1] for loader in self.testloader
         ]
-
-        if self.save:
-            self.model_trainer.save(self.agg_fpath)
 
         if self.best_acc < test_acc_lst[0]:
             self.model_trainer.save(self.best_fpath)

@@ -130,7 +130,7 @@ class DLClient(object):
                 进行到第i轮
         """
 
-        train_loss, train_acc = self.model_trainer.loop(self.epoch, self.trainloader)
+        train_loss, train_acc = self.model_trainer.train(self.trainloader, self.epoch)
 
         # save，最新的客户端模型
         if self.save:
