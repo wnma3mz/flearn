@@ -64,7 +64,7 @@ if __name__ == "__main__":
     i = 0
     train_res = c.train(i)
     upload_res = c.upload(i)
- 
+
     s_conf = {
         "Round": 1,
         "N_clients": 1,
@@ -72,11 +72,9 @@ if __name__ == "__main__":
         "dataset_name": dataset_name,
         "strategy_name": strategy_name,
     }
-    
+
     s_model = Server(s_conf)
-    data_lst = [
-        upload_res
-    ]
+    data_lst = [upload_res]
     model_b64_str = s_model.ensemble(data_lst, 0)
     revice_res = c.revice(i, model_b64_str)
 
