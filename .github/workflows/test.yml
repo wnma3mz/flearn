@@ -33,8 +33,10 @@ jobs:
         python -m pip install --upgrade pip
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
         python setup.py sdist bdist_wheel
-        pip3 install dist/flearn-0.0.1.tar.gz
+        pip install dist/flearn-0.0.1.tar.gz
+
     - name: Test
+      id: test
       run: |
         cd test/
         python test_pipline.py
@@ -43,8 +45,45 @@ jobs:
         python test_DLClient.py
         cd ../server
         python test_communicator.py
+        echo "::set-output name=status::success"
         
-    # - name: Test Server
-    #   run: |
-    #     cd ControlledFederatedLearning/test/server
-    #     python test_server.py
+
+    - name: version
+      run: echo "::set-output name=version::$(python -c 'import flearn; print(flearn.__version__)')"
+      id: version
+
+    - name: create_release
+      id: create_release
+      uses: actions/create-release@v1
+      if: steps.test.outputs.status == 'success'
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ steps.version.outputs.version }}
+        release_name: ${{ steps.version.outputs.version }}
+        draft: false
+        prerelease: false
+
+    - name: upload-release-tar-gz
+      id: upload-release-tar-gz
+      uses: actions/upload-release-asset@v1
+      if: steps.test.outputs.status == 'success'
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./dist/flearn-${{ steps.version.outputs.version }}.tar.gz
+        asset_name: flearn-${{ steps.version.outputs.version }}.tar.gz
+        asset_content_type: application/gzip
+
+    - name: upload-release-whl
+      id: upload-release-whl
+      uses: actions/upload-release-asset@v1
+      if: steps.test.outputs.status == 'success'
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./dist/flearn-${{ steps.version.outputs.version }}.whl
+        asset_name: flearn-${{ steps.version.outputs.version }}.whl
+        asset_content_type: application/zip
