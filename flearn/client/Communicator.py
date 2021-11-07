@@ -1,7 +1,7 @@
 from flask import Flask, jsonify, make_response, request
 
-from .Client import Client
-from .utils import load_client_conf
+from flearn.client import Client
+from flearn.client.utils import load_client_conf
 
 
 # add route in class

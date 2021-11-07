@@ -1,18 +1,12 @@
 # coding: utf-8
-
-import base64
-import copy
 import os
 import pickle
 from os.path import join as ospj
 
 import torch
-import torch.nn as nn
 
-from flearn.common import Encrypt, Logger
-from flearn.common.utils import init_strategy
-from .Trainer import Trainer
-from .utils import bool_key_lst, listed_keys, str_key_lst
+from flearn.common import Encrypt, Logger, Trainer, init_strategy
+from flearn.client.utils import bool_key_lst, listed_keys, str_key_lst
 
 
 class Client(object):

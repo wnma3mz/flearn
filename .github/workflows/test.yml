@@ -41,8 +41,9 @@ jobs:
         cd test/
         python test_pipline.py
         cd client 
-        python test_trainer.py
         python test_DLClient.py
+        cd ../common
+        python test_trainer.py
         cd ../server
         python test_communicator.py
         echo "::set-output name=status::success"

@@ -1,15 +1,9 @@
 # coding: utf-8
-
-import base64
-import os
-import pickle
 from os.path import join as ospj
 
 import torch
-import torch.nn as nn
 
-from flearn.common import Logger
-from .Trainer import Trainer
+from flearn.common import Logger, Trainer
 from .utils import bool_key_lst, listed_keys, str_key_lst
 
 

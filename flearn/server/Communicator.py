@@ -5,11 +5,10 @@ import json
 import os
 import threading
 
-import numpy as np
 import requests
 from flearn.common import Logger
 
-from .Server import Server
+from flearn.server import Server
 
 
 class Communicator(object):

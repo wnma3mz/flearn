@@ -3,8 +3,7 @@ import base64
 import pickle
 
 import numpy as np
-from flearn.common.utils import init_strategy
-from flearn.client import Trainer
+from flearn.common import Trainer, init_strategy
 
 
 class Server(object):
