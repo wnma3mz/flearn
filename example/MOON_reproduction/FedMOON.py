@@ -4,7 +4,8 @@ import copy
 
 import torch
 import torch.nn as nn
-from flearn.client import Client, Trainer
+from flearn.client import Client
+from flearn.common import Trainer
 
 
 class AVGTrainer(Trainer):

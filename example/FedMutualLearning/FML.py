@@ -7,7 +7,8 @@ import pickle
 import numpy as np
 import torch
 import torch.nn as nn
-from flearn.client import Client, Trainer
+from flearn.client import Client
+from flearn.common import Trainer
 
 
 class KDLoss(nn.Module):
