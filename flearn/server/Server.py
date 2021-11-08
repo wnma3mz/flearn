@@ -3,7 +3,7 @@ import base64
 import pickle
 
 import numpy as np
-from flearn.common import Trainer, init_strategy
+from flearn.common import Encrypt, init_strategy
 
 
 class Server(object):
@@ -28,6 +28,8 @@ class Server(object):
                                         测试模型配置参数。
                                         {
                                             "model":        全局模型结构,
+
+                                            "trainer":      Trainer, 训练模型器
 
                                             "criterion":    损失函数,
 
@@ -64,6 +66,8 @@ class Server(object):
         strategy_p["model_fpath"] = self.model_fpath
         if self.strategy == None:
             self.strategy = init_strategy(self.strategy_name, **strategy_p)
+
+        self.encrypt = Encrypt()
 
     @staticmethod
     def active_client(lst, k):
@@ -132,9 +136,7 @@ class Server(object):
         for item in data_lst:
             if int(round_) != int(item["round"]):
                 continue
-            model_params_encode = item["datas"].encode()
-            model_params_b = base64.b64decode(model_params_encode)
-            model_data = pickle.loads(model_params_b)
+            model_data = pickle.loads(self.encrypt.decode(item["datas"]))
 
             client_id_lst.append(item["client_id"])
             ensemble_params_lst.append(model_data)
@@ -145,8 +147,9 @@ class Server(object):
         # 做进一步筛选，比如按照agg_weight排序
         # if k != 0:
         #     idxs_users = sorted(range(N), key=lambda x: agg_weight_lst[x])[:m]
-
-        return self.strategy.server(ensemble_params_lst, round_)
+        glob_params = self.strategy.server(ensemble_params_lst, round_, **kwargs)
+        self.glob_w = pickle.loads(self.encrypt.decode(glob_params))
+        return glob_params
 
     def revice(self):
         pass
@@ -193,8 +196,10 @@ class Server(object):
             tuple:
                 loss, acc
         """
-        trainer = Trainer(
-            self.eval_conf["model"],
+        model_ = self.eval_conf["model"]
+        model_.load_state_dict(self.glob_w)
+        trainer = self.eval_conf["trainer"](
+            model_,
             None,
             self.eval_conf["criterion"],
             self.eval_conf["device"],

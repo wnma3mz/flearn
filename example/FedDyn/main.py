@@ -156,13 +156,13 @@ if __name__ == "__main__":
         "Round": 1000,
         "client_numbers": client_numbers,
         "model_fpath": model_fpath,
-        "iid": iid,
         "dataset_name": dataset_name,
         "strategy_name": args.strategy_name,
         "strategy": Dyn(model_fpath, copy.deepcopy(model_base).state_dict()),
         "log_suffix": args.suffix,
+        "client_lst": client_lst
     }
-    server_o = sc(conf=s_conf, **{"client_lst": client_lst})
+    server_o = sc(conf=s_conf)
     server_o.max_workers = min(20, client_numbers)
     for ri in range(s_conf["Round"]):
         loss, train_acc, test_acc = server_o.run(ri, k=k)

@@ -165,8 +165,9 @@ if __name__ == "__main__":
         "strategy_name": args.strategy_name,
         "shared_key_layers": shared_key_layers,
         "log_suffix": args.suffix,
+        "client_lst": client_lst
     }
-    server_o = sc(conf=s_conf, **{"client_lst": client_lst})
+    server_o = sc(conf=s_conf)
     server_o.max_workers = 1
     for ri in range(s_conf["Round"]):
         loss, train_acc, test_acc = server_o.run(ri, k=k)

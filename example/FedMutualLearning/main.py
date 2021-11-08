@@ -155,8 +155,9 @@ if __name__ == "__main__":
         "dataset_name": dataset_name,
         "strategy_name": args.strategy_name,
         "log_suffix": args.suffix,
+        "client_lst": client_lst
     }
-    server_o = sc(conf=s_conf, **{"client_lst": client_lst})
+    server_o = sc(conf=s_conf)
     server_o.max_workers = min(20, client_numbers)
     # server_o.max_workers = 20
     for ri in range(s_conf["Round"]):

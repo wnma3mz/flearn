@@ -1,17 +1,9 @@
 # coding: utf-8
 
-import base64
 import copy
-import pickle
 
 import torch.nn as nn
 from flearn.client import Client
-from flearn.server import Server
-
-
-class PAVServer(Server):
-    def ensemble(self, data_lst, round_, k=-1, **kwargs):
-        return super(PAVServer, self).ensemble(data_lst, round_, k=-1, **kwargs)
 
 
 class PAVClient(Client):

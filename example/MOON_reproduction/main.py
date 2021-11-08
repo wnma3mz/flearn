@@ -193,11 +193,11 @@ if __name__ == "__main__":
         "dataset_name": dataset_name,
         "strategy_name": strategy_name,
         "log_suffix": args.suffix,
+        "client_lst": client_lst,
     }
     if args.strategy_name.lower() == "dyn":
         s_conf["strategy"] = Dyn(model_fpath, copy.deepcopy(model_base).state_dict())
-    # server_o = sc(conf=s_conf, Server=MOONServer, **{"client_lst": client_lst})
-    server_o = sc(conf=s_conf, **{"client_lst": client_lst})
+    server_o = sc(conf=s_conf)
     # server_o.max_workers = min(20, client_numbers)
     server_o.max_workers = 1
     for ri in range(s_conf["Round"]):

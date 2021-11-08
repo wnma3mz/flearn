@@ -1,4 +1,4 @@
-from .encrypt import Encrypt
+from .Encrypt import Encrypt
 from .Logger import Logger
 from .Trainer import Trainer
 from .utils import init_strategy

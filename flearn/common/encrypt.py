@@ -13,6 +13,7 @@ class Encrypt(object):
 
         Args:
             params ():   客户端模型参数
+            
         Returns:
             str: 编码后的模型参数
         """
@@ -27,6 +28,7 @@ class Encrypt(object):
 
         Args:
             glob_params (str):   全局参数（服务端传回的模型参数）
+            
         Returns:
             array: 解码后的模型参数
         """

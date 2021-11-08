@@ -161,9 +161,11 @@ if __name__ == "__main__":
         "dataset_name": dataset_name,
         "strategy_name": args.strategy_name,
         "log_suffix": args.suffix,
-        "shared_key_layers": shared_key_layers,
+        "client_lst": client_lst,
     }
-    server_o = sc(conf=s_conf, Server=PAVServer, **{"client_lst": client_lst})
+    server_o = sc(
+        conf=s_conf, Server=PAVServer, **{"shared_key_layers": shared_key_layers}
+    )
     server_o.max_workers = min(20, client_numbers)
 
     # 额外的公开数据集
