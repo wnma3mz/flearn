@@ -9,6 +9,7 @@ import torch.optim as optim
 from flearn.client import Client
 from flearn.server import Server
 from flearn.server.Communicator import Communicator as sc
+from flearn.common import Trainer
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
@@ -87,6 +88,7 @@ if __name__ == "__main__":
         "display": False,
         "dataloader": testloader,
         "eval_clients": False,
+        "trainer": Trainer,
     }
     test_sc(s_conf=s_conf)
 

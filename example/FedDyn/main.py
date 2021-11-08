@@ -160,7 +160,7 @@ if __name__ == "__main__":
         "strategy_name": args.strategy_name,
         "strategy": Dyn(model_fpath, copy.deepcopy(model_base).state_dict()),
         "log_suffix": args.suffix,
-        "client_lst": client_lst
+        "client_lst": client_lst,
     }
     server_o = sc(conf=s_conf)
     server_o.max_workers = min(20, client_numbers)
