@@ -173,9 +173,7 @@ class Server(object):
                 return data_lst
 
         def process_acc_str(data_lst):
-            print(data_lst)
             test_acc_lst = np.mean(list(map(lambda x: x["test_acc"], data_lst)), axis=0)
-            print(test_acc_lst)
             return "; ".join("{:.4f}".format(x) for x in test_acc_lst)
 
         if self.eval_conf == None:

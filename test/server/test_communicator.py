@@ -24,6 +24,14 @@ class MLP(nn.Module):
         return x
 
 
+def test_sc(s_conf):
+    server_o = sc(conf=s_conf)
+    server_o.max_workers = 1
+    for ri in range(s_conf["Round"]):
+        loss, train_acc, test_acc = server_o.run(ri, k=1)
+    return loss, train_acc, test_acc
+
+
 if __name__ == "__main__":
     model = MLP()
     optim_ = optim.SGD(model.parameters(), lr=1e-2, momentum=0.9, weight_decay=1e-5)
@@ -59,19 +67,28 @@ if __name__ == "__main__":
         "log": False,
     }
 
-    c = Client(c_conf)
-    client_lst = [c]
+    client_lst = [Client(c_conf)]
 
     s_conf = {
         "Round": 1,
-        "client_numbers": 1,
+        "client_numbers": len(client_lst),
         "model_fpath": ".",
         "dataset_name": dataset_name,
         "strategy_name": strategy_name,
         "client_lst": client_lst,
     }
 
-    server_o = sc(conf=s_conf)
-    server_o.max_workers = 1
-    for ri in range(s_conf["Round"]):
-        loss, train_acc, test_acc = server_o.run(ri, k=1)
+    test_sc(s_conf=s_conf)
+
+    s_conf["eval_conf"] = {
+        "model": model,
+        "criterion": nn.CrossEntropyLoss(),
+        "device": device,
+        "display": False,
+        "dataloader": testloader,
+        "eval_clients": False,
+    }
+    test_sc(s_conf=s_conf)
+
+    s_conf["eval_conf"]["eval_clients"] = True
+    test_sc(s_conf=s_conf)
