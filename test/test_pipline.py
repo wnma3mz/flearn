@@ -67,7 +67,7 @@ if __name__ == "__main__":
 
     s_conf = {
         "Round": 1,
-        "N_clients": 1,
+        "client_numbers": 1,
         "model_fpath": ".",
         "dataset_name": dataset_name,
         "strategy_name": strategy_name,

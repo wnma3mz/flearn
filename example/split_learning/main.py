@@ -160,25 +160,27 @@ if __name__ == "__main__":
     setup_seed(0)
 
     # 客户端数量，及每轮上传客户端数量
-    N_clients = 20
-    k = int(N_clients * args.frac)
+    client_numbers = 20
+    k = int(client_numbers * args.frac)
 
     print("切分数据集")
     if iid == "True":
-        trainloader_idx_lst = iid_f(trainset, N_clients)
-        testloader_idx_lst = iid_f(testset, N_clients)
+        trainloader_idx_lst = iid_f(trainset, client_numbers)
+        testloader_idx_lst = iid_f(testset, client_numbers)
     else:
         shard_per_user = 2
         if dataset_name == "cifar100":
             shard_per_user = 20
-        trainloader_idx_lst, rand_set_all = noniid(trainset, N_clients, shard_per_user)
+        trainloader_idx_lst, rand_set_all = noniid(
+            trainset, client_numbers, shard_per_user
+        )
         testloader_idx_lst, rand_set_all = noniid(
-            testset, N_clients, shard_per_user, rand_set_all=rand_set_all
+            testset, client_numbers, shard_per_user, rand_set_all=rand_set_all
         )
     _, glob_testloader = get_dataloader(trainset, testset, batch_size, pin_memory=True)
     print("初始化客户端")
     client_lst = []
-    for client_id in range(N_clients):
+    for client_id in range(client_numbers):
         conf_params = inin_single_client(
             client_id, trainloader_idx_lst, testloader_idx_lst
         )

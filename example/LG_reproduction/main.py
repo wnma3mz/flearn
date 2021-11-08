@@ -130,33 +130,35 @@ if __name__ == "__main__":
     setup_seed(0)
 
     # 客户端数量，及每轮上传客户端数量
-    N_clients = 100
-    k = int(N_clients * args.frac)
-    print("客户端总数: {}; 每轮上传客户端数量: {}".format(N_clients, k))
+    client_numbers = 100
+    k = int(client_numbers * args.frac)
+    print("客户端总数: {}; 每轮上传客户端数量: {}".format(client_numbers, k))
 
     print("切分{}数据集, 切割方式iid={}".format(dataset_name, iid))
     if iid == "True":
-        trainloader_idx_lst = iid_f(trainset, N_clients)
-        testloader_idx_lst = iid_f(testset, N_clients)
+        trainloader_idx_lst = iid_f(trainset, client_numbers)
+        testloader_idx_lst = iid_f(testset, client_numbers)
     else:
         shard_per_user = 2
         if dataset_name == "cifar100":
             shard_per_user = 20
-        trainloader_idx_lst, rand_set_all = noniid(trainset, N_clients, shard_per_user)
+        trainloader_idx_lst, rand_set_all = noniid(
+            trainset, client_numbers, shard_per_user
+        )
         testloader_idx_lst, rand_set_all = noniid(
-            testset, N_clients, shard_per_user, rand_set_all=rand_set_all
+            testset, client_numbers, shard_per_user, rand_set_all=rand_set_all
         )
         print("每个客户端标签数量: {}".format(shard_per_user))
 
     print("初始化客户端")
     client_lst = []
-    for client_id in range(N_clients):
+    for client_id in range(client_numbers):
         c_conf = inin_single_client(client_id, trainloader_idx_lst, testloader_idx_lst)
         client_lst.append(LGClient(c_conf))
 
     s_conf = {
         "Round": 200,
-        "N_clients": N_clients,
+        "client_numbers": client_numbers,
         "model_fpath": model_fpath,
         "iid": iid,
         "dataset_name": dataset_name,

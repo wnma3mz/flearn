@@ -12,34 +12,33 @@ class Server(object):
 
         Args:
             conf (dict): {
-                    "model_fpath" :  str
-                                     模型存储路径
+                    "model_fpath" :     str
+                                        模型存储路径
 
-                    "Round" :        int
-                                     总共训练轮数
+                    "client_numbers":   int
+                                        客户端总数
 
-                    "N_clients":     int
-                                     客户端总数
+                    "strategy_name":    str
+                                        联邦学习策略名称
 
-                    "strategy_name": str
-                                     联邦学习策略名称
+                    "strategy":         Strategy, default: None
+                                        联邦学习策略
 
-                    "strategy":      , default: None
-                                     联邦学习策略
+                    "eval_conf":        dict, default: None
+                                        测试模型配置参数。
+                                        {
+                                            "model":        全局模型结构,
 
-                    "eval_conf":     dict, defaul: None
-                                     测试模型配置参数。
-                                     {
-                                         "model":      全局模型结构,
+                                            "criterion":    损失函数,
 
-                                         "criterion":  损失函数,
+                                            "device":       gpu or cpu,
 
-                                         "device":     gpu or cpu,
+                                            "display":      False,
 
-                                         "display":    False,
+                                            "dataloader":   测试数据集,
 
-                                         "dataloader", 测试数据集
-                                     }
+                                            "eval_clients": False, 是否测试客户端
+                                        }
             } 服务端配置文件
 
             strategy_p: dict
@@ -48,8 +47,7 @@ class Server(object):
         """
         listed_keys = [
             "model_fpath",
-            "Round",
-            "N_clients",
+            "client_numbers",
             "strategy_name",
             "strategy",
             "eval_conf",
@@ -166,21 +164,33 @@ class Server(object):
         Returns:
             list or str:
         """
-        if self.eval_conf != None:
-            if is_select == True:
-                return []
-            _, acc = self.server_eval()
-            return acc
 
         if is_select == True:
-            return data_lst
+            # 如果需要在服务器端进行模型测试并且仍旧需要在客户端测试
+            if self.eval_conf != None:
+                return data_lst if self.eval_conf["eval_clients"] == True else []
+            else:
+                return data_lst
 
-        test_acc_lst = np.mean(list(map(lambda x: x["test_acc"], data_lst)), axis=0)
-        test_acc = "; ".join("{:.4f}".format(x) for x in test_acc_lst)
+        def process_acc_str(data_lst):
+            print(data_lst)
+            test_acc_lst = np.mean(list(map(lambda x: x["test_acc"], data_lst)), axis=0)
+            print(test_acc_lst)
+            return "; ".join("{:.4f}".format(x) for x in test_acc_lst)
+
+        if self.eval_conf == None:
+            test_acc = process_acc_str(data_lst)
+        else:
+            _, test_acc_server = self.server_eval()
+            test_acc = "[Server] {:.4f}".format(test_acc_server)
+            # 如果仍需要在客户端进行测试的情况
+            if self.eval_conf["eval_clients"] == True:
+                test_acc += "; [Clients] {}".format(process_acc_str(data_lst))
         return test_acc
 
     def server_eval(self):
         """在服务器端对模型进行评估
+
         Returns:
             tuple:
                 loss, acc

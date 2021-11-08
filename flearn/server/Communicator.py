@@ -12,7 +12,7 @@ from flearn.server import Server
 
 
 class Communicator(object):
-    def __init__(self, conf_fpath=None, conf=None, Server=Server, **kwargs):
+    def __init__(self, conf_fpath=None, conf=None, Server=Server, **strategy_p):
         """服务端的通信模块，用于发送指令
 
         Args:
@@ -22,40 +22,40 @@ class Communicator(object):
             conf       :     dict
                                 服务端配置字典，{
 
-                                    "Round": 200,
+                                    "Round":            200,
+                                                        训练总轮数
 
-                                    "N_clients": 1,
+                                    "client_numbers":   1,
+                                                        客户端数量
 
-                                    "model_fpath": "", # 模型存储路径
+                                    "model_fpath":      "",
+                                                        模型存储路径
 
-                                    "grad_norm": "False",
+                                    "grad_norm":        False,
 
-                                    "iid": "True",
+                                    "dataset_name":     "faces",
 
-                                    "dataset_name": "faces",
+                                    "strategy_name":    "pav",
 
-                                    "strategy_name": "pav",
+                                    "log_name_fmt":     "",
 
-                                    "client_url_lst": ["http://127.0.0.1:6000/{}"],
-
-                                    "shared_key_layers": [
-                                        "fc.weight",
-                                        "fc.bias"
-                                    ],
-
-                                    "log_name_fmt": "",
-
-                                    "log": True,
+                                    "log":              True,
 
                                     "log_suffix" :      str
                                                         log名称的后缀, ""
+
+                                    "client_url_lst":   ["http://127.0.0.1:6000/{}"]
+                                                        请求客户端的链接，单机情况可换为"client_lst", 优先为该情况
+
+                                    "client_lst" :      [Client]
+                                                        训练客户端的对象，多机情况可换为"client_url_lst"
                                 }
 
-            CustomServer :      object
-                                自定义服务端
+            Server     :        Server
+                                自定义的服务端
 
-            kwargs :            dict
-                                单机训练配置参数，{'client_lst': `Client`}
+            strategy_p :        dict
+                                策略的额外参数，{"shared_key_layers": 共享的参数名称}
         """
         if conf == None:
             if conf_fpath != None and os.path.isfile(conf_fpath):
@@ -63,7 +63,29 @@ class Communicator(object):
                     conf = json.loads(f.read())
             else:
                 raise SyntaxError("Please input conf or conf_fpath")
-        self.server = Server(conf)
+        self.server = Server(conf, **strategy_p)
+
+        # 训练客户端配置
+        if "client_url_lst" in conf.keys():
+            # 网络请求，对客户端进行请求的API
+            self.client_url_lst = conf["client_url_lst"]
+            self.thread_func = self.thread_request  # 多线程并行训练
+            self.client_id_lst = range(len(self.client_url_lst))  # 为每个客户端分配一个id
+        elif "client_lst" in conf.keys():
+            # 如果是单机训练
+            self.client_url_lst = conf["client_lst"]  # 更换为客户端的对象
+            self.thread_func = self.thread_run  # 更换请求函数
+            # 根据客户端的client_id重新定义，有待更新
+            self.client_id_lst = [x.client_id for x in self.client_url_lst]
+        else:
+            raise SyntaxError("Please input client_url_lst or client_lst")
+
+        if "client_numbers" in conf.keys():
+            client_numbers = conf["client_numbers"]
+        else:
+            client_numbers = len(self.client_url_lst)
+
+        assert client_numbers == len(self.client_url_lst)
 
         # 日志相关配置
         self.log = False if "log" in conf.keys() and conf["log"] == False else True
@@ -78,7 +100,7 @@ class Communicator(object):
             log_server_name = log_name_fmt.format(
                 conf["strategy_name"],
                 conf["Round"],
-                conf["N_clients"],
+                client_numbers,
                 conf["dataset_name"],
                 log_suffix,
             )
@@ -86,23 +108,6 @@ class Communicator(object):
             self.log_fmt = (
                 "Id: Server; Round: {}; Loss: {:.4f}; TrainAcc: {:.4f}; TestAcc: {};"
             )
-        # 训练客户端配置
-
-        # 网络请求，对客户端进行请求的API
-        if "client_url_lst" not in conf.keys():
-            self.client_url_lst = []
-        else:
-            self.client_url_lst = conf["client_url_lst"]
-        self.thread_func = self.thread_request  # 多线程并行训练
-        self.client_id_lst = range(len(self.client_url_lst))  # 为每个客户端分配一个id
-
-        # 如果是单机训练
-        if "client_lst" in kwargs.keys():
-            self.client_url_lst = kwargs["client_lst"]  # 更换为客户端的对象
-            self.thread_func = self.thread_run  # 更换请求函数
-            self.client_id_lst = [
-                x.client_id for x in self.client_url_lst
-            ]  # 根据客户端的client_id重新定义，有待更新
 
         self.active_client_id_lst = copy.deepcopy(self.client_id_lst)  # 每轮选中的客户端进行训练、上传
 

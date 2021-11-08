@@ -20,9 +20,9 @@ class LeNet5Client(nn.Module):
 
 
 class LeNet5Server(nn.Module):
-    def __init__(self, num_classes, N_clients=1):
+    def __init__(self, num_classes, client_numbers=1):
         super(LeNet5Server, self).__init__()
-        self.fc1 = nn.Linear(256 * N_clients, 120)
+        self.fc1 = nn.Linear(256 * client_numbers, 120)
         self.fc2 = nn.Linear(120, 84)
         self.fc3 = nn.Linear(84, num_classes)
 

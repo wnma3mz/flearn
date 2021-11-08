@@ -80,9 +80,9 @@ def setup_seed(seed):
 setup_seed(0)
 
 # 客户端数量，及每轮上传客户端数量
-N_clients = 10
-k = int(N_clients * args.frac)
-print("客户端总数: {}; 每轮上传客户端数量: {}".format(N_clients, k))
+client_numbers = 10
+k = int(client_numbers * args.frac)
+print("客户端总数: {}; 每轮上传客户端数量: {}".format(client_numbers, k))
 
 (
     X_train,
@@ -96,7 +96,7 @@ print("客户端总数: {}; 每轮上传客户端数量: {}".format(N_clients, k
     dataset_fpath,
     logdir="./logs",
     partition=partition,
-    n_parties=N_clients,
+    n_parties=client_numbers,
     beta=beta,
 )
 print("beta: {}".format(beta))
@@ -168,7 +168,7 @@ if __name__ == "__main__":
 
     print("初始化客户端")
     client_lst = []
-    for client_id in range(N_clients):
+    for client_id in range(client_numbers):
         c_conf = inin_single_client(client_id)
         if args.strategy_name.lower() == "avg":
             client_lst.append(Client(c_conf))
@@ -187,7 +187,7 @@ if __name__ == "__main__":
             client_lst.append(DynClient(c_conf))
     s_conf = {
         "Round": 100,
-        "N_clients": N_clients,
+        "client_numbers": client_numbers,
         "model_fpath": model_fpath,
         "iid": iid,
         "dataset_name": dataset_name,
@@ -198,7 +198,7 @@ if __name__ == "__main__":
         s_conf["strategy"] = Dyn(model_fpath, copy.deepcopy(model_base).state_dict())
     # server_o = sc(conf=s_conf, Server=MOONServer, **{"client_lst": client_lst})
     server_o = sc(conf=s_conf, **{"client_lst": client_lst})
-    # server_o.max_workers = min(20, N_clients)
+    # server_o.max_workers = min(20, client_numbers)
     server_o.max_workers = 1
     for ri in range(s_conf["Round"]):
         loss, train_acc, test_acc = server_o.run(ri, k=k)
