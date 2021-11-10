@@ -22,6 +22,10 @@ class Strategy(ABC):
         self.model_fpath = model_fpath
         self.encrypt = Encrypt()
 
+    @staticmethod
+    def extract_lst(lst, key):
+        return list(map(lambda x: x[key], lst))
+
     def server_pre_processing(self, ensemble_params_lst):
         """提取服务器端收到的的参数
 
