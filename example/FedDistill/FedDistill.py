@@ -92,12 +92,6 @@ class Distill(AVG):
 
         logits_glob = self.aggregate_logits(logits_lst)
 
-        with open("logits_lst.pkl", "wb") as f:
-            pickle.dump(logits_lst, f)
-
-        with open("logits_glob.pkl", "wb") as f:
-            pickle.dump(logits_glob, f)
-
         return self.server_post_processing(
             {"w_glob": w_glob, "logits_glob": logits_glob}, round_
         )
