@@ -105,8 +105,6 @@ class Distill(AVG):
 
 class DistillClient(Client):
     def revice(self, i, glob_params):
-        w_local = self.model_trainer.weight
-        self.w_local_bak = copy.deepcopy(w_local)
         # decode
         w_glob_b = self.encrypt.decode(glob_params)
         # update
@@ -116,7 +114,6 @@ class DistillClient(Client):
 
         if self.scheduler != None:
             self.scheduler.step()
-        # self.model_trainer.model.load_state_dict(self.w_local_bak)
         self.model_trainer.model.load_state_dict(update_w)
         self.model_trainer.glob_logit = copy.deepcopy(logits_glob)
 
@@ -146,7 +143,7 @@ class DistillTrainer(Trainer):
             if self.glob_logit != None:
                 self.glob_logit = self.glob_logit.to(self.device)
                 target_p = self.glob_logit[target, :]
-                loss += self.kd_loss(output, target_p)
+                loss += self.kd_mu * self.kd_loss(output, target_p)
 
             self.optimizer.zero_grad()
             loss.backward()

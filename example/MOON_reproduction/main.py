@@ -12,8 +12,24 @@ from flearn.client import Client
 from flearn.client.utils import get_free_gpu_id
 from flearn.server import Communicator as sc
 
-from FedMOON import AVGTrainer, MOONClient, MOONTrainer, ProxClient, ProxTrainer
-from FedKD import LSDClient, LSDTrainer, SSDClient, DynClient, DynTrainer, Dyn
+from FedMOON import (
+    AVGTrainer,
+    MOONClient,
+    MOONTrainer,
+    ProxClient,
+    ProxTrainer,
+    DynClient,
+    DynTrainer,
+    Dyn,
+)
+from FedKD import (
+    LSDClient,
+    LSDTrainer,
+    SSDClient,
+    DistillClient,
+    Distill,
+    DistillTrainer,
+)
 
 from model import ModelFedCon
 from utils import get_dataloader, partition_data
@@ -48,7 +64,7 @@ parser.add_argument(
 
 args = parser.parse_args()
 iid = args.iid
-if args.strategy_name.lower() in ["moon", "lsd", "ssd", "lsdn", "prox", "dyn", "dane"]:
+if args.strategy_name.lower() in ["moon", "lsd", "ssd", "lsdn", "prox", "dane"]:
     strategy_name = "avg"
 else:
     strategy_name = args.strategy_name.lower()
@@ -126,6 +142,7 @@ trainer_d = {
     "ssd": LSDTrainer,
     "lsdn": LSDTrainer,
     "dyn": DynTrainer,
+    "distill": DistillTrainer,
 }
 
 trainer = None
@@ -158,7 +175,6 @@ def inin_single_client(client_id):
         "strategy_name": strategy_name,
         "trainer": trainer,
         "save": False,
-        # "display": True,
         "display": False,
         "log": False,
     }
@@ -185,6 +201,10 @@ if __name__ == "__main__":
                 model_fpath, copy.deepcopy(model_base).state_dict()
             )
             client_lst.append(DynClient(c_conf))
+        elif args.strategy_name.lower() == "distill":
+            c_conf["strategy"] = Distill(model_fpath)
+            client_lst.append(DistillClient(c_conf))
+
     s_conf = {
         "Round": 100,
         "client_numbers": client_numbers,
@@ -197,6 +217,9 @@ if __name__ == "__main__":
     }
     if args.strategy_name.lower() == "dyn":
         s_conf["strategy"] = Dyn(model_fpath, copy.deepcopy(model_base).state_dict())
+    elif args.strategy_name.lower() == "distill":
+        s_conf["strategy"] = Distill(model_fpath)
+
     server_o = sc(conf=s_conf)
     # server_o.max_workers = min(20, client_numbers)
     server_o.max_workers = 1
