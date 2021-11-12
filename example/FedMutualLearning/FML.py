@@ -11,20 +11,7 @@ import torch.optim as optim
 
 from flearn.client import Client
 from flearn.common import Trainer
-
-
-class KDLoss(nn.Module):
-    def __init__(self, temp_factor):
-        super(KDLoss, self).__init__()
-        self.temp_factor = temp_factor
-        self.kl_div = nn.KLDivLoss(reduction="sum")
-
-    def forward(self, input, target):
-        log_p = torch.log_softmax(input / self.temp_factor, dim=1)
-        q = torch.softmax(target / self.temp_factor, dim=1)
-        loss = self.kl_div(log_p, q) * (self.temp_factor ** 2) / input.size(0)
-        # print(loss)
-        return loss
+from flearn.common.distiller import KDLoss
 
 
 class FMLTrainer(Trainer):
@@ -43,10 +30,6 @@ class FMLTrainer(Trainer):
     def train(self, data_loader, epochs=1):
         self.local_model.train()
         return super(FMLTrainer, self).train(data_loader, epochs)
-
-    # def test(self, data_loader):
-    #     self.local_model.eval()
-    #     return super(FMLTrainer, self).test(data_loader)
 
     def batch(self, data, target):
         _, _, output = self.model(data)

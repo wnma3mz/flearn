@@ -1,9 +1,7 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-import torch.optim as optim
 
-from flearn.common.distiller import Distiller
+from flearn.common import Distiller
 
 
 class MLP(nn.Module):
@@ -28,13 +26,12 @@ if __name__ == "__main__":
 
     t = Distiller(loader, device)
 
-    kwargs = {"lr": 0.01, "epoch": 1}
+    kwargs = {"lr": 0.01, "epoch": 1, "method": "avg_losses"}
     t.single(teacher, student, **kwargs)
 
     teacher_lst = [MLP() for _ in range(3)]
-    t.multi(teacher_lst, student, **kwargs)
+    t.multi(teacher_lst, student, **kwargs)  # 默认为avg_logits
 
-    t.multi(teacher_lst, student, "avg_losses", **kwargs)
+    t.multi(teacher_lst, student, kwargs.pop("method"), **kwargs)
 
     t.multi(teacher_lst, student, "avg_probs", **kwargs)
-

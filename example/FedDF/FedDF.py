@@ -1,6 +1,7 @@
 # coding: utf-8
 import copy
 
+import numpy as np
 import torch
 import torch.nn.functional as F
 
@@ -38,9 +39,14 @@ class DFDistiller(Distiller):
         else:
             raise NotImplementedError("please input a vaild method")
 
-    def multi(self, teacher_lst, student, method, weight_lst, **kwargs):
+    def multi(
+        self, teacher_lst, student, method="avg_logits", weight_lst=None, **kwargs
+    ):
         self._init_kd(teacher_lst, student, **kwargs)
-        self.weight_lst = weight_lst
+        if weight_lst == None:
+            self.weight_lst = [1 / len(teacher_lst)] * len(teacher_lst)
+        else:
+            self.weight_lst = weight_lst
 
         for _ in range(self.epoch):
             for _, (x, _) in enumerate(self.kd_loader):
@@ -95,12 +101,14 @@ class DF(AVG):
         student = copy.deepcopy(self.model_base)
 
         self.distiller = DFDistiller(
-            kwargs["kd_loader"], self.device, kd_loss=KDLoss(kwargs["T"])
+            kwargs.pop("kd_loader"), self.device, kd_loss=KDLoss(kwargs.pop("T"))
         )
 
+        molecular = np.sum(agg_weight_lst)
+        weight_lst = [w / molecular for w in agg_weight_lst]
         # agg_weight_lst：应该依照每个模型在验证集上的性能来进行分配
         w_glob = self.distiller.multi(
-            teacher_lst, student, kwargs["method"], agg_weight_lst, **kwargs
+            teacher_lst, student, kwargs.pop("method"), weight_lst=weight_lst, **kwargs
         )
 
         return self.server_post_processing(w_glob, round_)

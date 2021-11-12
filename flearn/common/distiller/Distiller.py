@@ -44,7 +44,7 @@ class DistillLoss(nn.Module):
         cross_loss = F.cross_entropy(y, labels)
         s_probs = F.log_softmax(y / self.T, dim=1)
         if type(t_probs) != torch.Tensor:
-            t_probs = F.softmax(soft_target / self.temp_factor, dim=1)
+            t_probs = F.softmax(soft_target / self.T, dim=1)
         kd_loss = self.alpha * self.kl_div(s_probs, t_probs) * self.T * self.T * 2.0
 
         return kd_loss + (1.0 - self.alpha) * cross_loss
@@ -183,7 +183,7 @@ class Distiller:
             """
             student_loss_lst = [
                 (f(soft_target.detach()) + at_loss) * weight
-                for soft_target, weight in (soft_target_lst, self.weight_lst)
+                for soft_target, weight in zip(soft_target_lst, self.weight_lst)
             ]
             return sum(student_loss_lst)
         elif method == "avg_logits":
@@ -216,7 +216,7 @@ class Distiller:
                                 学生模型
 
             method:             str
-                                蒸馏的方法, "avg_losses", "avg_logits", "avg_probs"。默认为"avg_losses",
+                                蒸馏的方法, "avg_losses", "avg_logits", "avg_probs"。默认为"avg_logits",
 
             weight_lst:         list
                                 每个teacher的权重
@@ -234,7 +234,8 @@ class Distiller:
         self._init_kd(teacher_lst, student, **kwargs)
         if weight_lst == None:
             self.weight_lst = [1 / len(teacher_lst)] * len(teacher_lst)
-        self.weight_lst = weight_lst
+        else:
+            self.weight_lst = weight_lst
 
         for _ in range(self.epoch):
             for _, (x, target) in enumerate(self.kd_loader):
