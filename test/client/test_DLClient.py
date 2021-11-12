@@ -4,6 +4,7 @@ import os
 import torch
 import torch.nn as nn
 import torch.optim as optim
+
 from flearn.client import DLClient
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"

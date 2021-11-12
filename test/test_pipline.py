@@ -1,11 +1,12 @@
 # coding: utf-8
+import base64
 import os
 import pickle
-import base64
 
 import torch
 import torch.nn as nn
 import torch.optim as optim
+
 from flearn.client import Client
 from flearn.server import Server
 from flearn.server.Communicator import Communicator as sc
