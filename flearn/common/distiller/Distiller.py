@@ -20,17 +20,18 @@ class KDLoss(nn.Module):
 
 
 class DistillLoss(nn.Module):
-    def __init__(self, T):
+    def __init__(self, T, alpha):
         super(DistillLoss, self).__init__()
         self.T = T
+        self.alpha = alpha
         self.kl_div = nn.KLDivLoss(reduction="sum")
         # self.kl_div = F.mse_loss
         # self.kl_div = F.l1_loss
 
-    def forward(self, y, soft_target=None, labels=None, alpha=1, t_probs=None):
+    def forward(self, y, soft_target=None, labels=None, t_probs=None):
         """
         soft_target: None, 教师输出
-        labels  : None, 无监督蒸馏, 此时alpha=1
+        labels  : None, 无监督蒸馏, 此时self.alpha=1
         t_probs : None, 不提供教师输出标签（soft_target）
         soft_target与t_probs二者中必须传一个参数
         """
@@ -44,21 +45,21 @@ class DistillLoss(nn.Module):
         s_probs = F.log_softmax(y / self.T, dim=1)
         if type(t_probs) != torch.Tensor:
             t_probs = F.softmax(soft_target / self.temp_factor, dim=1)
-        kd_loss = alpha * self.kl_div(s_probs, t_probs) * self.T * self.T * 2.0
+        kd_loss = self.alpha * self.kl_div(s_probs, t_probs) * self.T * self.T * 2.0
 
-        return kd_loss + (1.0 - alpha) * cross_loss
+        return kd_loss + (1.0 - self.alpha) * cross_loss
 
 
 class Distiller:
-    def __init__(self, device, kd_loss=DistillLoss(2), kd_loader=None):
+    def __init__(self, kd_loader, device, kd_loss=DistillLoss(2)):
         """知识蒸馏训练器
 
         Args:
-            device :    str
-                        蒸馏训练所在的设备，gpu or cpu
-
             kd_loss :   nn.Module
                         蒸馏损失函数，默认为KL散度
+
+            device :    str
+                        蒸馏训练所在的设备，gpu or cpu
 
             kd_loader : DataLoader
                         蒸馏训练的数据集，为None，则随机生成
@@ -70,7 +71,6 @@ class Distiller:
     def _init_kd(self, teacher, student, **kwargs):
         """初始化蒸馏参数"""
         self.lr = kwargs["lr"]
-        self.alpha = kwargs["alpha"]
         self.epoch = kwargs["epoch"]
 
         if type(teacher) == list:
@@ -122,7 +122,6 @@ class Distiller:
                     output,
                     soft_target=soft_target.detach(),
                     labels=target,
-                    alpha=self.alpha,
                 )
 
                 self.optimizer.zero_grad()
@@ -155,7 +154,6 @@ class Distiller:
                 output,
                 soft_target=soft_target,
                 labels=target,
-                alpha=self.alpha,
                 t_probs=t_probs,
             )
 
@@ -280,18 +278,3 @@ class Distiller:
             optimizer.step()
             # print("train_loss_fine_tuning", loss.data)
         return student
-
-    def _create_data_randomly(self):
-        # create pseudo_data and map to [0, 1].
-        pseudo_data = torch.randn(
-            (self.batch_size, 3, self.conf.img_resolution, self.conf.img_resolution),
-            requires_grad=False,
-        ).to(device=self.device)
-        pseudo_data = (pseudo_data - torch.min(pseudo_data)) / (
-            torch.max(pseudo_data) - torch.min(pseudo_data)
-        )
-
-        # map values to [-1, 1] if necessary.
-        if self.conf.pn_normalize:
-            pseudo_data = (pseudo_data - 0.5) * 2
-        return pseudo_data

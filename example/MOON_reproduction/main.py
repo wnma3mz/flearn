@@ -8,29 +8,28 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from flearn.client import Client
-from flearn.client.utils import get_free_gpu_id
-from flearn.server import Communicator as sc
 
+from FedKD import (
+    Distill,
+    DistillClient,
+    DistillTrainer,
+    LSDClient,
+    LSDTrainer,
+    SSDClient,
+)
 from FedMOON import (
     AVGTrainer,
+    Dyn,
+    DynClient,
+    DynTrainer,
     MOONClient,
     MOONTrainer,
     ProxClient,
     ProxTrainer,
-    DynClient,
-    DynTrainer,
-    Dyn,
 )
-from FedKD import (
-    LSDClient,
-    LSDTrainer,
-    SSDClient,
-    DistillClient,
-    Distill,
-    DistillTrainer,
-)
-
+from flearn.client import Client
+from flearn.client.utils import get_free_gpu_id
+from flearn.server import Communicator as sc
 from model import ModelFedCon
 from utils import get_dataloader, partition_data
 

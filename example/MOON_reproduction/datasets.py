@@ -1,21 +1,21 @@
-import torch.utils.data as data
-from PIL import Image
-import numpy as np
-import torchvision
-from torchvision.datasets import (
-    MNIST,
-    EMNIST,
-    CIFAR10,
-    CIFAR100,
-    SVHN,
-    FashionMNIST,
-    ImageFolder,
-    DatasetFolder,
-    utils,
-)
-
 import os
 import os.path
+
+import numpy as np
+import torch.utils.data as data
+import torchvision
+from PIL import Image
+from torchvision.datasets import (
+    CIFAR10,
+    CIFAR100,
+    EMNIST,
+    MNIST,
+    SVHN,
+    DatasetFolder,
+    FashionMNIST,
+    ImageFolder,
+    utils,
+)
 
 # import logging
 

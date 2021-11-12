@@ -1,18 +1,17 @@
 # coding: utf-8
-import os
-
 import argparse
 import copy
+import os
 import random
 
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
+
 from flearn.client import Client
 from flearn.client.datasets import get_datasets, get_split_loader
 from flearn.server import Communicator as sc
-
 from models import LeNet5
 from resnet import ResNet_cifar
 from split_data import iid as iid_f

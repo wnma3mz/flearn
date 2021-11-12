@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # https://github.com/epfml/federated-learning-public-code/blob/master/codes/FedDF-code/pcode/models/resnet.py
 import math
-import torch.nn as nn
 
+import torch.nn as nn
 
 __all__ = ["resnet"]
 

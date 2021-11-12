@@ -9,7 +9,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
-from FedMD import MD
+from FedDF import DF
 from flearn.client import Client
 from flearn.client.datasets import get_dataloader, get_datasets, get_split_loader
 from flearn.client.utils import get_free_gpu_id
@@ -63,12 +63,6 @@ _, glob_testloader = get_dataloader(trainset, testset, 100, pin_memory=True)
 # 设置模型
 if dataset_name == "mnist":
     model_base = LeNet5(num_classes=num_classes)
-    key_lst = ["fc3.weight", "fc3.bias"]
-    glob_model = copy.deepcopy(model_base)
-    glob_model.fc3 = nn.Sequential()
-    optim_glob = optim.SGD(glob_model.parameters(), lr=1e-1)
-
-
 elif "cifar" in dataset_name:
     model_base = ResNet_cifar(
         dataset=args.dataset_name,
@@ -77,10 +71,6 @@ elif "cifar" in dataset_name:
         freeze_bn=False,
         freeze_bn_affine=False,
     )
-    key_lst = ["classifier.weight", "classifier.bias"]
-    glob_model = copy.deepcopy(model_base)
-    glob_model.classifier = nn.Sequential()
-    optim_glob = optim.SGD(glob_model.parameters(), lr=1e-1)
 
 
 model_fpath = "./client_checkpoint"
@@ -123,11 +113,28 @@ def inin_single_client(client_id, trainloader_idx_lst, testloader_idx_lst):
         "epoch": args.local_epoch,
         "dataset_name": dataset_name,
         "strategy_name": args.strategy_name,
-        "strategy": MD(model_fpath, key_lst, glob_model, optim_glob, device),
+        "strategy": DF(model_fpath, model_base, device),
         "save": False,
         "display": False,
         "log": False,
     }
+
+
+pn_normalize = True
+
+
+def create_data_randomly():
+    # create pseudo_data and map to [0, 1].
+    # cifar10
+    pseudo_data = torch.randn((batch_size, 3, 32, 32), requires_grad=False)
+    pseudo_data = (pseudo_data - torch.min(pseudo_data)) / (
+        torch.max(pseudo_data) - torch.min(pseudo_data)
+    )
+
+    # map values to [-1, 1] if necessary.
+    if pn_normalize:
+        pseudo_data = (pseudo_data - 0.5) * 2
+    return pseudo_data, [0] * batch_size
 
 
 if __name__ == "__main__":
@@ -168,7 +175,7 @@ if __name__ == "__main__":
         "model_fpath": model_fpath,
         "iid": iid,
         "dataset_name": dataset_name,
-        "strategy": MD(model_fpath, key_lst, glob_model, optim_glob, device),
+        "strategy": DF(model_fpath, model_base, device),
         "strategy_name": args.strategy_name,
         "log_suffix": args.suffix,
         "client_lst": client_lst,
@@ -176,10 +183,15 @@ if __name__ == "__main__":
     server_o = sc(conf=s_conf)
     server_o.max_workers = 1
 
-    # 随意选取，可替换为更合适的数据集
+    # 随意选取，可替换为更合适的数据集；或者生成随机数，见_create_data_randomly
     trainset, testset = get_datasets("cifar100", dataset_fpath)
     _, glob_testloader = get_dataloader(trainset, testset, 100, num_workers=0)
-    kwargs = {"data_loader": glob_testloader}
-
+    kwargs = {
+        "lr": 1e-2,
+        "T": 2,
+        "epoch": 1,
+        "method": "avg_logits",
+        "kd_loader": glob_testloader,
+    }
     for ri in range(s_conf["Round"]):
         loss, train_acc, test_acc = server_o.run(ri, k=k, **kwargs)

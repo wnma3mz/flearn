@@ -7,6 +7,8 @@ import pickle
 import numpy as np
 import torch
 import torch.nn as nn
+import torch.optim as optim
+
 from flearn.client import Client
 from flearn.common import Trainer
 
@@ -23,9 +25,6 @@ class KDLoss(nn.Module):
         loss = self.kl_div(log_p, q) * (self.temp_factor ** 2) / input.size(0)
         # print(loss)
         return loss
-
-
-import torch.optim as optim
 
 
 class FMLTrainer(Trainer):

@@ -8,11 +8,11 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
+
+from FedPAV import PAVClient, PAVServer
 from flearn.client.datasets import get_dataloader, get_datasets, get_split_loader
 from flearn.client.utils import get_free_gpu_id
 from flearn.server import Communicator as sc
-
-from FedPAV import PAVClient, PAVServer
 from models import LeNet5
 from resnet import ResNet_cifar
 from split_data import iid as iid_f

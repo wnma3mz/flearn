@@ -1,1 +1,1 @@
-from .Distiller import Distiller
+from .Distiller import Distiller, DistillLoss, KDLoss

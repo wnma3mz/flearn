@@ -1,6 +1,7 @@
 # coding: utf-8
-from flearn.client import Client
 import copy
+
+from flearn.client import Client
 
 
 class LGClient(Client):

@@ -1,24 +1,21 @@
 # coding: utf-8
-import os
-
 import argparse
+import base64
 import copy
+import os
 import random
+
 import numpy as np
+import requests
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from flearn.client.datasets import (
-    get_datasets,
-    get_split_loader,
-    get_dataloader,
-)
+
+from flearn.client.datasets import get_dataloader, get_datasets, get_split_loader
 from flearn.client.utils import get_free_gpu_id
-from models import LeNet5Server, LeNet5Client, ResNet_cifarServer, ResNet_cifarClient
+from models import LeNet5Client, LeNet5Server, ResNet_cifarClient, ResNet_cifarServer
 from split_data import iid as iid_f
 from split_data import noniid
-import requests
-import base64
 
 idx = get_free_gpu_id()
 print("使用{}号GPU".format(idx))

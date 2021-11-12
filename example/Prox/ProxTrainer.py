@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import torch
+
 from flearn.common import Trainer
 
 

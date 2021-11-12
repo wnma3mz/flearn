@@ -1,5 +1,10 @@
-from torch import nn
+# -*- coding: utf-8 -*-
+# https://github.com/epfml/federated-learning-public-code/blob/master/codes/FedDF-code/pcode/models/resnet.py
+import math
+
+import torch.nn as nn
 import torch.nn.functional as F
+from torch import nn as nn
 
 
 class LeNet5Client(nn.Module):
@@ -32,12 +37,6 @@ class LeNet5Server(nn.Module):
         x = F.relu(self.fc2(x))
         x = self.fc3(x)
         return x
-
-
-# -*- coding: utf-8 -*-
-# https://github.com/epfml/federated-learning-public-code/blob/master/codes/FedDF-code/pcode/models/resnet.py
-import math
-import torch.nn as nn
 
 
 __all__ = ["resnet"]

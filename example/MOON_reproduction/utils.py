@@ -1,18 +1,18 @@
 import os
+import random
 
 # import logging
 import numpy as np
 import torch
-import torchvision.transforms as transforms
-import torch.utils.data as data
-from torch.autograd import Variable
-import torch.nn.functional as F
 import torch.nn as nn
-import random
+import torch.nn.functional as F
+import torch.utils.data as data
+import torchvision.transforms as transforms
 from sklearn.metrics import confusion_matrix
+from torch.autograd import Variable
 
-from model import *
 from datasets import CIFAR10_truncated, CIFAR100_truncated, ImageFolder_custom
+from model import *
 
 # logging.basicConfig()
 # logger = logging.getLogger()

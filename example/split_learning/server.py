@@ -1,4 +1,5 @@
 import argparse
+import json
 import os
 import random
 
@@ -6,8 +7,9 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from flearn.client.utils import get_free_gpu_id
+from flask import Flask, jsonify, make_response, request
 
+from flearn.client.utils import get_free_gpu_id
 from models import LeNet5Client, LeNet5Server, ResNet_cifarClient, ResNet_cifarServer
 
 parser = argparse.ArgumentParser(description="Please input conf")
@@ -74,8 +76,6 @@ def setup_seed(seed):
 
 setup_seed(0)
 
-import json
-from flask import Flask, jsonify, make_response, request
 
 app = Flask(__name__)
 

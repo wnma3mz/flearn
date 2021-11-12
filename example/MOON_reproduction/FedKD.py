@@ -1,10 +1,11 @@
 # coding: utf-8
 
 import copy
+import pickle
 
 import torch
 import torch.nn as nn
-import pickle
+
 from flearn.client import Client
 from flearn.common import Trainer
 from flearn.common.strategy import AVG
