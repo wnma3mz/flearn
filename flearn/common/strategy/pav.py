@@ -11,7 +11,7 @@ import torch.optim as optim
 from .strategy import Strategy
 
 
-class Distillation:
+class Distiller:
     def __init__(self, input_len, kd_loader, device, regularization=True):
         # input_len: 512
         self.input_len = input_len
@@ -78,7 +78,7 @@ class PAV(Strategy):
 
     note:
     1. soft label or cosine distance
-    2. Knowledge Distillation
+    2. Knowledge Distiller
 
     References
     ----------
@@ -178,7 +178,7 @@ class PAV(Strategy):
 
         # 进行蒸馏
         if "kd" in kwargs.keys() and kwargs["kd"] == True:
-            self.distiller = Distillation(
+            self.distiller = Distiller(
                 kwargs["input_len"],
                 kwargs["kd_loader"],
                 kwargs["device"],

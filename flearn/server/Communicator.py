@@ -6,13 +6,14 @@ import os
 import threading
 
 import requests
+
 from flearn.common import Logger
 
-from flearn.server import Server
+from .Server import Server as MyServer
 
 
 class Communicator(object):
-    def __init__(self, conf_fpath=None, conf=None, Server=Server, **strategy_p):
+    def __init__(self, conf_fpath=None, conf=None, server=MyServer, **strategy_p):
         """服务端的通信模块，用于发送指令
 
         Args:
@@ -63,7 +64,8 @@ class Communicator(object):
                     conf = json.loads(f.read())
             else:
                 raise SyntaxError("Please input conf or conf_fpath")
-        self.server = Server(conf, **strategy_p)
+        print(conf, strategy_p)
+        self.server = server(conf, **strategy_p)
 
         # 训练客户端配置
         if "client_url_lst" in conf.keys():

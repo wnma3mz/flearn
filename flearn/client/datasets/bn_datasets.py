@@ -2,14 +2,14 @@ import os
 import sys
 
 import numpy as np
-import torchvision
-
-base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
 import torch
+import torchvision
 import torchvision.transforms as transforms
 from PIL import Image
 from torch.utils.data import Dataset
+
+base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 
 # https://github.com/med-air/FedBN/blob/df4a9f9c4f/utils/data_utils.py
 class DigitsDataset(Dataset):

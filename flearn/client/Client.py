@@ -5,8 +5,8 @@ from os.path import join as ospj
 
 import torch
 
-from flearn.common import Encrypt, Logger, Trainer, init_strategy
 from flearn.client.utils import bool_key_lst, listed_keys, str_key_lst
+from flearn.common import Encrypt, Logger, Trainer, init_strategy
 
 
 class Client(object):

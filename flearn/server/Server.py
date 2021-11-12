@@ -3,6 +3,7 @@ import base64
 import pickle
 
 import numpy as np
+
 from flearn.common import Encrypt, init_strategy
 
 

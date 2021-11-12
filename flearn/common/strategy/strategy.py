@@ -6,6 +6,7 @@ from functools import reduce
 
 import numpy as np
 import torch
+
 from flearn.common import Encrypt
 
 

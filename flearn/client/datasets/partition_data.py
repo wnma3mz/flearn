@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 # https://github.com/epfml/federated-learning-public-code/blob/master/codes/FedDF-code/pcode/datasets/partition_data.py
-import math
 import functools
+import math
 
 import numpy as np
-
 import torch
 import torch.distributed as dist
 
