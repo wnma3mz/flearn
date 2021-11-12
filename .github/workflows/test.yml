@@ -57,6 +57,8 @@ jobs:
       - name: delete_release
         id: delete_release
         uses: dev-drprasad/delete-tag-and-release@v0.2.0
+        # 限定版本为3.7时才运行操作
+        if: matrix.python-version == '3.7' && steps.test.outputs.status == 'success'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -67,7 +69,7 @@ jobs:
       - name: create_release
         id: create_release
         uses: actions/create-release@v1
-        if: steps.test.outputs.status == 'success'
+        if: matrix.python-version == '3.7' && steps.test.outputs.status == 'success'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -80,7 +82,7 @@ jobs:
       - name: upload-release-tar-gz
         id: upload-release-tar-gz
         uses: actions/upload-release-asset@v1
-        if: steps.test.outputs.status == 'success'
+        if: matrix.python-version == '3.7' && steps.test.outputs.status == 'success'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -92,7 +94,7 @@ jobs:
       - name: upload-release-whl
         id: upload-release-whl
         uses: actions/upload-release-asset@v1
-        if: steps.test.outputs.status == 'success'
+        if: matrix.python-version == '3.7' && steps.test.outputs.status == 'success'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:

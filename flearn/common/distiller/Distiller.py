@@ -51,25 +51,36 @@ class DistillLoss(nn.Module):
 
 
 class Distiller:
-    def __init__(self, kd_loader, device, kd_loss=DistillLoss(2)):
+    def __init__(self, kd_loader, device, kd_loss=DistillLoss(2, 0.5)):
         """知识蒸馏训练器
 
         Args:
+            kd_loader : DataLoader
+                        蒸馏训练的数据集，为None，则随机生成
+
             kd_loss :   nn.Module
                         蒸馏损失函数，默认为KL散度
 
             device :    str
                         蒸馏训练所在的设备，gpu or cpu
 
-            kd_loader : DataLoader
-                        蒸馏训练的数据集，为None，则随机生成
         """
         self.loss = kd_loss
         self.kd_loader = kd_loader
         self.device = device
 
     def _init_kd(self, teacher, student, **kwargs):
-        """初始化蒸馏参数"""
+        """初始化蒸馏参数
+        Args:
+            teacher :
+                        教师模型
+
+            student :
+                        学生模型
+
+            kwargs :    dict
+                        {"lr": 学习率, "epoch": 蒸馏轮数}
+        """
         self.lr = kwargs["lr"]
         self.epoch = kwargs["epoch"]
 
@@ -103,8 +114,11 @@ class Distiller:
             teacher :
                         教师模型
 
-            student：
+            student :
                         学生模型
+
+            kwargs :    dict
+                        {"lr": 学习率, "epoch": 蒸馏轮数}
 
         Returns:
             OrderDict: 模型的权重参数
@@ -189,7 +203,9 @@ class Distiller:
         else:
             raise NotImplementedError("please input a vaild method")
 
-    def multi(self, teacher_lst, student, method, weight_lst, **kwargs):
+    def multi(
+        self, teacher_lst, student, method="avg_logits", weight_lst=None, **kwargs
+    ):
         """多个教师对一个学生进行知识蒸馏
 
         Args:
@@ -200,7 +216,7 @@ class Distiller:
                                 学生模型
 
             method:             str
-                                蒸馏的方法
+                                蒸馏的方法, "avg_losses", "avg_logits", "avg_probs"。默认为"avg_losses",
 
             weight_lst:         list
                                 每个teacher的权重
@@ -216,6 +232,8 @@ class Distiller:
             OrderDict: 模型的权重参数
         """
         self._init_kd(teacher_lst, student, **kwargs)
+        if weight_lst == None:
+            self.weight_lst = [1 / len(teacher_lst)] * len(teacher_lst)
         self.weight_lst = weight_lst
 
         for _ in range(self.epoch):
