@@ -1,4 +1,4 @@
-## FedMD
+## FedDF
 
 ```bash
 @inproceedings{lin2020ensemble,
