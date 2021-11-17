@@ -44,8 +44,8 @@
   - [X] FedMutual
   - [X] MOON
   - [X] CCVR
-  - [ ] FedGen
-  - [ ] FedEnsemble
+  - [X] FedGen
+  - [X] FedDF(Ensemble Distillation)
   - [ ] FedNova
 
 split-learning可见[README.md](https://github.com/wnma3mz/flearn/tree/master/example/split_learning)，尚存在loss爆炸问题。

@@ -11,13 +11,10 @@ import torch.optim as optim
 
 from FedCVVR import CCVRTrainer, FedCCVR
 from flearn.client import Client
-from flearn.client.datasets import get_dataloader, get_datasets, get_split_loader
 from flearn.client.utils import get_free_gpu_id
 from flearn.server import Communicator as sc
-from models import LeNet5
-from resnet import ResNet_cifar
-from split_data import iid as iid_f
-from split_data import noniid
+from model import GlobModel, ModelFedCon
+from utils import get_dataloader, partition_data
 
 idx = get_free_gpu_id()
 print("使用{}号GPU".format(idx))
@@ -38,7 +35,7 @@ parser.add_argument(
     "--dataset_name",
     dest="dataset_name",
     default="mnist",
-    choices=["mnist", "cifar10", "cifar100"],
+    choices=["tinyimagenet", "cifar10", "cifar100"],
     type=str,
 )
 parser.add_argument(
@@ -54,38 +51,85 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # 设置数据集
 dataset_name = args.dataset_name
 dataset_fpath = args.dataset_fpath
-num_classes = 10
-batch_size = 128
-trainset, testset = get_datasets(dataset_name, dataset_fpath)
-# 全局测试集，所有客户端模型在此数据集上进行测试取平均。
-_, glob_testloader = get_dataloader(trainset, testset, 100, pin_memory=True)
+client_numbers = 10
+
+batch_size = 64
+if iid == True:
+    partition = "homo"
+else:
+    partition = "noniid"
+    beta = 0.5
+print("切分{}数据集, 切割方式: {}".format(dataset_name, partition))
+(
+    X_train,
+    y_train,
+    X_test,
+    y_test,
+    net_dataidx_map,
+    traindata_cls_counts,
+) = partition_data(
+    dataset_name,
+    dataset_fpath,
+    logdir="./logs",
+    partition=partition,
+    n_parties=client_numbers,
+    beta=beta,
+)
+print("beta: {}".format(beta))
+
+
+train_dl_global, test_dl, train_ds_global, test_ds_global = get_dataloader(
+    dataset_name, dataset_fpath, batch_size, test_bs=batch_size
+)
 
 # 设置模型
-if dataset_name == "mnist":
-    model_base = LeNet5(num_classes=num_classes)
-    key_lst = ["fc3.weight", "fc3.bias"]
-    glob_model = copy.deepcopy(model_base)
-    glob_model.fc3 = nn.Sequential()
-    optim_glob = optim.SGD(glob_model.parameters(), lr=1e-1)
+if dataset_name == "cifar10":
+    model_base = ModelFedCon("simple-cnn", out_dim=256, n_classes=10)
+    glob_model_base = GlobModel("simple-cnn", out_dim=256, n_classes=10)
+elif dataset_name == "cifar100":
+    model_base = ModelFedCon("resnet50-cifar100", out_dim=256, n_classes=100)
+    glob_model_base = GlobModel("resnet50-cifar100", out_dim=256, n_classes=100)
 
+elif dataset_name == "tinyimagenet":
+    model_base = ModelFedCon("resnet50-cifar100", out_dim=256, n_classes=200)
+    glob_model_base = GlobModel("resnet50-cifar100", out_dim=256, n_classes=200)
 
-elif "cifar" in dataset_name:
-    model_base = ResNet_cifar(
-        dataset=args.dataset_name,
-        resnet_size=8,
-        group_norm_num_groups=None,
-        freeze_bn=False,
-        freeze_bn_affine=False,
-    )
-    key_lst = ["classifier.weight", "classifier.bias"]
-    glob_model = copy.deepcopy(model_base)
-    glob_model.classifier = nn.Sequential()
-    optim_glob = optim.SGD(glob_model.parameters(), lr=1e-1)
-
+shared_key_layers = list(
+    set(model_base.state_dict().keys()) - set(glob_model_base.state_dict().keys())
+)
 
 model_fpath = "./client_checkpoint"
 if not os.path.isdir(model_fpath):
     os.mkdir(model_fpath)
+
+
+def inin_single_client(client_id):
+    model_ = copy.deepcopy(model_base)
+    optim_ = optim.SGD(model_.parameters(), lr=1e-2, momentum=0.9, weight_decay=1e-5)
+
+    trainloader, testloader, _, _ = get_dataloader(
+        dataset_name, dataset_fpath, batch_size, batch_size, net_dataidx_map[client_id]
+    )
+
+    return {
+        "model": model_,
+        "criterion": nn.CrossEntropyLoss(),
+        "optimizer": optim_,
+        "trainloader": trainloader,
+        "testloader": test_dl,
+        "model_fname": "client{}_round_{}.pth".format(client_id, "{}"),
+        "client_id": client_id,
+        "device": device,
+        "model_fpath": model_fpath,
+        "epoch": args.local_epoch,
+        "dataset_name": dataset_name,
+        "strategy_name": args.strategy_name,
+        "strategy": FedCCVR(model_fpath, glob_model_base),
+        "trainer": CCVRTrainer,
+        "save": False,
+        "display": False,
+        "log": False,
+    }
 
 
 def setup_seed(seed):
@@ -97,83 +141,33 @@ def setup_seed(seed):
     torch.backends.cudnn.deterministic = True
 
 
-def inin_single_client(client_id, trainloader_idx_lst, testloader_idx_lst):
-    model_ = copy.deepcopy(model_base)
-    optim_ = optim.SGD(model_.parameters(), lr=1e-1)
-
-    trainloader, testloader = get_split_loader(
-        trainset,
-        testset,
-        trainloader_idx_lst[client_id],
-        testloader_idx_lst[client_id],
-        batch_size,
-        num_workers=32,
-    )
-
-    return {
-        "model": model_,
-        "criterion": nn.CrossEntropyLoss(),
-        "optimizer": optim_,
-        "trainloader": trainloader,
-        "testloader": [testloader, glob_testloader],
-        "model_fname": "client{}_round_{}.pth".format(client_id, "{}"),
-        "client_id": client_id,
-        "device": device,
-        "model_fpath": model_fpath,
-        "epoch": args.local_epoch,
-        "dataset_name": dataset_name,
-        "strategy_name": args.strategy_name,
-        "strategy": FedCCVR(model_fpath),
-        "trainer": CCVRTrainer,
-        "save": False,
-        "display": False,
-        "log": False,
-    }
-
-
 if __name__ == "__main__":
 
     # 设置随机数种子
     setup_seed(0)
 
     # 客户端数量，及每轮上传客户端数量
-    client_numbers = 5
     k = int(client_numbers * args.frac)
     print("客户端总数: {}; 每轮上传客户端数量: {}".format(client_numbers, k))
-
-    print("切分{}数据集, 切割方式iid={}".format(dataset_name, iid))
-    if iid == "True":
-        trainloader_idx_lst = iid_f(trainset, client_numbers)
-        testloader_idx_lst = iid_f(testset, client_numbers)
-    else:
-        shard_per_user = 2
-        if dataset_name == "cifar100":
-            shard_per_user = 20
-        trainloader_idx_lst, rand_set_all = noniid(
-            trainset, client_numbers, shard_per_user
-        )
-        testloader_idx_lst, rand_set_all = noniid(
-            testset, client_numbers, shard_per_user, rand_set_all=rand_set_all
-        )
-        print("每个客户端标签数量: {}".format(shard_per_user))
 
     print("初始化客户端")
     client_lst = []
     for client_id in range(client_numbers):
-        c_conf = inin_single_client(client_id, trainloader_idx_lst, testloader_idx_lst)
+        c_conf = inin_single_client(client_id)
         client_lst.append(Client(c_conf))
 
     s_conf = {
-        "Round": 1000,
+        "Round": 100,
         "client_numbers": client_numbers,
         "model_fpath": model_fpath,
         "iid": iid,
         "dataset_name": dataset_name,
-        "strategy": FedCCVR(model_fpath),
+        "strategy": FedCCVR(model_fpath, glob_model_base),
         "strategy_name": args.strategy_name,
         "log_suffix": args.suffix,
         "client_lst": client_lst,
     }
+
     server_o = sc(conf=s_conf)
     server_o.max_workers = 1
 

@@ -1,4 +1,6 @@
 # coding: utf-8
+import pickle
+
 import numpy as np
 import torch
 import torch.nn as nn
@@ -6,20 +8,6 @@ import torch.optim as optim
 
 from flearn.common import Trainer
 from flearn.common.strategy import AVG
-from resnet import BasicBlock, Bottleneck
-
-
-class GlobModel(nn.Module):
-    def __init__(self, resnet_size=8, scaling=1):
-        block_fn = Bottleneck if resnet_size >= 44 else BasicBlock
-        self.classifier = nn.Linear(
-            in_features=int(64 * scaling * block_fn.expansion),
-            out_features=self.num_classes,
-        )
-
-    def forward(self, x):
-        x = self.classifier(x)
-        return x
 
 
 class ReTrain:
@@ -43,7 +31,7 @@ class ReTrain:
                 x = x.type(torch.float32)
                 x, target = x.to(self.device), target.to(self.device)
 
-                _, _, output = student(x)
+                output = student(x)
 
                 loss = CELoss(output, target)
 
@@ -79,12 +67,12 @@ class CCVRTrainer(Trainer):
         return np.mean(epoch_loss), np.mean(epoch_accuracy)
 
     def batch(self, data, target):
-        feat, output = self.model(data)
+        h, _, output = self.model(data)
         loss = self.criterion(output, target)
 
         if self.is_train:
             # 保存中间特征
-            self.feat_lst.append(feat)
+            self.feat_lst.append(h)
             self.label_lst.append(target)
 
             self.optimizer.zero_grad()
@@ -103,14 +91,14 @@ class FedCCVR(AVG):
     [1] Luo M, Chen F, Hu D, et al. No Fear of Heterogeneity: Classifier Calibration for Federated Learning with Non-IID Data[J]. arXiv preprint arXiv:2106.05001, 2021.
     """
 
-    def __init__(self, model_fpath):
-        super().__init__(model_fpath)
-        self.glob_model = GlobModel()
+    def __init__(self, model_fpath, glob_model_base):
+        super(FedCCVR, self).__init__(model_fpath)
+        self.glob_model = glob_model_base
 
     def client(self, model_trainer, agg_weight=1.0):
         w_local = model_trainer.weight
         w_shared = {"params": {}, "agg_weight": agg_weight}
-        for k in self.shared_key_layers:
+        for k in w_local.keys():
             w_shared["params"][k] = w_local[k].cpu()
 
         # 按照类别提取特征
@@ -147,9 +135,7 @@ class FedCCVR(AVG):
 
         agg_weight_lst, w_local_lst = self.server_pre_processing(ensemble_params_lst)
         try:
-            w_glob = self.server_ensemble(
-                agg_weight_lst, w_local_lst, key_lst=self.shared_key_layers
-            )
+            w_glob = self.server_ensemble(agg_weight_lst, w_local_lst)
         except Exception as e:
             return self.server_exception(e)
 
@@ -158,7 +144,7 @@ class FedCCVR(AVG):
         for x in fd_lst:
             label_lst += list(x.keys())
         label_lst = list(set(label_lst))
-        print("标签：", label_lst)
+        print("labels: ", label_lst)
 
         fd_d = {}
         # 统计每个标签的特征分布

@@ -89,9 +89,12 @@ class Generator(nn.Module):
         :param verbose: also return the sampled Gaussian noise if verbose = True
         :return: a dictionary of output information.
         """
+        device = labels.device
+
         result = {}
         batch_size = labels.shape[0]
-        eps = torch.rand((batch_size, self.noise_dim))  # sampling from Gaussian
+        # sampling from Gaussian
+        eps = torch.rand((batch_size, self.noise_dim), device=device)
         if verbose:
             result["eps"] = eps
         if self.embedding:  # embedded dense vector
@@ -101,6 +104,7 @@ class Generator(nn.Module):
             y_input.zero_()
             # labels = labels.view
             y_input.scatter_(1, labels.view(-1, 1), 1)
+        y_input = y_input.to(device)
         z = torch.cat((eps, y_input), dim=1)
         ### FC layers
         for layer in self.fc_layers:

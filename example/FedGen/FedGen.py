@@ -31,6 +31,8 @@ class Gen(AVG):
         self.model_base.to(self.device)
         self.model_base.eval()
 
+        self.generative_model.to(self.device)
+
     def client(self, model_trainer, agg_weight=1.0):
         w_local = model_trainer.weight
         w_shared = {"params": {}, "agg_weight": agg_weight}
@@ -84,18 +86,14 @@ class Gen(AVG):
         CE_loss = nn.CrossEntropyLoss()
 
         def get_teacher_loss(y_input, gen_output):
-            gen_output = gen_output.to(device)
-
             teacher_loss = 0
             teacher_logit = 0
             for user_idx, discriminator_model in enumerate(discriminator_model_lst):
                 discriminator_model.eval()
                 weight = label_weights[y][:, user_idx].reshape(-1, 1)
                 expand_weight = np.tile(weight, (1, len(unique_labels)))
-                dis_output = discriminator_model(
-                    gen_output, start_layer_idx=start_layer_idx
-                )
-                dis_output = dis_output.cpu().detach()
+                with torch.no_grad():
+                    dis_output = discriminator_model(gen_output, start_layer_idx)
                 user_output_logp_ = F.log_softmax(dis_output, dim=1)
                 teacher_loss_ = torch.mean(
                     NLL_loss(user_output_logp_, y_input)
@@ -110,7 +108,7 @@ class Gen(AVG):
         for _ in range(epochs):
             for _ in range(iter_):
                 y = np.random.choice(qualified_labels, batch_size)
-                y_input = torch.tensor(y)
+                y_input = torch.tensor(y).to(device)
                 ## feed to generator
 
                 gen_result = generative_model(y_input, verbose=True)
@@ -129,9 +127,7 @@ class Gen(AVG):
 
                 if beta > 0:
                     with torch.no_grad():
-                        student_output = student_model(
-                            gen_output, start_layer_idx=start_layer_idx
-                        )
+                        student_output = student_model(gen_output, start_layer_idx)
                     student_output = student_output.cpu().detach()
                     student_loss = F.kl_div(
                         F.log_softmax(student_output, dim=1),
@@ -242,7 +238,7 @@ class GenClient(Client):
         self.model_trainer.model.load_state_dict(update_w)
 
         self.model_trainer.generative_model = update_gen
-        # self.model_trainer.generative_model.to(self.device)
+        self.model_trainer.generative_model.to(self.device)
         self.model_trainer.generative_model.eval()
 
         generative_alpha = self.model_trainer.generative_alpha
@@ -306,11 +302,8 @@ class GenTrainer(Trainer):
             if self.generative_model != None:
                 ### get generator output(latent representation) of the same label
                 with torch.no_grad():
-                    gen_output = self.generative_model(target.cpu())["output"]
-                gen_output = gen_output.to(self.device)
-                dis_output = self.model(
-                    gen_output, start_layer_idx=self.start_layer_idx
-                )
+                    gen_output = self.generative_model(target)["output"]
+                dis_output = self.model(gen_output, self.start_layer_idx)
                 target_p = F.softmax(dis_output, dim=1).clone().detach()
                 user_latent_loss = self.generative_beta * self.kl_loss(
                     F.log_softmax(output, dim=1), target_p
@@ -318,16 +311,12 @@ class GenTrainer(Trainer):
 
                 # self.gen_batch_size = len(target)
                 sampled_y = np.random.choice(self.available_labels, len(target))
-                sampled_y = torch.tensor(sampled_y)
+                sampled_y = torch.tensor(sampled_y).to(self.device)
                 # latent representation when latent = True, x otherwise
 
                 with torch.no_grad():
                     gen_output = self.generative_model(sampled_y)["output"]
-                gen_output = gen_output.to(self.device)
-                dis_output = self.model(
-                    gen_output, start_layer_idx=self.start_layer_idx
-                )
-                sampled_y = sampled_y.to(self.device)
+                dis_output = self.model(gen_output, self.start_layer_idx)
                 teacher_loss = self.generative_alpha * torch.mean(
                     self.gen_loss(F.log_softmax(dis_output, dim=1), sampled_y)
                 )
