@@ -21,8 +21,8 @@ class SGD(AVG):
         g_shared["params"] = {k: v.cpu() for k, v in w_local.items()}
         return g_shared
 
-    def client_revice(self, model_trainer, data_glob_b):
-        g_glob = data_glob_b["w_glob"]
+    def client_revice(self, model_trainer, data_glob_d):
+        g_glob = data_glob_d["w_glob"]
 
         w_local = model_trainer.weight
         for k, v in w_local.items():

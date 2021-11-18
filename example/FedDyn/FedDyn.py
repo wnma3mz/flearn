@@ -35,7 +35,7 @@ class Dyn(AVG):
             w_glob[k] = w_glob[k] - self.alpha * self.h[k]
         self.theta = w_glob
 
-        return self.server_post_processing(w_glob, round_)
+        return {"w_glob": w_glob}
 
 
 class DynTrainer(Trainer):

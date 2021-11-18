@@ -51,37 +51,25 @@ class Distill(AVG):
     """
 
     def client(self, model_trainer, agg_weight=1.0):
-        w_local = model_trainer.weight
-        w_shared = {"params": {}, "agg_weight": agg_weight}
-        for k in w_local.keys():
-            w_shared["params"][k] = w_local[k].cpu()
+        w_shared = super(Distill, self).client(model_trainer, agg_weight)
         # upload logits
         w_shared["logits"] = model_trainer.logit_tracker.avg()
         return w_shared
 
-    def client_revice(self, model_trainer, w_glob_b):
+    def client_revice(self, model_trainer, data_glob_d):
         w_local = model_trainer.weight
-        d = pickle.loads(w_glob_b)
-        w_glob, logits_glob = d["w_glob"], d["logits_glob"]
+        w_glob, logits_glob = data_glob_d["w_glob"], data_glob_d["logits_glob"]
         for k in w_glob.keys():
             w_local[k] = w_glob[k]
         return w_local, logits_glob
 
     def server(self, ensemble_params_lst, round_):
-        agg_weight_lst = self.extract_lst(ensemble_params_lst, "agg_weight")
-        w_local_lst = self.extract_lst(ensemble_params_lst, "params")
+        g_shared = super(Distill, self).client(ensemble_params_lst, round_)
+
         logits_lst = self.extract_lst(ensemble_params_lst, "logits")
+        g_shared["logits_glob"] = self.aggregate_logits(logits_lst)
 
-        try:
-            w_glob = self.server_ensemble(agg_weight_lst, w_local_lst)
-        except Exception as e:
-            return self.server_exception(e)
-
-        logits_glob = self.aggregate_logits(logits_lst)
-
-        return self.server_post_processing(
-            {"w_glob": w_glob, "logits_glob": logits_glob}, round_
-        )
+        return g_shared
 
     def aggregate_logits(self, logits_lst):
         user_logits = 0

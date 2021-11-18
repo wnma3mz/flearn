@@ -29,15 +29,14 @@ class MD(LG_R):
                 glob_w[k] = w_dict[k]
         return glob_w
 
-    def client_revice(self, model_trainer, w_glob_b):
+    def client_revice(self, model_trainer, data_glob_d):
         w_local = model_trainer.weight
         w_local_bak = copy.deepcopy(w_local)
         self.glob_model.load_state_dict(
             self.load_model(self.glob_model.state_dict(), w_local)
         )
         criterion = model_trainer.criterion
-        d = pickle.loads(w_glob_b)
-        x_lst, logits_lst = d["x_lst"], d["logits_lst"]
+        x_lst, logits_lst = data_glob_d["x_lst"], data_glob_d["logits_lst"]
 
         # 为降低通信成本，该训练应该放到服务器端学习，再发回给各个客户端训练后不同的模型。但为了方便实现，该步骤先放到客户端进行
         epoch = 1
@@ -88,6 +87,4 @@ class MD(LG_R):
 
         x_lst, logits_lst = self.client_pub_predict(w_local_lst, **kwargs)
 
-        return self.server_post_processing(
-            {"x_lst": x_lst, "logits_lst": logits_lst}, round_
-        )
+        return {"x_lst": x_lst, "logits_lst": logits_lst}

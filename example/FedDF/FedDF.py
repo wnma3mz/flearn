@@ -111,4 +111,4 @@ class DF(AVG):
             teacher_lst, student, kwargs.pop("method"), weight_lst=weight_lst, **kwargs
         )
 
-        return self.server_post_processing(w_glob, round_)
+        return {"w_glob": w_glob}

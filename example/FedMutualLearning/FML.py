@@ -76,10 +76,10 @@ class FMLClient(Client):
 
     def revice(self, i, glob_params):
         # decode
-        data_glob_b = self.encrypt.decode(glob_params)
+        data_glob_d = self.encrypt.decode(glob_params)
 
         # update
-        update_w = self.strategy.client_revice(self.model_trainer, data_glob_b)
+        update_w = self.strategy.client_revice(self.model_trainer, data_glob_d)
         if self.scheduler != None:
             self.scheduler.step()
         self.model_trainer.model.load_state_dict(update_w)

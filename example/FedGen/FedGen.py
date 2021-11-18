@@ -34,11 +34,7 @@ class Gen(AVG):
         self.generative_model.to(self.device)
 
     def client(self, model_trainer, agg_weight=1.0):
-        w_local = model_trainer.weight
-        w_shared = {"params": {}, "agg_weight": agg_weight}
-        for k in w_local.keys():
-            w_shared["params"][k] = w_local[k].cpu()
-
+        w_shared = super(Gen, self).client(model_trainer, agg_weight)
         # 上传客户端的标签数量
         w_shared["label_counts"] = model_trainer.label_counts
         return w_shared
@@ -209,17 +205,15 @@ class Gen(AVG):
 
         self.visualize_images(self.generative_model, round_, unique_labels, repeats=10)
 
-        return self.server_post_processing(
-            {"w_glob": w_glob, "gen_model": self.generative_model.state_dict()}, round_
-        )
+        return {"w_glob": w_glob, "gen_model": self.generative_model.state_dict()}
 
-    def client_revice(self, model_trainer, w_glob_b):
+    def client_revice(self, model_trainer, data_glob_d):
         w_local = model_trainer.weight
-        w_glob = pickle.loads(w_glob_b)["w_glob"]
+        w_glob = data_glob_d["w_glob"]
         for k in w_glob.keys():
             w_local[k] = w_glob[k]
 
-        w_gen_glob = pickle.loads(w_glob_b)["gen_model"]
+        w_gen_glob = data_glob_d["gen_model"]
         self.generative_model.load_state_dict(w_gen_glob)
         return w_local, self.generative_model
 
@@ -227,11 +221,11 @@ class Gen(AVG):
 class GenClient(Client):
     def revice(self, i, glob_params):
         # decode
-        data_glob_b = self.encrypt.decode(glob_params)
+        data_glob_d = self.encrypt.decode(glob_params)
 
         # update
         update_w, update_gen = self.strategy.client_revice(
-            self.model_trainer, data_glob_b
+            self.model_trainer, data_glob_d
         )
         if self.scheduler != None:
             self.scheduler.step()

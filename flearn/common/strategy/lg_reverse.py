@@ -28,9 +28,9 @@ class LG_R(Strategy):
         }
         return w_shared
 
-    def client_revice(self, model_trainer, data_glob_b):
+    def client_revice(self, model_trainer, data_glob_d):
         w_local = model_trainer.weight
-        w_glob = data_glob_b["w_glob"]
+        w_glob = data_glob_d["w_glob"]
         for k in w_glob.keys():
             if k not in self.shared_key_layers:
                 w_local[k] = w_glob[k]

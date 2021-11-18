@@ -96,10 +96,7 @@ class FedCCVR(AVG):
         self.glob_model = glob_model_base
 
     def client(self, model_trainer, agg_weight=1.0):
-        w_local = model_trainer.weight
-        w_shared = {"params": {}, "agg_weight": agg_weight}
-        for k in w_local.keys():
-            w_shared["params"][k] = w_local[k].cpu()
+        w_shared = super(FedCCVR, self).client(model_trainer, agg_weight)
 
         # 按照类别提取特征
         d = {}
@@ -180,4 +177,4 @@ class FedCCVR(AVG):
         for k in w_train.keys():
             w_glob[k] = w_train[k].cpu()
 
-        return self.server_post_processing(w_glob, round_)
+        return {"w_glob": w_glob}

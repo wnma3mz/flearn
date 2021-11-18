@@ -117,10 +117,10 @@ class MOONClient(Client):
         )
 
         # decode
-        data_glob_b = self.encrypt.decode(glob_params)
+        data_glob_d = self.encrypt.decode(glob_params)
 
         # update
-        update_w = self.strategy.client_revice(self.model_trainer, data_glob_b)
+        update_w = self.strategy.client_revice(self.model_trainer, data_glob_d)
         if self.scheduler != None:
             self.scheduler.step()
         self.model_trainer.model.load_state_dict(update_w)
@@ -182,10 +182,10 @@ class ProxTrainer(Trainer):
 class ProxClient(Client):
     def revice(self, i, glob_params):
         # decode
-        data_glob_b = self.encrypt.decode(glob_params)
+        data_glob_d = self.encrypt.decode(glob_params)
 
         # update
-        update_w = self.strategy.client_revice(self.model_trainer, data_glob_b)
+        update_w = self.strategy.client_revice(self.model_trainer, data_glob_d)
         if self.scheduler != None:
             self.scheduler.step()
         self.model_trainer.model.load_state_dict(update_w)
@@ -226,7 +226,7 @@ class Dyn(AVG):
             w_glob[k] = w_glob[k] - self.alpha * self.h[k]
         self.theta = w_glob
 
-        return self.server_post_processing(w_glob, round_)
+        return {"w_glob": w_glob}
 
 
 class DynTrainer(Trainer):

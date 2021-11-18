@@ -20,9 +20,9 @@ class AVG(Strategy):
         w_shared["params"] = {k: v.cpu() for k, v in w_local.items()}
         return w_shared
 
-    def client_revice(self, model_trainer, data_glob_b):
+    def client_revice(self, model_trainer, data_glob_d):
         w_local = model_trainer.weight
-        w_glob = data_glob_b["w_glob"]
+        w_glob = data_glob_d["w_glob"]
         for k in w_glob.keys():
             w_local[k] = w_glob[k]
         return w_local
