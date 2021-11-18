@@ -69,24 +69,7 @@ class FMLClient(Client):
             self.trainloader, self.epoch
         )
         # 权重为本地数据大小
-        data_upload = self.strategy.client(
+        self.update_model = self.strategy.client(
             self.model_trainer, agg_weight=len(self.trainloader)
         )
-        return self._pickle_model(data_upload)
-
-    def revice(self, i, glob_params):
-        # decode
-        data_glob_d = self.encrypt.decode(glob_params)
-
-        # update
-        update_w = self.strategy.client_revice(self.model_trainer, data_glob_d)
-        if self.scheduler != None:
-            self.scheduler.step()
-        self.model_trainer.model.load_state_dict(update_w)
-
-        return {
-            "code": 200,
-            "msg": "Model update completed",
-            "client_id": self.client_id,
-            "round": str(i),
-        }
+        return self._pickle_model()

@@ -80,11 +80,11 @@ class Distill(AVG):
 
 class DistillClient(Client):
     def revice(self, i, glob_params):
-        # decode
-        w_glob_b = self.encrypt.decode(glob_params)
+        data_glob_d = self.strategy.revice_processing(glob_params)
+
         # update
         update_w, logits_glob = self.strategy.client_revice(
-            self.model_trainer, w_glob_b
+            self.model_trainer, data_glob_d
         )
 
         if self.scheduler != None:

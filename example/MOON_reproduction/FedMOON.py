@@ -102,10 +102,10 @@ class MOONClient(Client):
             self.trainloader, self.epoch
         )
         # 权重为本地数据大小
-        data_upload = self.strategy.client(
+        self.upload_model = self.strategy.client(
             self.model_trainer, agg_weight=len(self.trainloader)
         )
-        return self._pickle_model(data_upload)
+        return self._pickle_model()
 
     def revice(self, i, glob_params):
         # 额外需要两类模型，glob和previous，一般情况下glob只有一个，previous也定义只有一个
@@ -117,7 +117,7 @@ class MOONClient(Client):
         )
 
         # decode
-        data_glob_d = self.encrypt.decode(glob_params)
+        data_glob_d = self.strategy.revice_processing(glob_params)
 
         # update
         update_w = self.strategy.client_revice(self.model_trainer, data_glob_d)
@@ -182,7 +182,7 @@ class ProxTrainer(Trainer):
 class ProxClient(Client):
     def revice(self, i, glob_params):
         # decode
-        data_glob_d = self.encrypt.decode(glob_params)
+        data_glob_d = self.strategy.revice_processing(glob_params)
 
         # update
         update_w = self.strategy.client_revice(self.model_trainer, data_glob_d)
@@ -298,9 +298,9 @@ class DynClient(Client):
         w_local = self.model_trainer.weight
         self.w_local_bak = copy.deepcopy(w_local)
         # decode
-        w_glob_b = self.encrypt.decode(glob_params)
+        data_glob_d = self.strategy.revice_processing(glob_params)
         # update
-        update_w = self.strategy.client_revice(self.model_trainer, w_glob_b)
+        update_w = self.strategy.client_revice(self.model_trainer, data_glob_d)
         if self.scheduler != None:
             self.scheduler.step()
         # self.model_trainer.model.load_state_dict(self.w_local_bak)

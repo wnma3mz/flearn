@@ -11,9 +11,9 @@ class ProxClient(Client):
         w_local = self.model_trainer.weight
         self.w_local_bak = copy.deepcopy(w_local)
         # decode
-        w_glob_b = self.encrypt.decode(glob_params)
+        data_glob_d = self.strategy.revice_processing(glob_params)
         # update
-        update_w = self.strategy.client_revice(self.model_trainer, w_glob_b)
+        update_w = self.strategy.client_revice(self.model_trainer, data_glob_d)
         if self.scheduler != None:
             self.scheduler.step()
         # self.model_trainer.model.load_state_dict(self.w_local_bak)

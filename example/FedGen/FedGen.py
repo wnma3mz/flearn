@@ -221,7 +221,7 @@ class Gen(AVG):
 class GenClient(Client):
     def revice(self, i, glob_params):
         # decode
-        data_glob_d = self.encrypt.decode(glob_params)
+        data_glob_d = self.strategy.revice_processing(glob_params)
 
         # update
         update_w, update_gen = self.strategy.client_revice(
