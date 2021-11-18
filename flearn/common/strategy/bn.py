@@ -14,11 +14,9 @@ class BN(AVG):
     """
 
     def client(self, model_trainer, agg_weight=1.0):
+        w_shared = {"agg_weight": agg_weight}
         w_local = model_trainer.weight
-        w_shared = {"params": {}, "agg_weight": agg_weight}
-        for k in w_local.keys():
-            if "bn" not in k:
-                w_shared["params"][k] = w_local[k].cpu()
+        w_shared["params"] = {k: v.cpu() for k, v in w_local.items() if "bn" not in k}
         return w_shared
 
     def server(self, ensemble_params_lst, round_):

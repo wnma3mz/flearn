@@ -19,10 +19,9 @@ class LG(Strategy):
         self.shared_key_layers = shared_key_layers
 
     def client(self, model_trainer, agg_weight=1.0):
+        w_shared = {"agg_weight": agg_weight}
         w_local = model_trainer.weight
-        w_shared = {"params": {}, "agg_weight": agg_weight}
-        for k in self.shared_key_layers:
-            w_shared["params"][k] = w_local[k].cpu()
+        w_shared["params"] = {k: w_local[k].cpu() for k in self.shared_key_layers}
         return w_shared
 
     def client_revice(self, model_trainer, data_glob_b):

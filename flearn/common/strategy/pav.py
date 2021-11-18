@@ -8,7 +8,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 
-from .strategy import Strategy
+from .lg_reverse import LG_R
 
 
 class Distiller:
@@ -72,7 +72,7 @@ class Distiller:
         return student
 
 
-class PAV(Strategy):
+class PAV(LG_R):
     """
     FedPAV, https://github.com/cap-ntu/FedReID
 
@@ -84,10 +84,6 @@ class PAV(Strategy):
     ----------
     .. [1] Zhuang W, Wen Y, Zhang X, et al. Performance Optimization of Federated Person Re-identification via Benchmark Analysis[C]//Proceedings of the 28th ACM International Conference on Multimedia. 2020: 955-963.
     """
-
-    def __init__(self, model_fpath, shared_key_layers):
-        super(PAV, self).__init__(model_fpath)
-        self.shared_key_layers = shared_key_layers
 
     def client(self, model_trainer, old_model, device, trainloader):
         """客户端发送参数
@@ -114,23 +110,15 @@ class PAV(Strategy):
                                 模型参数所占权重（该客户端聚合所占权重）
             }
         """
-        w_local = model_trainer.weight
         distance = self.cdw_feature_distance(
             old_model, model_trainer.model, device, trainloader
         )
-        w_shared = {"params": {}, "agg_weight": np.float(distance)}
-        for k in w_local.keys():
-            if k not in self.shared_key_layers:
-                w_shared["params"][k] = w_local[k].cpu()
-        return w_shared
-
-    def client_revice(self, model_trainer, data_glob_b):
+        w_shared = {"agg_weight": np.float(distance)}
         w_local = model_trainer.weight
-        w_glob = data_glob_b["w_glob"]
-        for k in w_glob.keys():
-            if k not in self.shared_key_layers:
-                w_local[k] = w_glob[k]
-        return w_local
+        w_shared["params"] = {
+            k: v.cpu() for k, v in w_local.items() if k not in self.shared_key_layers
+        }
+        return w_shared
 
     @staticmethod
     def load_model(glob_w, w_dict):
