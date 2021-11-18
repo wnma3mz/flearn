@@ -47,31 +47,28 @@ class Strategy(ABC):
             w_local_lst.append(p["params"])
         return agg_weight_lst, w_local_lst
 
-    def server_post_processing(self, w_glob, round_):
-        """服务端后处理函数
+    def revice_processing(self, data):
+        """数据加密并转为二进制流
 
         Args:
-            w_glob :            dict
-                                聚合后的全局参数
-
-            round_ :            int or float
-                                第x轮
+            data :
 
         Returns:
-            dict : Dict {
-                'glob_params' : str
-                                编码后的全局模型
 
-                'code' :        int
-                                状态码,
-
-                'msg' :         str
-                                状态消息,
-            }
         """
-        # encryption
-        w_glob_b = pickle.dumps(w_glob)
-        return self.encrypt.encode(w_glob_b)
+        return pickle.loads(self.encrypt.decode(data))
+
+    def upload_processing(self, data):
+        """数据转为Python数据结构并解密
+
+        Args:
+            data :   bytes
+                     二进制数据流
+
+        Returns:
+
+        """
+        return self.encrypt.encode(pickle.dumps(data))
 
     @staticmethod
     def cdw_feature_distance(old_model, new_model, device, train_loader):
@@ -203,7 +200,7 @@ class Strategy(ABC):
             return NotImplemented
         except Exception as e:
             return self.server_exception(e)
-        return self.server_post_processing(w_glob, round_)
+        return {"w_glob": w_glob}
 
     @abstractmethod
     def client_revice(self, model_trainer, w_glob_b):

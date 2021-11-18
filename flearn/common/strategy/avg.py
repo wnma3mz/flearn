@@ -15,15 +15,14 @@ class AVG(Strategy):
     """
 
     def client(self, model_trainer, agg_weight=1.0):
+        w_shared = {"agg_weight": agg_weight}
         w_local = model_trainer.weight
-        w_shared = {"params": {}, "agg_weight": agg_weight}
-        for k in w_local.keys():
-            w_shared["params"][k] = w_local[k].cpu()
+        w_shared["params"] = {k: v.cpu() for k, v in w_local.items()}
         return w_shared
 
-    def client_revice(self, model_trainer, w_glob_b):
+    def client_revice(self, model_trainer, data_glob_b):
         w_local = model_trainer.weight
-        w_glob = pickle.loads(w_glob_b)
+        w_glob = data_glob_b["w_glob"]
         for k in w_glob.keys():
             w_local[k] = w_glob[k]
         return w_local
@@ -34,4 +33,5 @@ class AVG(Strategy):
             w_glob = self.server_ensemble(agg_weight_lst, w_local_lst)
         except Exception as e:
             return self.server_exception(e)
-        return self.server_post_processing(w_glob, round_)
+
+        return {"w_glob": w_glob}

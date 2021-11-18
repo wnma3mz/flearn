@@ -22,8 +22,9 @@ class SGD(AVG):
             g_shared["params"][k] = g_local[k].cpu()
         return g_shared
 
-    def client_revice(self, model_trainer, w_glob_b):
-        g_glob = pickle.loads(w_glob_b)
+    def client_revice(self, model_trainer, data_glob_b):
+        g_glob = data_glob_b["w_glob"]
+
         w_local = model_trainer.weight
         for k, v in w_local.items():
             w_local[k] = v.cpu() + g_glob[k]

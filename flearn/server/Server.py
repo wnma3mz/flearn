@@ -137,7 +137,7 @@ class Server(object):
         for item in data_lst:
             if int(round_) != int(item["round"]):
                 continue
-            model_data = pickle.loads(self.encrypt.decode(item["datas"]))
+            model_data = self.strategy.revice_processing(item["datas"])
 
             client_id_lst.append(item["client_id"])
             ensemble_params_lst.append(model_data)
@@ -149,8 +149,8 @@ class Server(object):
         # if k != 0:
         #     idxs_users = sorted(range(N), key=lambda x: agg_weight_lst[x])[:m]
         glob_params = self.strategy.server(ensemble_params_lst, round_, **kwargs)
-        self.glob_w = pickle.loads(self.encrypt.decode(glob_params))
-        return glob_params
+        self.glob_w = glob_params["w_glob"]
+        return self.strategy.upload_processing(glob_params)
 
     def revice(self):
         pass

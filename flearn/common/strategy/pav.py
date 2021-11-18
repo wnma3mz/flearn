@@ -124,9 +124,9 @@ class PAV(Strategy):
                 w_shared["params"][k] = w_local[k].cpu()
         return w_shared
 
-    def client_revice(self, model_trainer, w_glob_b):
+    def client_revice(self, model_trainer, data_glob_b):
         w_local = model_trainer.weight
-        w_glob = pickle.loads(w_glob_b)
+        w_glob = data_glob_b["w_glob"]
         for k in w_glob.keys():
             if k not in self.shared_key_layers:
                 w_local[k] = w_glob[k]
@@ -204,4 +204,4 @@ class PAV(Strategy):
             for k in w_glob.keys():
                 w_glob[k] = glob_model_d[k].cpu()
 
-        return self.server_post_processing(w_glob, round_)
+        return {"w_glob": w_glob}

@@ -22,7 +22,7 @@ class OPT(AVG):
     .. [1] Reddi S, Charles Z, Zaheer M, et al. Adaptive federated optimization[J]. arXiv preprint arXiv:2003.00295, 2020.
     """
 
-    def client_revice(self, model_trainer, w_glob_b, method="Adagrad"):
+    def client_revice(self, model_trainer, data_glob_b, method="Adagrad"):
         w_local = model_trainer.weight
         method = method.lower()
         assert method in ["adagrad", "yogi", "adam"]
@@ -31,7 +31,7 @@ class OPT(AVG):
         self.beta1 = 0.9
         self.beta2 = 0.99
 
-        w_glob = pickle.loads(w_glob_b)
+        w_glob = data_glob_b["w_glob"]
         delta_w = copy.deepcopy(w_glob)
         # 计算差值delta_w
         for k in w_glob.keys():

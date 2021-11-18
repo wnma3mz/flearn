@@ -165,11 +165,10 @@ class Client(object):
         self.train_loss, self.train_acc = self.model_trainer.train(
             self.trainloader, self.epoch
         )
-        data_upload = self.strategy.client(self.model_trainer, agg_weight=1.0)
-        return self._pickle_model(data_upload)
+        self.upload_model = self.strategy.client(self.model_trainer, agg_weight=1.0)
+        return self._pickle_model()
 
-    def _pickle_model(self, data_upload):
-        # save，最新的客户端模型
+    def _pickle_model(self):
         if self.save:
             self.model_trainer.save(self.update_fpath)
 
@@ -177,8 +176,6 @@ class Client(object):
             _, self.val_acc = self.model_trainer.test(self.valloader)
         else:
             self.val_acc = -1
-
-        self.upload_model = pickle.dumps(data_upload)
 
         return {
             "code": 200,
@@ -212,7 +209,8 @@ class Client(object):
             }
         """
         # weight params to string
-        model_b64_str = self.encrypt.encode(self.upload_model)
+        model_b64_str = self.strategy.upload_processing(self.upload_model)
+
         return {
             "code": 200,
             "msg": "Model uploaded successfully",
@@ -247,7 +245,7 @@ class Client(object):
             self.scheduler.step(epoch=(i + 1) * self.epoch)
         """
         # decode
-        data_glob_b = self.encrypt.decode(glob_params)
+        data_glob_b = self.strategy.revice_processing(glob_params)
 
         # update
         update_w = self.strategy.client_revice(self.model_trainer, data_glob_b)
