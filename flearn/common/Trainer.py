@@ -1,15 +1,6 @@
 # -*- coding: utf-8 -*-
-
-import copy
-import os
-from collections import OrderedDict
-from functools import wraps
-
 import numpy as np
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import torch.optim as optim
 from tqdm import tqdm
 
 
@@ -56,6 +47,8 @@ class Trainer:
         self.display = display
         self.model.to(self.device)
         self.is_train = None
+        self.history_loss = []
+        self.history_accuracy = []
 
     def fed_loss(self):
         """联邦学习中，客户端可能需要自定义其他的损失函数"""
@@ -139,15 +132,12 @@ class Trainer:
         """
         self.model.train()
         self.is_train = True
-        epoch_loss, epoch_accuracy = [], []
-        for ep in range(1, epochs + 1):
-            # if ep < self.epoch + 1:
-            #     continue
+        for _ in range(1, epochs + 1):
             with torch.enable_grad():
                 loss, accuracy = self._iteration(data_loader)
-            epoch_loss.append(loss)
-            epoch_accuracy.append(accuracy)
-        return np.mean(epoch_loss), np.mean(epoch_accuracy)
+            self.history_loss.append(loss)
+            self.history_accuracy.append(accuracy)
+        return loss, accuracy
 
     def test(self, data_loader):
         """模型测试的初始入口，由于只有一轮，所以不需要loop
@@ -169,21 +159,32 @@ class Trainer:
         return loss, accuracy
 
     def save(self, fpath):
-        # if self.save_dir is not None:
-        #     state = {"epoch": epoch, "weight": self.model.state_dict()}
-        #     if not os.path.exists(self.save_dir):
-        #         os.makedirs(self.save_dir)
-        torch.save(self.model.state_dict(), fpath)
+        """保存模型
+        Args:
+            fpath :  string
+                     模型保存的路径
+        """
+        torch.save(
+            {
+                "model": self.model.state_dict(),
+                "optimizer": self.optimizer.state_dict(),
+            },
+            fpath,
+        )
 
-    def restore(self, model_file, include_epoch=False):
-        self.say("\n***** restore from {} *****\n".format(model_file))
-        w = torch.load(model_file)
-        if include_epoch:
-            self.epoch = w["epoch"]
-        # self.model.load_state_dict(model["weight"])
-        self.model.load_state_dict(w)
+    def restore(self, fpath):
+        """恢复模型
+        Args:
+            fpath :  string
+                     模型保存的路径
+        """
+        saved_data = torch.load(fpath)
+        self.model.load_state_dict(saved_data["model"])
+        self.optimizer.load_state_dict(saved_data["optimizer"])
 
-    def get_lr(self):
+    @property
+    def lr(self):
+        """当前模型的学习率"""
         return self.optimizer.state_dict()["param_groups"][0]["lr"]
         # return self.optimizer.param_groups[0]["lr"]
 

@@ -34,7 +34,8 @@ jobs:
           python -m pip install --upgrade pip
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
           python setup.py sdist bdist_wheel
-          pip install dist/flearn-0.0.1.tar.gz
+          package_release=`ls dist | grep tar.gz`
+          pip install dist/$package_release
 
       - name: Test
         id: test

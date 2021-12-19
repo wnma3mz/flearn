@@ -98,14 +98,14 @@ class Client(object):
             strategy_p["model_fpath"] = self.model_fpath
             self.strategy = init_strategy(self.strategy_name, **strategy_p)
 
-        if self.restore_path != None:
-            self.model.load_state_dict(torch.load(self.restore_path))
-
         self.trainer = Trainer if self.trainer == None else self.trainer
 
         self.model_trainer = self.trainer(
             self.model, self.optimizer, self.criterion, self.device, self.display
         )
+
+        if self.restore_path != None:
+            self.model_trainer.restore(self.restore_path)
 
         if self.log == True:
             self.init_log(self.log_name_fmt)
