@@ -133,7 +133,7 @@ class Distill(AVG):
         return w_local, logits_glob
 
     def server(self, ensemble_params_lst, round_):
-        g_shared = super(Distill, self).client(ensemble_params_lst, round_)
+        g_shared = super(Distill, self).server(ensemble_params_lst, round_)
 
         logits_lst = self.extract_lst(ensemble_params_lst, "logits")
         g_shared["logits_glob"] = self.aggregate_logits(logits_lst)

@@ -18,7 +18,7 @@ class SGD(AVG):
     def client(self, model_trainer, agg_weight=1.0):
         g_shared = {"agg_weight": agg_weight}
         g_local = model_trainer.grads
-        g_shared["params"] = {k: v.cpu() for k, v in w_local.items()}
+        g_shared["params"] = {k: v.cpu() for k, v in g_local.items()}
         return g_shared
 
     def client_revice(self, model_trainer, data_glob_d):

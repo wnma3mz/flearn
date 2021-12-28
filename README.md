@@ -30,25 +30,29 @@
 
 ### 支持策略
 
-- [X] FedSGD
-- [X] FedAVG
-- [X] FedAVGM
-- [X] FedBN
-- [X] LG-FedAVG
-- [X] FedOPT
-- [X] FedPAV
+- [X] FedSGD/FedAVG [论文](https://arxiv.org/pdf/1602.05629)
+- [X] FedAVGM [论文](https://arxiv.org/pdf/1909.06335)
+- [X] FedBN [论文](https://arxiv.org/pdf/2102.07623)
+- [X] LG-FedAVG [论文](https://arxiv.org/pdf/2001.01523)
+- [X] FedOPT [论文](https://arxiv.org/pdf/2003.00295)
+- [X] FedPAV [论文](https://arxiv.org/pdf/2008.11560)
 - [ ] 复现计划
-  - [X] FedDistill
-  - [X] FedDyn
-  - [X] FedMD
-  - [X] FedMutual
-  - [X] MOON
-  - [X] CCVR
-  - [X] FedGen
-  - [X] FedDF(Ensemble Distillation)
-  - [ ] FedNova
+  - [X] FedDistill [论文](https://arxiv.org/pdf/2011.02367)
+  - [X] FedDyn [论文](https://arxiv.org/pdf/2111.04263)
+  - [X] FedMD [论文](https://arxiv.org/pdf/1910.03581)
+  - [X] FedMutual [论文](https://arxiv.org/pdf/2006.16765)
+  - [X] MOON [论文](https://arxiv.org/pdf/2103.16257.pdf)
+  - [X] CCVR [论文](https://arxiv.org/pdf/2106.05001) 
+  - [X] FedGen [论文](arXiv preprint arXiv:2105.10056, 2021.)
+  - [X] FedDF(Ensemble Distillation) [论文](https://arxiv.org/pdf/2006.07242)
+  - [ ] FedNova [论文](https://arxiv.org/pdf/2007.07481)
+  - [ ] FedDist [论文](https://arxiv.org/pdf/2110.10223)
 
 split-learning可见[README.md](https://github.com/wnma3mz/flearn/tree/master/example/split_learning)，尚存在loss爆炸问题。
+
+### TODO
+
+- [ ] 策略改成组件形式，可任意搭配
 
 ### 框架图
 

@@ -68,7 +68,11 @@ class DFDistiller(Distiller):
 
 
 class DF(AVG):
-    """"""
+    """
+    Ensemble distillation for robust model fusion in federated learning
+
+    [1] Lin T, Kong L, Stich S U, et al. Ensemble distillation for robust model fusion in federated learning[J]. arXiv preprint arXiv:2006.07242, 2020.
+    """
 
     def __init__(self, model_fpath, model_base, device):
         super(DF, self).__init__(model_fpath)

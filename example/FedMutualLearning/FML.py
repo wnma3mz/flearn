@@ -15,7 +15,11 @@ from flearn.common.distiller import KDLoss
 
 
 class FMLTrainer(Trainer):
-    """"搭配FMLClient使用"""
+    """ "搭配FMLClient使用
+    Federated mutual learning
+
+    [1] Shen T, Zhang J, Jia X, et al. Federated mutual learning[J]. arXiv preprint arXiv:2006.16765, 2020.
+    """
 
     def __init__(self, model, optimizer, criterion, device, display=True):
         super(FMLTrainer, self).__init__(model, optimizer, criterion, device, display)

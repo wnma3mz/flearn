@@ -21,7 +21,7 @@ class LogitTracker:
         self.unique_labels = unique_labels
         self.labels = [i for i in range(unique_labels)]
         self.label_counts = torch.ones(unique_labels)  # avoid division by zero error
-        self.logit_sums = torch.zeros((unique_labels, unique_labels))
+        self.logit_sums = torch.zeros((self.unique_labels, self.unique_labels))
 
     def update(self, logits, Y):
         """
