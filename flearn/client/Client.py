@@ -15,26 +15,14 @@ class Client(object):
 
         Args:
             conf (dict): {
-                "model" :           torchvision.models
-                                    模型,
-
-                "criterion" :       torch.nn.modules.loss
-                                    损失函数
-
-                "optimizer" :       torch.optim
-                                    优化器
-
                 "trainloader" :     torch.utils.data
                                     训练数据集
 
                 "testloader" :      torch.utils.data
                                     测试数据集
 
-                "device" :          torch.device
-                                    使用GPU还是CPU,
-
                 "scheduler" :       torch.optim.lr_scheduler
-                                    调整学习率
+                                    调整学习率, 待调整
 
                 "epoch" :           int (default: 1)
                                     本地训练轮数
@@ -51,9 +39,6 @@ class Client(object):
                 "save" :            bool
                                     是否存储最新模型，便于restore。(default: `True`)
 
-                "display" :         bool (default: `True`)
-                                    是否显示训练过程
-
                 "log" :             bool (default: `True`)
                                     是否记录客户端log信息
 
@@ -64,7 +49,7 @@ class Client(object):
                                     恢复已经训练模型的路径,
 
                 "trainer" :         Trainer
-                                    自定义训练器,
+                                    训练器
 
                 "strategy" :        Strategy
                                     自定义策略
@@ -98,14 +83,8 @@ class Client(object):
             strategy_p["model_fpath"] = self.model_fpath
             self.strategy = init_strategy(self.strategy_name, **strategy_p)
 
-        self.trainer = Trainer if self.trainer == None else self.trainer
-
-        self.model_trainer = self.trainer(
-            self.model, self.optimizer, self.criterion, self.device, self.display
-        )
-
         if self.restore_path != None:
-            self.model_trainer.restore(self.restore_path)
+            self.trainer.restore(self.restore_path)
 
         if self.log == True:
             self.init_log(self.log_name_fmt)
@@ -162,18 +141,18 @@ class Client(object):
                               模型在训练集上的精度
             }
         """
-        self.train_loss, self.train_acc = self.model_trainer.train(
+        self.train_loss, self.train_acc = self.trainer.train(
             self.trainloader, self.epoch
         )
-        self.upload_model = self.strategy.client(self.model_trainer, agg_weight=1.0)
+        self.upload_model = self.strategy.client(self.trainer, agg_weight=1.0)
         return self._pickle_model()
 
     def _pickle_model(self):
         if self.save:
-            self.model_trainer.save(self.update_fpath)
+            self.trainer.save(self.update_fpath)
 
         if self.valloader != None:
-            _, self.val_acc = self.model_trainer.test(self.valloader)
+            _, self.val_acc = self.trainer.test(self.valloader)
         else:
             self.val_acc = -1
 
@@ -248,13 +227,13 @@ class Client(object):
         data_glob_d = self.strategy.revice_processing(glob_params)
 
         # update
-        update_w = self.strategy.client_revice(self.model_trainer, data_glob_d)
+        update_w = self.strategy.client_revice(self.trainer, data_glob_d)
         if self.scheduler != None:
             self.scheduler.step()
-        self.model_trainer.model.load_state_dict(update_w)
+        self.trainer.model.load_state_dict(update_w)
 
         if self.save:
-            self.model_trainer.save(self.agg_fpath)
+            self.trainer.save(self.agg_fpath)
 
         return {
             "code": 200,
@@ -264,12 +243,10 @@ class Client(object):
         }
 
     def evaluate(self, i):
-        test_acc_lst = [
-            self.model_trainer.test(loader)[1] for loader in self.testloader
-        ]
+        test_acc_lst = [self.trainer.test(loader)[1] for loader in self.testloader]
 
         if self.best_acc < test_acc_lst[0]:
-            self.model_trainer.save(self.best_fpath)
+            self.trainer.save(self.best_fpath)
             self.best_acc = test_acc_lst[0]
 
         if self.log == True and "train_loss" in self.__dict__.keys():

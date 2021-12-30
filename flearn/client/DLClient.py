@@ -82,12 +82,12 @@ class DLClient(object):
         if self.restore_path:
             self.model.load_state_dict(torch.load(self.restore_path))
 
-        if self.trainer == None:
-            self.trainer = Trainer
+        # if self.trainer == None:
+        #     self.trainer = Trainer
 
-        self.model_trainer = self.trainer(
-            self.model, self.optimizer, self.criterion, self.device, self.display
-        )
+        # self.trainer = self.trainer(
+        #     self.model, self.optimizer, self.criterion, self.device, self.display
+        # )
 
         if self.log == True:
             self.init_log(self.log_name_fmt)
@@ -125,17 +125,17 @@ class DLClient(object):
                 进行到第i轮
         """
 
-        train_loss, train_acc = self.model_trainer.train(self.trainloader, self.epoch)
+        train_loss, train_acc = self.trainer.train(self.trainloader, self.epoch)
 
         # save，最新的客户端模型
         if self.save:
-            self.model_trainer.save(self.update_fpath)
-        _, test_acc = self.model_trainer.test(self.testloader)
+            self.trainer.save(self.update_fpath)
+        _, test_acc = self.trainer.test(self.testloader)
         if self.scheduler:
             self.scheduler.step()
 
         if self.best_acc > test_acc:
-            self.model_trainer.save(self.best_fpath)
+            self.trainer.save(self.best_fpath)
             self.best_acc = test_acc
 
         log_i = i, train_loss, train_acc, test_acc

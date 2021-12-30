@@ -5,21 +5,16 @@ import numpy as np
 import torch
 
 listed_keys = [
-    "model",
     "trainloader",
     "testloader",
     "valloader",
     "client_id",
-    "optimizer",
-    "criterion",
     "epoch",
     "model_fpath",
     "model_fname",
     "save",
     "restore_path",
     "trainer",
-    "device",
-    "display",
     "scheduler",
     "log",
     "log_suffix",
@@ -29,7 +24,7 @@ listed_keys = [
     "shared_key_layers",
     "dataset_name",
 ]
-bool_key_lst = ["save", "display", "log"]
+bool_key_lst = ["save", "log"]
 str_key_lst = [
     "restore_path",
     "trainer",
