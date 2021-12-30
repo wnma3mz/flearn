@@ -14,7 +14,21 @@ from flearn.client import Client
 from flearn.client.utils import get_free_gpu_id
 from flearn.server import Communicator as sc
 from model import GlobModel, ModelFedCon
+from MyClients import MOONClient, ProxClient
 from utils import get_dataloader, partition_data
+
+
+def setup_seed(seed):
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    np.random.seed(seed)
+    random.seed(seed)
+    # tf.random.set_seed(seed)
+    torch.backends.cudnn.deterministic = True
+
+
+# 设置随机数种子
+setup_seed(0)
 
 idx = get_free_gpu_id()
 print("使用{}号GPU".format(idx))
@@ -26,7 +40,9 @@ else:
     raise SystemError("No Free GPU Device")
 
 parser = argparse.ArgumentParser(description="Please input strategy_name")
-parser.add_argument("--strategy_name", dest="strategy_name")
+parser.add_argument(
+    "--strategy_name", dest="strategy_name", choices=["avg", "moon", "prox"]
+)
 parser.add_argument("--local_epoch", dest="local_epoch", default=1, type=int)
 parser.add_argument("--frac", dest="frac", default=1, type=float)
 parser.add_argument("--suffix", dest="suffix", default="", type=str)
@@ -48,6 +64,7 @@ args = parser.parse_args()
 iid = args.iid
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
+base_strategy = args.strategy_name.lower()
 # 设置数据集
 dataset_name = args.dataset_name
 dataset_fpath = args.dataset_fpath
@@ -102,6 +119,8 @@ model_fpath = "./client_checkpoint"
 if not os.path.isdir(model_fpath):
     os.mkdir(model_fpath)
 
+client_d = {"avg": Client, "moon": MOONClient, "prox": ProxClient}
+
 
 def inin_single_client(client_id):
     model_ = copy.deepcopy(model_base)
@@ -132,20 +151,7 @@ def inin_single_client(client_id):
     }
 
 
-def setup_seed(seed):
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed_all(seed)
-    np.random.seed(seed)
-    random.seed(seed)
-    # tf.random.set_seed(seed)
-    torch.backends.cudnn.deterministic = True
-
-
 if __name__ == "__main__":
-
-    # 设置随机数种子
-    setup_seed(0)
-
     # 客户端数量，及每轮上传客户端数量
     k = int(client_numbers * args.frac)
     print("客户端总数: {}; 每轮上传客户端数量: {}".format(client_numbers, k))
@@ -154,7 +160,9 @@ if __name__ == "__main__":
     client_lst = []
     for client_id in range(client_numbers):
         c_conf = inin_single_client(client_id)
-        client_lst.append(Client(c_conf))
+        client_item = client_d[base_strategy](c_conf)
+        client_item.model_trainer.strategy = base_strategy
+        client_lst.append(client_item)
 
     s_conf = {
         "Round": 100,

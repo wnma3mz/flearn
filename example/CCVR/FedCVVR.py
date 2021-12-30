@@ -1,13 +1,11 @@
 # coding: utf-8
-import pickle
-
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
 
-from flearn.common import Trainer
 from flearn.common.strategy import AVG
+from MyTrainers import MOONTrainer, ProxTrainer
 
 
 class ReTrain:
@@ -43,13 +41,24 @@ class ReTrain:
         return student.state_dict()
 
 
-class CCVRTrainer(Trainer):
-    def __init__(self, model, optimizer, criterion, device, display=True):
+class CCVRTrainer(MOONTrainer, ProxTrainer):
+    # 从左至右继承，如果右侧不会覆盖左侧的变量/函数
+    def __init__(
+        self, model, optimizer, criterion, device, display=True, strategy=None
+    ):
         super(CCVRTrainer, self).__init__(model, optimizer, criterion, device, display)
         self.feat_lst = []
         self.label_lst = []
+        self.fed_loss_d = {
+            "avg": lambda a, b: 0,
+            "moon": lambda a, b: self.moon_loss(a, b),
+            "prox": lambda a, b: self.prox_loss(),
+        }
+        self.strategy = strategy
 
     def train(self, data_loader, epochs=1):
+        self.eval_model()
+
         self.model.train()
         self.is_train = True
         epoch_loss, epoch_accuracy = [], []
@@ -66,18 +75,23 @@ class CCVRTrainer(Trainer):
 
         return np.mean(epoch_loss), np.mean(epoch_accuracy)
 
+    def update_feat(self, h, target):
+        # 保存中间特征
+        self.feat_lst.append(h)
+        self.label_lst.append(target)
+
     def batch(self, data, target):
-        h, _, output = self.model(data)
+        h, pro1, output = self.model(data)
         loss = self.criterion(output, target)
 
         if self.is_train:
-            # 保存中间特征
-            self.feat_lst.append(h)
-            self.label_lst.append(target)
+            loss += self.fed_loss_d[self.strategy](data, pro1)
 
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
+
+            self.update_feat(h, target)
 
         iter_loss = loss.data.item()
         iter_acc = self.metrics(output, target)
@@ -98,19 +112,26 @@ class FedCCVR(AVG):
     def client(self, model_trainer, agg_weight=1.0):
         w_shared = super(FedCCVR, self).client(model_trainer, agg_weight)
 
+        sum_ = 0
         # 按照类别提取特征
         d = {}
         for h_l, label_l in zip(model_trainer.feat_lst, model_trainer.label_lst):
+            sum_ += len(h_l)
             for h, label in zip(h_l, label_l):
                 label = int(label.cpu())
                 if label not in d.keys():
                     d[label] = [h]
                 else:
                     d[label].append(h)
+        # label_len = len(d.keys())
+
         # 计算mu, sigma
         upload_d = {}
         for k, v in d.items():
             v_item = torch.stack(v).detach().cpu()
+            # 考虑样本数量过少不上传的情况
+            # if len(v_item) * label_len * 2 < sum_:
+            #     continue
             mu, sigma = v_item.mean(dim=0), v_item.var(dim=0)
             upload_d[k] = {"mu": mu, "sigma": sigma, "N": len(v)}
 
