@@ -13,9 +13,9 @@ class BN(AVG):
     .. [1] Li X, Jiang M, Zhang X, et al. FedBN: Federated Learning on Non-IID Features via Local Batch Normalization[J]. arXiv preprint arXiv:2102.07623, 2021.
     """
 
-    def client(self, model_trainer, agg_weight=1.0):
+    def client(self, trainer, agg_weight=1.0):
         w_shared = {"agg_weight": agg_weight}
-        w_local = model_trainer.weight
+        w_local = trainer.weight
         w_shared["params"] = {k: v.cpu() for k, v in w_local.items() if "bn" not in k}
         return w_shared
 

@@ -85,11 +85,11 @@ class PAV(LG_R):
     .. [1] Zhuang W, Wen Y, Zhang X, et al. Performance Optimization of Federated Person Re-identification via Benchmark Analysis[C]//Proceedings of the 28th ACM International Conference on Multimedia. 2020: 955-963.
     """
 
-    def client(self, model_trainer, old_model, device, trainloader):
+    def client(self, trainer, old_model, device, trainloader):
         """客户端发送参数
 
         Args:
-            model_trainer :      Trainer
+            trainer :      Trainer
                                  客户端的训练器
 
             old_model :          Model
@@ -111,10 +111,10 @@ class PAV(LG_R):
             }
         """
         distance = self.cdw_feature_distance(
-            old_model, model_trainer.model, device, trainloader
+            old_model, trainer.model, device, trainloader
         )
         w_shared = {"agg_weight": np.float(distance)}
-        w_local = model_trainer.weight
+        w_local = trainer.weight
         w_shared["params"] = {
             k: v.cpu() for k, v in w_local.items() if k not in self.shared_key_layers
         }

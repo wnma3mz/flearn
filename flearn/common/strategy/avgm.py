@@ -17,8 +17,8 @@ class AVGM(AVG):
     .. [1] Hsu T M H, Qi H, Brown M. Measuring the effects of non-identical data distribution for federated visual classification[J]. arXiv preprint arXiv:1909.06335, 2019.
     """
 
-    def client_revice(self, model_trainer, data_glob_d, beta=0.9):
-        w_local = model_trainer.weight
+    def client_revice(self, trainer, data_glob_d, beta=0.9):
+        w_local = trainer.weight
         self.beta = beta
 
         w_glob = data_glob_d["w_glob"]

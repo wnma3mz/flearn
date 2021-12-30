@@ -14,14 +14,14 @@ class AVG(Strategy):
     .. [1] McMahan B, Moore E, Ramage D, et al. Communication-efficient learning of deep networks from decentralized data[C]//Artificial Intelligence and Statistics. PMLR, 2017: 1273-1282.
     """
 
-    def client(self, model_trainer, agg_weight=1.0):
+    def client(self, trainer, agg_weight=1.0):
         w_shared = {"agg_weight": agg_weight}
-        w_local = model_trainer.weight
+        w_local = trainer.weight
         w_shared["params"] = {k: v.cpu() for k, v in w_local.items()}
         return w_shared
 
-    def client_revice(self, model_trainer, data_glob_d):
-        w_local = model_trainer.weight
+    def client_revice(self, trainer, data_glob_d):
+        w_local = trainer.weight
         w_glob = data_glob_d["w_glob"]
         for k in w_glob.keys():
             w_local[k] = w_glob[k]

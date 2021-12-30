@@ -79,9 +79,8 @@ class Client(object):
 
         self.fname_fmt = ospj(self.model_fpath, self.model_fname)
 
-        if self.strategy == None:
-            strategy_p["model_fpath"] = self.model_fpath
-            self.strategy = init_strategy(self.strategy_name, **strategy_p)
+        strategy_p["model_fpath"] = self.model_fpath
+        self.strategy = init_strategy(self.strategy_name, self.strategy, **strategy_p)
 
         if self.restore_path != None:
             self.trainer.restore(self.restore_path)
@@ -227,10 +226,10 @@ class Client(object):
         data_glob_d = self.strategy.revice_processing(glob_params)
 
         # update
-        update_w = self.strategy.client_revice(self.trainer, data_glob_d)
+        w_update = self.strategy.client_revice(self.trainer, data_glob_d)
         if self.scheduler != None:
             self.scheduler.step()
-        self.trainer.model.load_state_dict(update_w)
+        self.trainer.model.load_state_dict(w_update)
 
         if self.save:
             self.trainer.save(self.agg_fpath)
@@ -243,8 +242,10 @@ class Client(object):
         }
 
     def evaluate(self, i):
+        # Consider the case where there are multiple testloader
         test_acc_lst = [self.trainer.test(loader)[1] for loader in self.testloader]
 
+        # Save the best model against the test results of the first testloader
         if self.best_acc < test_acc_lst[0]:
             self.trainer.save(self.best_fpath)
             self.best_acc = test_acc_lst[0]

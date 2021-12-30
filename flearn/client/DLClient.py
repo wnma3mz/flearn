@@ -82,13 +82,6 @@ class DLClient(object):
         if self.restore_path:
             self.model.load_state_dict(torch.load(self.restore_path))
 
-        # if self.trainer == None:
-        #     self.trainer = Trainer
-
-        # self.trainer = self.trainer(
-        #     self.model, self.optimizer, self.criterion, self.device, self.display
-        # )
-
         if self.log == True:
             self.init_log(self.log_name_fmt)
         self.best_acc = 0.0

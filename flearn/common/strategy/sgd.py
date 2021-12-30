@@ -15,16 +15,16 @@ class SGD(AVG):
 
     """
 
-    def client(self, model_trainer, agg_weight=1.0):
+    def client(self, trainer, agg_weight=1.0):
         g_shared = {"agg_weight": agg_weight}
-        g_local = model_trainer.grads
+        g_local = trainer.grads
         g_shared["params"] = {k: v.cpu() for k, v in g_local.items()}
         return g_shared
 
-    def client_revice(self, model_trainer, data_glob_d):
+    def client_revice(self, trainer, data_glob_d):
         g_glob = data_glob_d["w_glob"]
 
-        w_local = model_trainer.weight
+        w_local = trainer.weight
         for k, v in w_local.items():
             w_local[k] = v.cpu() + g_glob[k]
         return w_local

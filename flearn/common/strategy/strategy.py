@@ -145,7 +145,7 @@ class Strategy(ABC):
         return w_glob
 
     @abstractmethod
-    def client(self, model_trainer, i, agg_weight=1.0):
+    def client(self, trainer, i, agg_weight=1.0):
         """获取客户端需要上传的模型参数及所占全局模型的权重
 
         Args:
@@ -203,7 +203,7 @@ class Strategy(ABC):
         return {"w_glob": w_glob}
 
     @abstractmethod
-    def client_revice(self, model_trainer, w_glob_b):
+    def client_revice(self, trainer, w_glob_b):
         """客户端更新全局模型参数.
 
         Args:

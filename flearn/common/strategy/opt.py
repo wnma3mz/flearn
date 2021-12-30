@@ -22,8 +22,8 @@ class OPT(AVG):
     .. [1] Reddi S, Charles Z, Zaheer M, et al. Adaptive federated optimization[J]. arXiv preprint arXiv:2003.00295, 2020.
     """
 
-    def client_revice(self, model_trainer, data_glob_d, method="Adagrad"):
-        w_local = model_trainer.weight
+    def client_revice(self, trainer, data_glob_d, method="Adagrad"):
+        w_local = trainer.weight
         method = method.lower()
         assert method in ["adagrad", "yogi", "adam"]
         self.eta = 1e-1

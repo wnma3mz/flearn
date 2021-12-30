@@ -20,16 +20,16 @@ class LG_R(Strategy):
         super(LG_R, self).__init__(model_fpath)
         self.shared_key_layers = shared_key_layers
 
-    def client(self, model_trainer, agg_weight=1.0):
+    def client(self, trainer, agg_weight=1.0):
         w_shared = {"agg_weight": agg_weight}
-        w_local = model_trainer.weight
+        w_local = trainer.weight
         w_shared["params"] = {
             k: v.cpu() for k, v in w_local.items() if k not in self.shared_key_layers
         }
         return w_shared
 
-    def client_revice(self, model_trainer, data_glob_d):
-        w_local = model_trainer.weight
+    def client_revice(self, trainer, data_glob_d):
+        w_local = trainer.weight
         w_glob = data_glob_d["w_glob"]
         for k in w_glob.keys():
             if k not in self.shared_key_layers:
