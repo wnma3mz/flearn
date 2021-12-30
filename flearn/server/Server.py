@@ -65,8 +65,7 @@ class Server(object):
         self.eval_conf = conf["eval_conf"] if "eval_conf" in conf.keys() else None
 
         strategy_p["model_fpath"] = self.model_fpath
-        if self.strategy == None:
-            self.strategy = init_strategy(self.strategy_name, **strategy_p)
+        self.strategy = init_strategy(self.strategy_name, self.strategy, **strategy_p)
 
         self.encrypt = Encrypt()
 
