@@ -10,6 +10,7 @@ import torch.optim as optim
 from flask import Flask, jsonify, make_response, request
 
 from flearn.client.utils import get_free_gpu_id
+from flearn.common.utils import setup_seed
 from models import LeNet5Client, LeNet5Server, ResNet_cifarClient, ResNet_cifarServer
 
 parser = argparse.ArgumentParser(description="Please input conf")
@@ -63,15 +64,6 @@ model_server.to(device)
 model_server.train()
 optim_server = optim.SGD(model_server.parameters(), lr=1e-1)
 criterion_server = nn.CrossEntropyLoss()
-
-
-def setup_seed(seed):
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed_all(seed)
-    np.random.seed(seed)
-    random.seed(seed)
-    # tf.random.set_seed(seed)
-    torch.backends.cudnn.deterministic = True
 
 
 setup_seed(0)

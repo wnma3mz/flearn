@@ -10,20 +10,11 @@ import torch.nn as nn
 import torch.optim as optim
 
 from flearn.client.utils import get_free_gpu_id
+from flearn.common.utils import setup_seed
 from flearn.server import Communicator as sc
 from FML import FMLClient, FMLTrainer
 from model import ModelFedCon
 from utils import get_dataloader, partition_data
-
-
-def setup_seed(seed):
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed_all(seed)
-    np.random.seed(seed)
-    random.seed(seed)
-    # tf.random.set_seed(seed)
-    torch.backends.cudnn.deterministic = True
-
 
 # 设置随机数种子
 setup_seed(0)

@@ -13,21 +13,12 @@ from flearn.client.datasets import get_dataloader, get_datasets, get_split_loade
 from flearn.client.utils import get_free_gpu_id
 from flearn.common import Trainer
 from flearn.common.strategy import LG, LG_R
+from flearn.common.utils import setup_seed
 from flearn.server import Communicator as sc
 from LGClient import LGClient
 from models import MLP, CNNCifar, CNNMnist
 from split_data import iid as iid_f
 from split_data import noniid
-
-
-def setup_seed(seed):
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed_all(seed)
-    np.random.seed(seed)
-    random.seed(seed)
-    # tf.random.set_seed(seed)
-    torch.backends.cudnn.deterministic = True
-
 
 # 设置随机数种子
 setup_seed(0)

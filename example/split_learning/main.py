@@ -11,19 +11,10 @@ import torch.optim as optim
 
 from flearn.client.datasets import get_dataloader, get_datasets, get_split_loader
 from flearn.client.utils import get_free_gpu_id
+from flearn.common.utils import setup_seed
 from models import LeNet5Client, LeNet5Server, ResNet_cifarClient, ResNet_cifarServer
 from split_data import iid as iid_f
 from split_data import noniid
-
-
-def setup_seed(seed):
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed_all(seed)
-    np.random.seed(seed)
-    random.seed(seed)
-    # tf.random.set_seed(seed)
-    torch.backends.cudnn.deterministic = True
-
 
 # 设置随机数种子
 setup_seed(0)
