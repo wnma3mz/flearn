@@ -6,9 +6,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from flearn.client import Client
 from flearn.common import Trainer
-from flearn.common.strategy import AVG
+from flearn.common.distiller import KDLoss
 
 
 class AVGTrainer(Trainer):
@@ -27,8 +26,6 @@ class AVGTrainer(Trainer):
 
 
 class MOONTrainer(Trainer):
-    """"搭配MOONClient使用"""
-
     def __init__(self, model, optimizer, criterion, device, display=True):
         super(MOONTrainer, self).__init__(model, optimizer, criterion, device, display)
         self.global_model = copy.deepcopy(self.model)
@@ -39,7 +36,7 @@ class MOONTrainer(Trainer):
         #  CIFAR-10, CIFAR-100, and Tiny-Imagenet are 5, 1, and 1
         self.mu = 5
 
-    def fed_loss(self, data, pro1):
+    def moon_loss(self, data, pro1):
         if self.global_model != None:
             # 全局与本地的对比损失，越小越好
             with torch.no_grad():
@@ -75,7 +72,7 @@ class MOONTrainer(Trainer):
         _, pro1, output = self.model(data)
         loss = self.criterion(output, target)
         if self.is_train:
-            loss += self.fed_loss(data, pro1)
+            loss += self.moon_loss(data, pro1)
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
@@ -85,63 +82,6 @@ class MOONTrainer(Trainer):
         return iter_loss, iter_acc
 
 
-class MOONClient(Client):
-    """MOONClient"""
-
-    def __init__(self, conf, pre_buffer_size=1):
-        super(MOONClient, self).__init__(conf)
-        # 保存以前模型的大小
-        self.pre_buffer_size = pre_buffer_size
-        # 记录运行轮数
-        self.ci = -1
-
-    def train(self, i):
-        # 每轮训练+1
-        self.ci += 1
-        self.train_loss, self.train_acc = self.model_trainer.train(
-            self.trainloader, self.epoch
-        )
-        # 权重为本地数据大小
-        self.upload_model = self.strategy.client(
-            self.model_trainer, agg_weight=len(self.trainloader)
-        )
-        return self._pickle_model()
-
-    def revice(self, i, glob_params):
-        # 额外需要两类模型，glob和previous，一般情况下glob只有一个，previous也定义只有一个
-        # 如果存储超过这个大小，则删除最老的模型
-        while len(self.model_trainer.previous_model_lst) >= self.pre_buffer_size:
-            self.model_trainer.previous_model_lst.pop(0)
-        self.model_trainer.previous_model_lst.append(
-            copy.deepcopy(self.model_trainer.model)
-        )
-
-        # decode
-        data_glob_d = self.strategy.revice_processing(glob_params)
-
-        # update
-        update_w = self.strategy.client_revice(self.model_trainer, data_glob_d)
-        if self.scheduler != None:
-            self.scheduler.step()
-        self.model_trainer.model.load_state_dict(update_w)
-
-        # 如果该客户端训练轮数不等于服务器端的训练轮数，则表示该客户端的模型本轮没有训练，则不做对比学习，并且同步进度轮数。
-        if self.ci != i:
-            self.model_trainer.global_model = None
-            self.model_trainer.previous_model_lst = []
-            self.ci = i - 1
-        else:
-            self.model_trainer.global_model = copy.deepcopy(self.model_trainer.model)
-            self.model_trainer.global_model.load_state_dict(update_w)
-
-        return {
-            "code": 200,
-            "msg": "Model update completed",
-            "client_id": self.client_id,
-            "round": str(i),
-        }
-
-
 class ProxTrainer(Trainer):
     def __init__(self, model, optimizer, criterion, device, display=True):
         super(ProxTrainer, self).__init__(model, optimizer, criterion, device, display)
@@ -149,7 +89,7 @@ class ProxTrainer(Trainer):
         #  CIFAR-10, CIFAR-100, and Tiny-Imagenet are 0.01, 0.001, and 0.001
         self.prox_mu = 0.01
 
-    def fed_loss(self):
+    def prox_loss(self):
         if self.global_model != None:
             w_diff = torch.tensor(0.0, device=self.device)
             for w, w_t in zip(self.model.parameters(), self.global_model.parameters()):
@@ -163,7 +103,7 @@ class ProxTrainer(Trainer):
         loss = self.criterion(output, target)
 
         if self.is_train:
-            loss += self.fed_loss()
+            loss += self.prox_loss()
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
@@ -177,56 +117,6 @@ class ProxTrainer(Trainer):
             self.global_model.eval()
             self.global_model.to(self.device)
         return super(ProxTrainer, self).train(data_loader, epochs)
-
-
-class ProxClient(Client):
-    def revice(self, i, glob_params):
-        # decode
-        data_glob_d = self.strategy.revice_processing(glob_params)
-
-        # update
-        update_w = self.strategy.client_revice(self.model_trainer, data_glob_d)
-        if self.scheduler != None:
-            self.scheduler.step()
-        self.model_trainer.model.load_state_dict(update_w)
-        self.model_trainer.global_model = copy.deepcopy(self.model_trainer.model)
-        self.model_trainer.global_model.load_state_dict(update_w)
-
-        return {
-            "code": 200,
-            "msg": "Model update completed",
-            "client_id": self.client_id,
-            "round": str(i),
-        }
-
-
-class Dyn(AVG):
-    def __init__(self, model_fpath, h):
-        super(Dyn, self).__init__(model_fpath)
-        self.h = h
-        self.theta = copy.deepcopy(self.h)
-        self.alpha = 0.01
-
-    def server(self, ensemble_params_lst, round_):
-        agg_weight_lst, w_local_lst = self.server_pre_processing(ensemble_params_lst)
-        try:
-            w_glob = self.server_ensemble(agg_weight_lst, w_local_lst)
-        except Exception as e:
-            return self.server_exception(e)
-
-        delta_theta = {}
-        # assume agg_weight_lst all is 1.0
-        for k in self.h.keys():
-            delta_theta[k] = w_glob[k] * len(w_local_lst) - self.theta[k]
-
-        for k in self.h.keys():
-            self.h[k] -= self.alpha / len(w_local_lst) * delta_theta[k]
-
-        for k in self.h.keys():
-            w_glob[k] = w_glob[k] - self.alpha * self.h[k]
-        self.theta = w_glob
-
-        return {"w_glob": w_glob}
 
 
 class DynTrainer(Trainer):
@@ -293,26 +183,94 @@ class DynTrainer(Trainer):
         return iter_loss, iter_acc
 
 
-class DynClient(Client):
-    def revice(self, i, glob_params):
-        w_local = self.model_trainer.weight
-        self.w_local_bak = copy.deepcopy(w_local)
-        # decode
-        data_glob_d = self.strategy.revice_processing(glob_params)
-        # update
-        update_w = self.strategy.client_revice(self.model_trainer, data_glob_d)
-        if self.scheduler != None:
-            self.scheduler.step()
-        # self.model_trainer.model.load_state_dict(self.w_local_bak)
-        self.model_trainer.model.load_state_dict(update_w)
-        self.model_trainer.server_model = copy.deepcopy(self.model_trainer.model)
-        self.model_trainer.server_model.load_state_dict(update_w)
+class LSDTrainer(Trainer):
+    def __init__(self, model, optimizer, criterion, device, display=True):
+        super(LSDTrainer, self).__init__(model, optimizer, criterion, device, display)
+        self.teacher_model = None
+        self.mu_kd = 2
+        # self.mu_kd = 0.5
+        self.kd_loss = KDLoss(2)
 
-        self.model_trainer.server_model.eval()
-        self.model_trainer.server_state_dict = copy.deepcopy(update_w)
-        return {
-            "code": 200,
-            "msg": "Model update completed",
-            "client_id": self.client_id,
-            "round": str(i),
-        }
+    def train(self, data_loader, epochs=1):
+        if self.teacher_model != None:
+            self.teacher_model.eval()
+            self.teacher_model.to(self.device)
+        return super(LSDTrainer, self).train(data_loader, epochs)
+
+    def batch(self, data, target):
+        h, _, output = self.model(data)
+        loss = self.criterion(output, target)
+        if self.is_train:
+            if self.teacher_model != None:
+                with torch.no_grad():
+                    t_h, _, t_output = self.teacher_model(data)
+
+                loss2 = self.mu_kd * self.kd_loss(output, t_output.detach())
+                loss += loss2
+
+            self.optimizer.zero_grad()
+            loss.backward()
+            self.optimizer.step()
+
+        iter_loss = loss.data.item()
+        iter_acc = self.metrics(output, target)
+        return iter_loss, iter_acc
+
+
+class LogitTracker:
+    def __init__(self, unique_labels):
+        self.unique_labels = unique_labels
+        self.labels = [i for i in range(unique_labels)]
+        self.label_counts = torch.ones(unique_labels)  # avoid division by zero error
+        self.logit_sums = torch.zeros((unique_labels, unique_labels))
+
+    def update(self, logits, Y):
+        """
+        update logit tracker.
+        :param logits: shape = n_sampls * logit-dimension
+        :param Y: shape = n_samples
+        :return: nothing
+        """
+        logits, Y = logits.to("cpu"), Y.to("cpu")
+        batch_unique_labels, batch_labels_counts = Y.unique(dim=0, return_counts=True)
+        self.label_counts[batch_unique_labels] += batch_labels_counts
+        # expand label dimension to be n_samples X logit_dimension
+        labels = Y.view(Y.size(0), 1).expand(-1, logits.size(1))
+        logit_sums_ = torch.zeros((self.unique_labels, self.unique_labels))
+        logit_sums_.scatter_add_(0, labels, logits)
+        self.logit_sums += logit_sums_
+
+    def avg(self):
+        return self.logit_sums.detach() / self.label_counts.float().unsqueeze(1)
+
+
+class DistillTrainer(Trainer):
+    def __init__(self, model, optimizer, criterion, device, display=True):
+        super(DistillTrainer, self).__init__(
+            model, optimizer, criterion, device, display
+        )
+        self.logit_tracker = LogitTracker(10)  # cifar10
+        self.glob_logit = None
+        self.kd_mu = 1
+        self.kd_loss = KDLoss(2)
+
+    def batch(self, data, target):
+        _, _, output = self.model(data)
+        loss = self.criterion(output, target)
+
+        if self.is_train:
+            if self.glob_logit != None:
+                self.glob_logit = self.glob_logit.to(self.device)
+                target_p = self.glob_logit[target, :]
+                loss += self.kd_mu * self.kd_loss(output, target_p)
+
+            self.optimizer.zero_grad()
+            loss.backward()
+            self.optimizer.step()
+
+            # 更新上传的logits
+            self.logit_tracker.update(output, target)
+
+        iter_loss = loss.data.item()
+        iter_acc = self.metrics(output, target)
+        return iter_loss, iter_acc

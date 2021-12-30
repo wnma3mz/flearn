@@ -19,6 +19,18 @@ from resnet import ResNet_cifar
 from split_data import iid as iid_f
 from split_data import noniid
 
+
+def setup_seed(seed):
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    np.random.seed(seed)
+    random.seed(seed)
+    # tf.random.set_seed(seed)
+    torch.backends.cudnn.deterministic = True
+
+
+# 设置随机数种子
+setup_seed(0)
 idx = get_free_gpu_id()
 print("使用{}号GPU".format(idx))
 if idx != -1:
@@ -78,15 +90,6 @@ if not os.path.isdir(model_fpath):
     os.mkdir(model_fpath)
 
 
-def setup_seed(seed):
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed_all(seed)
-    np.random.seed(seed)
-    random.seed(seed)
-    # tf.random.set_seed(seed)
-    torch.backends.cudnn.deterministic = True
-
-
 def inin_single_client(client_id, trainloader_idx_lst, testloader_idx_lst):
     model_ = copy.deepcopy(model_base)
     optim_ = optim.SGD(model_.parameters(), lr=1e-1)
@@ -138,9 +141,6 @@ def create_data_randomly():
 
 
 if __name__ == "__main__":
-
-    # 设置随机数种子
-    setup_seed(0)
 
     # 客户端数量，及每轮上传客户端数量
     client_numbers = 5

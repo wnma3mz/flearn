@@ -15,6 +15,18 @@ from FML import FMLClient, FMLTrainer
 from model import ModelFedCon
 from utils import get_dataloader, partition_data
 
+
+def setup_seed(seed):
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    np.random.seed(seed)
+    random.seed(seed)
+    # tf.random.set_seed(seed)
+    torch.backends.cudnn.deterministic = True
+
+
+# 设置随机数种子
+setup_seed(0)
 idx = get_free_gpu_id()
 print("使用{}号GPU".format(idx))
 if idx != -1:
@@ -58,18 +70,6 @@ else:
     beta = 0.5
 print("切分{}数据集, 切割方式: {}".format(dataset_name, partition))
 
-
-def setup_seed(seed):
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed_all(seed)
-    np.random.seed(seed)
-    random.seed(seed)
-    # tf.random.set_seed(seed)
-    torch.backends.cudnn.deterministic = True
-
-
-# 设置随机数种子
-setup_seed(0)
 
 # 客户端数量，及每轮上传客户端数量
 client_numbers = 10

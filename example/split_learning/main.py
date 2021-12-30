@@ -15,6 +15,18 @@ from models import LeNet5Client, LeNet5Server, ResNet_cifarClient, ResNet_cifarS
 from split_data import iid as iid_f
 from split_data import noniid
 
+
+def setup_seed(seed):
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    np.random.seed(seed)
+    random.seed(seed)
+    # tf.random.set_seed(seed)
+    torch.backends.cudnn.deterministic = True
+
+
+# 设置随机数种子
+setup_seed(0)
 idx = get_free_gpu_id()
 print("使用{}号GPU".format(idx))
 if idx != -1:
@@ -77,15 +89,6 @@ criterion_server = nn.CrossEntropyLoss()
 model_fpath = "./client_checkpoint"
 if not os.path.isdir(model_fpath):
     os.mkdir(model_fpath)
-
-
-def setup_seed(seed):
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed_all(seed)
-    np.random.seed(seed)
-    random.seed(seed)
-    # tf.random.set_seed(seed)
-    torch.backends.cudnn.deterministic = True
 
 
 def inin_single_client(client_id, trainloader_idx_lst, testloader_idx_lst):
@@ -152,9 +155,6 @@ def client_backward(client_output_tmp, client_grad, optimizer_):
 
 
 if __name__ == "__main__":
-
-    # 设置随机数种子
-    setup_seed(0)
 
     # 客户端数量，及每轮上传客户端数量
     client_numbers = 20
