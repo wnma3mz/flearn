@@ -11,6 +11,7 @@ import torch.optim as optim
 
 from flearn.client import Client
 from flearn.client.utils import get_free_gpu_id
+from flearn.common import Trainer
 from flearn.server import Communicator as sc
 from model import ModelFedCon
 from MyClients import (
@@ -133,22 +134,17 @@ def inin_single_client(model_base, client_id):
     )
 
     return {
-        "model": model_,
-        "criterion": nn.CrossEntropyLoss(),
-        "optimizer": optim_,
+        "trainer": trainer(model_, optim_, nn.CrossEntropyLoss(), device, False),
         "trainloader": trainloader,
         # "testloader": testloader,
         "testloader": test_dl,
         "model_fname": "client{}_round_{}.pth".format(client_id, "{}"),
         "client_id": client_id,
-        "device": device,
         "model_fpath": model_fpath,
         "epoch": args.local_epoch,
         "dataset_name": dataset_name,
         "strategy_name": base_strategy,
-        "trainer": trainer,
         "save": False,
-        "display": False,
         "log": False,
     }
 

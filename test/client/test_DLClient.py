@@ -6,6 +6,7 @@ import torch.nn as nn
 import torch.optim as optim
 
 from flearn.client import DLClient
+from flearn.common import Trainer
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
@@ -39,6 +40,7 @@ if __name__ == "__main__":
 
     client_id = 0
     c_conf = {
+        "trainer": Trainer(model, optim_, nn.CrossEntropyLoss(), device, True),
         "model": model,
         "criterion": nn.CrossEntropyLoss(),
         "optimizer": optim_,

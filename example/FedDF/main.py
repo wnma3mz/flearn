@@ -13,6 +13,7 @@ from FedDF import DF
 from flearn.client import Client
 from flearn.client.datasets import get_dataloader, get_datasets, get_split_loader
 from flearn.client.utils import get_free_gpu_id
+from flearn.common import Trainer
 from flearn.server import Communicator as sc
 from models import LeNet5
 from resnet import ResNet_cifar
@@ -104,21 +105,17 @@ def inin_single_client(client_id, trainloader_idx_lst, testloader_idx_lst):
     )
 
     return {
-        "model": model_,
-        "criterion": nn.CrossEntropyLoss(),
-        "optimizer": optim_,
+        "trainer": Trainer(model_, optim_, nn.CrossEntropyLoss(), device, False),
         "trainloader": trainloader,
         "testloader": [testloader, glob_testloader],
         "model_fname": "client{}_round_{}.pth".format(client_id, "{}"),
         "client_id": client_id,
-        "device": device,
         "model_fpath": model_fpath,
         "epoch": args.local_epoch,
         "dataset_name": dataset_name,
         "strategy_name": args.strategy_name,
         "strategy": DF(model_fpath, model_base, device),
         "save": False,
-        "display": False,
         "log": False,
     }
 

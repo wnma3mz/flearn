@@ -119,22 +119,17 @@ def inin_single_client(client_id):
         dataset_name, dataset_fpath, batch_size, batch_size, net_dataidx_map[client_id]
     )
     return {
-        "model": model_,
-        "criterion": nn.CrossEntropyLoss(),
-        "optimizer": optim_,
+        "trainer": FMLTrainer(model_, optim_, nn.CrossEntropyLoss(), device, False),
         "trainloader": trainloader,
         # "testloader": testloader,
         "testloader": test_dl,
         "model_fname": "client{}_round_{}.pth".format(client_id, "{}"),
         "client_id": client_id,
-        "device": device,
         "model_fpath": model_fpath,
         "epoch": args.local_epoch,
         "dataset_name": dataset_name,
         "strategy_name": args.strategy_name,
-        "trainer": FMLTrainer,
         "save": False,
-        "display": False,
         "log": False,
     }
 

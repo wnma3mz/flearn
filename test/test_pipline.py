@@ -8,6 +8,7 @@ import torch.nn as nn
 import torch.optim as optim
 
 from flearn.client import Client
+from flearn.common import Trainer
 from flearn.server import Server
 from flearn.server.Communicator import Communicator as sc
 
@@ -43,20 +44,16 @@ if __name__ == "__main__":
 
     client_id = 0
     c_conf = {
-        "model": model,
-        "criterion": nn.CrossEntropyLoss(),
-        "optimizer": optim_,
+        "trainer": Trainer(model, optim_, nn.CrossEntropyLoss(), device, True),
         "trainloader": trainloader,
         "testloader": testloader,
         "model_fname": "client{}_round_{}.pth".format(client_id, "{}"),
         "client_id": client_id,
-        "device": device,
         "model_fpath": model_fpath,
         "epoch": epoch,
         "dataset_name": dataset_name,
         "strategy_name": strategy_name,
         "save": False,
-        "display": True,
         "log": False,
     }
 

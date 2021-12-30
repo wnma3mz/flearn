@@ -104,23 +104,18 @@ def inin_single_client(client_id, trainloader_idx_lst, testloader_idx_lst):
     )
 
     return {
-        "model": model_,
-        "criterion": nn.CrossEntropyLoss(),
-        # "criterion": nn.NLLLoss(),
-        "optimizer": optim_,
+        # criterion=nn.NLLLoss(),
+        "trainer": GenTrainer(model_, optim_, nn.CrossEntropyLoss(), device, False),
         "trainloader": trainloader,
         "testloader": [testloader, glob_testloader],
         "model_fname": "client{}_round_{}.pth".format(client_id, "{}"),
         "client_id": client_id,
-        "device": device,
         "model_fpath": model_fpath,
         "epoch": args.local_epoch,
         "dataset_name": dataset_name,
         "strategy_name": args.strategy_name,
         "strategy": Gen(model_fpath, model_base, generative_model, optimizer, device),
-        "trainer": GenTrainer,
         "save": False,
-        "display": False,
         "log": False,
     }
 

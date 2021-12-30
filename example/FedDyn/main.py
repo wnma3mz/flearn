@@ -102,22 +102,17 @@ def inin_single_client(client_id, trainloader_idx_lst, testloader_idx_lst):
     )
 
     return {
-        "model": model_,
-        "criterion": nn.CrossEntropyLoss(),
-        "optimizer": optim_,
+        "trainer": DynTrainer(model_, optim_, nn.CrossEntropyLoss(), device, False),
+        "strategy": Dyn(model_fpath, h=copy.deepcopy(model_base).state_dict()),
         "trainloader": trainloader,
         "testloader": [testloader, glob_testloader],
         "model_fname": "client{}_round_{}.pth".format(client_id, "{}"),
         "client_id": client_id,
-        "device": device,
         "model_fpath": model_fpath,
         "epoch": args.local_epoch,
         "dataset_name": dataset_name,
         "strategy_name": args.strategy_name,
-        "strategy": Dyn(model_fpath, h=copy.deepcopy(model_base).state_dict()),
-        "trainer": DynTrainer,
         "save": False,
-        "display": False,
         "log": False,
     }
 

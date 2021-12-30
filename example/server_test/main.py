@@ -8,11 +8,11 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torch.utils import data
 
 from flearn.client import Client
 from flearn.client.datasets import get_dataloader, get_datasets, get_split_loader
 from flearn.client.utils import get_free_gpu_id
+from flearn.common import Trainer
 from flearn.server import Communicator as sc
 from flearn.server import Server
 from models import LeNet5
@@ -102,20 +102,16 @@ def inin_single_client(client_id, trainloader_idx_lst, testloader_idx_lst):
     )
 
     return {
-        "model": model_,
-        "criterion": nn.CrossEntropyLoss(),
-        "optimizer": optim_,
+        "trainer": Trainer(model_, optim_, nn.CrossEntropyLoss(), device, False),
         "trainloader": trainloader,
         "testloader": testloader,
         "model_fname": "client{}_round_{}.pth".format(client_id, "{}"),
         "client_id": client_id,
-        "device": device,
         "model_fpath": model_fpath,
         "epoch": args.local_epoch,
         "dataset_name": dataset_name,
         "strategy_name": args.strategy_name,
         "save": False,
-        "display": False,
         "log": False,
     }
 
