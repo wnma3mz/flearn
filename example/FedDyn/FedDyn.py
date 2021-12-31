@@ -114,20 +114,20 @@ class DynTrainer(Trainer):
 
 class DynClient(Client):
     def revice(self, i, glob_params):
-        w_local = self.model_trainer.weight
+        w_local = self.trainer.weight
         self.w_local_bak = copy.deepcopy(w_local)
 
         data_glob_d = self.strategy.revice_processing(glob_params)
         # update
-        update_w = self.strategy.client_revice(self.model_trainer, data_glob_d)
+        update_w = self.strategy.client_revice(self.trainer, data_glob_d)
         if self.scheduler != None:
             self.scheduler.step()
-        # self.model_trainer.model.load_state_dict(self.w_local_bak)
-        self.model_trainer.model.load_state_dict(update_w)
-        self.model_trainer.server_model = copy.deepcopy(self.self.model_trainer.model)
-        self.model_trainer.server_model.load_state_dict(update_w)
-        self.model_trainer.server_model.eval()
-        self.model_trainer.server_state_dict = copy.deepcopy(update_w)
+        # self.trainer.model.load_state_dict(self.w_local_bak)
+        self.trainer.model.load_state_dict(update_w)
+        self.trainer.server_model = copy.deepcopy(self.self.trainer.model)
+        self.trainer.server_model.load_state_dict(update_w)
+        self.trainer.server_model.eval()
+        self.trainer.server_state_dict = copy.deepcopy(update_w)
         return {
             "code": 200,
             "msg": "Model update completed",

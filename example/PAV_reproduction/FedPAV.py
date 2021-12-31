@@ -16,17 +16,17 @@ class PAVClient(Client):
 
     def train(self, i):
         # 注：写死了全连接层
-        # if type(self.model_trainer.model) == nn.DataParallel:
-        #     old_classifier = copy.deepcopy(self.model_trainer.model.module.fc)
+        # if type(self.trainer.model) == nn.DataParallel:
+        #     old_classifier = copy.deepcopy(self.trainer.model.module.fc)
         # else:
-        #     old_classifier = copy.deepcopy(self.model_trainer.model.fc)
+        #     old_classifier = copy.deepcopy(self.trainer.model.fc)
         # 在原项目中存在old_classifier这个变量，但这里已经合并进old_model中
-        old_model = copy.deepcopy(self.model_trainer.model)
-        self.train_loss, self.train_acc = self.model_trainer.train(
+        old_model = copy.deepcopy(self.trainer.model)
+        self.train_loss, self.train_acc = self.trainer.train(
             self.trainloader, self.epoch
         )
         w_upload = self.strategy.client(
-            self.model_trainer, old_model, self.device, self.trainloader
+            self.trainer, old_model, self.device, self.trainloader
         )
 
         return super(PAVClient, self)._pickle_model(w_upload)

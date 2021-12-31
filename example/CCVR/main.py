@@ -147,7 +147,7 @@ if __name__ == "__main__":
     for client_id in range(client_numbers):
         c_conf = inin_single_client(client_id)
         client_item = client_d[base_strategy](c_conf)
-        client_item.model_trainer.strategy = base_strategy
+        client_item.trainer.strategy = base_strategy
         client_lst.append(client_item)
 
     s_conf = {

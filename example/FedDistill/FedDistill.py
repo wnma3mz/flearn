@@ -50,14 +50,14 @@ class Distill(AVG):
     [1] Seo H, Park J, Oh S, et al. Federated knowledge distillation[J]. arXiv preprint arXiv:2011.02367, 2020.
     """
 
-    def client(self, model_trainer, agg_weight=1.0):
-        w_shared = super(Distill, self).client(model_trainer, agg_weight)
+    def client(self, trainer, agg_weight=1.0):
+        w_shared = super(Distill, self).client(trainer, agg_weight)
         # upload logits
-        w_shared["logits"] = model_trainer.logit_tracker.avg()
+        w_shared["logits"] = trainer.logit_tracker.avg()
         return w_shared
 
-    def client_revice(self, model_trainer, data_glob_d):
-        w_local = model_trainer.weight
+    def client_revice(self, trainer, data_glob_d):
+        w_local = trainer.weight
         w_glob, logits_glob = data_glob_d["w_glob"], data_glob_d["logits_glob"]
         for k in w_glob.keys():
             w_local[k] = w_glob[k]
@@ -83,14 +83,12 @@ class DistillClient(Client):
         data_glob_d = self.strategy.revice_processing(glob_params)
 
         # update
-        update_w, logits_glob = self.strategy.client_revice(
-            self.model_trainer, data_glob_d
-        )
+        update_w, logits_glob = self.strategy.client_revice(self.trainer, data_glob_d)
 
         if self.scheduler != None:
             self.scheduler.step()
-        self.model_trainer.model.load_state_dict(update_w)
-        self.model_trainer.glob_logit = copy.deepcopy(logits_glob)
+        self.trainer.model.load_state_dict(update_w)
+        self.trainer.glob_logit = copy.deepcopy(logits_glob)
 
         return {
             "code": 200,

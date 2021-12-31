@@ -1,7 +1,4 @@
 # coding: utf-8
-import base64
-import pickle
-
 import numpy as np
 
 from flearn.common import Encrypt, init_strategy
@@ -73,6 +70,8 @@ class Server(object):
     def active_client(lst, k):
         if k != -1:
             k = min(len(lst), k)
+            if k <= 0:
+                raise SystemError("Please input vaild k")
             return np.random.choice(lst, size=k, replace=False)
         return lst
 
@@ -80,10 +79,10 @@ class Server(object):
     def mean_lst(k, lst):
         return np.mean(list(map(lambda x: x[k], lst)))
 
-    def drop_client(self, val_acc_lst):
+    def drop_client(self, val_acc_lst, min_acc=12):
         print("精度: {}".format(val_acc_lst))
         # cifar10: 1 / 10 * 100 * 1.2 = 12
-        idx_lst = [idx for idx, val_acc in enumerate(val_acc_lst) if val_acc > 12]
+        idx_lst = [idx for idx, val_acc in enumerate(val_acc_lst) if val_acc > min_acc]
         # idx_lst = [np.argmax(val_acc_lst)]
         if len(idx_lst) == 0:
             return []

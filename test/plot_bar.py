@@ -1,16 +1,16 @@
 # coding: utf-8
-import matplotlib as mpl
-
-# mpl.use("Agg")
-from matplotlib import rc
-from matplotlib.pyplot import MultipleLocator
-import matplotlib.pyplot as plt
-import pickle
-import numpy as np
 import os
+import pickle
 import re
 from os.path import join as ospj
 
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib import rc
+from matplotlib.pyplot import MultipleLocator
+
+# mpl.use("Agg")
 
 font = {"size": 22}
 rc("font", **font)
@@ -216,7 +216,7 @@ def plot_bar_more():
 
 if __name__ == "__main__":
     Round = 3
-    N_clients = 10
+    client_numbers = 10
     iid = True
     batch_size = 128
     dataset_name = "covid"

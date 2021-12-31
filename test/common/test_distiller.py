@@ -2,6 +2,9 @@ import torch
 import torch.nn as nn
 
 from flearn.common import Distiller
+from flearn.common.utils import setup_seed
+
+setup_seed(0)
 
 
 class MLP(nn.Module):

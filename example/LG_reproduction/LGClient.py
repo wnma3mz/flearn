@@ -6,7 +6,7 @@ from flearn.client import Client
 
 class LGClient(Client):
     def revice(self, i, glob_params):
-        self.w_local_bak = copy.deepcopy(self.model_trainer.model.state_dict())
+        self.w_local_bak = copy.deepcopy(self.trainer.model.state_dict())
         return super(LGClient, self).revice(i, glob_params)
 
     def evaluate(self, i):
@@ -18,20 +18,18 @@ class LGClient(Client):
         #         "client_id": self.client_id,
         #         "test_acc": [0, 0],
         #     }
-        test_acc_lst = [
-            self.model_trainer.test(loader)[1] for loader in self.testloader
-        ]
+        test_acc_lst = [self.trainer.test(loader)[1] for loader in self.testloader]
 
         if self.save:
-            self.model_trainer.save(self.agg_fpath)
+            self.trainer.save(self.agg_fpath)
 
         if self.best_acc < test_acc_lst[0]:
-            self.model_trainer.save(self.best_fpath)
+            self.trainer.save(self.best_fpath)
             self.best_acc = test_acc_lst[0]
         else:
             # referring to https://github.com/pliang279/LG-FedAvg/blob/7af0568b2cae88922ebeacc021b1679815092f4e/main_lg.py#L139
             # 不更新模型
-            self.model_trainer.model.load_state_dict(self.w_local_bak)
+            self.trainer.model.load_state_dict(self.w_local_bak)
 
         if self.log == True and "train_loss" in self.__dict__.keys():
             test_acc_str = "; ".join("{:.4f}".format(x) for x in test_acc_lst)

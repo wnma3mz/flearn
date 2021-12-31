@@ -109,13 +109,13 @@ class FedCCVR(AVG):
         super(FedCCVR, self).__init__(model_fpath)
         self.glob_model = glob_model_base
 
-    def client(self, model_trainer, agg_weight=1.0):
-        w_shared = super(FedCCVR, self).client(model_trainer, agg_weight)
+    def client(self, trainer, agg_weight=1.0):
+        w_shared = super(FedCCVR, self).client(trainer, agg_weight)
 
         sum_ = 0
         # 按照类别提取特征
         d = {}
-        for h_l, label_l in zip(model_trainer.feat_lst, model_trainer.label_lst):
+        for h_l, label_l in zip(trainer.feat_lst, trainer.label_lst):
             sum_ += len(h_l)
             for h, label in zip(h_l, label_l):
                 label = int(label.cpu())

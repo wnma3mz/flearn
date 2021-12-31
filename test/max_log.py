@@ -1,8 +1,8 @@
 # coding: utf-8
 import glob
 import os
-import numpy as np
 
+import numpy as np
 
 if __name__ == "__main__":
     dir_ = "D:\shared_files\share_learning\contrast_experiments\BN\DomainNet"

@@ -33,10 +33,10 @@ class Gen(AVG):
 
         self.generative_model.to(self.device)
 
-    def client(self, model_trainer, agg_weight=1.0):
-        w_shared = super(Gen, self).client(model_trainer, agg_weight)
+    def client(self, trainer, agg_weight=1.0):
+        w_shared = super(Gen, self).client(trainer, agg_weight)
         # 上传客户端的标签数量
-        w_shared["label_counts"] = model_trainer.label_counts
+        w_shared["label_counts"] = trainer.label_counts
         return w_shared
 
     @staticmethod
@@ -207,8 +207,8 @@ class Gen(AVG):
 
         return {"w_glob": w_glob, "gen_model": self.generative_model.state_dict()}
 
-    def client_revice(self, model_trainer, data_glob_d):
-        w_local = model_trainer.weight
+    def client_revice(self, trainer, data_glob_d):
+        w_local = trainer.weight
         w_glob = data_glob_d["w_glob"]
         for k in w_glob.keys():
             w_local[k] = w_glob[k]
@@ -224,29 +224,27 @@ class GenClient(Client):
         data_glob_d = self.strategy.revice_processing(glob_params)
 
         # update
-        update_w, update_gen = self.strategy.client_revice(
-            self.model_trainer, data_glob_d
-        )
+        update_w, update_gen = self.strategy.client_revice(self.trainer, data_glob_d)
         if self.scheduler != None:
             self.scheduler.step()
-        self.model_trainer.model.load_state_dict(update_w)
+        self.trainer.model.load_state_dict(update_w)
 
-        self.model_trainer.generative_model = update_gen
-        self.model_trainer.generative_model.to(self.device)
-        self.model_trainer.generative_model.eval()
+        self.trainer.generative_model = update_gen
+        self.trainer.generative_model.to(self.device)
+        self.trainer.generative_model.eval()
 
-        generative_alpha = self.model_trainer.generative_alpha
-        generative_beta = self.model_trainer.generative_beta
+        generative_alpha = self.trainer.generative_alpha
+        generative_beta = self.trainer.generative_beta
 
-        self.model_trainer.generative_alpha = self.exp_lr_scheduler(
+        self.trainer.generative_alpha = self.exp_lr_scheduler(
             i, decay=0.98, init_lr=generative_alpha
         )
-        self.model_trainer.generative_beta = self.exp_lr_scheduler(
+        self.trainer.generative_beta = self.exp_lr_scheduler(
             i, decay=0.98, init_lr=generative_beta
         )
 
         if self.save:
-            self.model_trainer.save(self.agg_fpath)
+            self.trainer.save(self.agg_fpath)
 
         return {
             "code": 200,

@@ -69,11 +69,11 @@ class FMLClient(Client):
     def train(self, i):
         # 每轮训练+1
         self.ci += 1
-        self.train_loss, self.train_acc = self.model_trainer.train(
+        self.train_loss, self.train_acc = self.trainer.train(
             self.trainloader, self.epoch
         )
         # 权重为本地数据大小
         self.update_model = self.strategy.client(
-            self.model_trainer, agg_weight=len(self.trainloader)
+            self.trainer, agg_weight=len(self.trainloader)
         )
         return self._pickle_model()

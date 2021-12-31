@@ -4,6 +4,9 @@ import torch.nn.functional as F
 import torch.optim as optim
 
 from flearn.common import Trainer
+from flearn.common.utils import setup_seed
+
+setup_seed(0)
 
 
 class MLP(nn.Module):

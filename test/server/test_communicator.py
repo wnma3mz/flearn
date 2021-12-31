@@ -1,7 +1,5 @@
 # coding: utf-8
-import base64
 import os
-import pickle
 
 import torch
 import torch.nn as nn
@@ -9,9 +7,10 @@ import torch.optim as optim
 
 from flearn.client import Client
 from flearn.common import Trainer
-from flearn.server import Server
+from flearn.common.utils import setup_seed
 from flearn.server.Communicator import Communicator as sc
 
+setup_seed(0)
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 
@@ -67,6 +66,7 @@ if __name__ == "__main__":
 
     client_lst = [Client(c_conf)]
 
+    # 常规情况
     s_conf = {
         "Round": 1,
         "client_numbers": len(client_lst),
@@ -75,9 +75,9 @@ if __name__ == "__main__":
         "strategy_name": strategy_name,
         "client_lst": client_lst,
     }
-
     test_sc(s_conf=s_conf)
 
+    # 服务器端进行测试, 但客户端不进行测试
     s_conf["eval_conf"] = {
         "model": model,
         "criterion": nn.CrossEntropyLoss(),
@@ -89,5 +89,6 @@ if __name__ == "__main__":
     }
     test_sc(s_conf=s_conf)
 
+    # 服务器端进行测试, 客户端也进行测试
     s_conf["eval_conf"]["eval_clients"] = True
     test_sc(s_conf=s_conf)

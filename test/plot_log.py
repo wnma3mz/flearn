@@ -1,11 +1,12 @@
 # coding: utf-8
 # In Server
+import pickle
+
 import matplotlib as mpl
+import matplotlib.pyplot as plt
+import numpy as np
 
 mpl.use("Agg")
-import matplotlib.pyplot as plt
-import pickle
-import numpy as np
 
 
 def data2png(log_client_name, log_server_name):
@@ -53,12 +54,12 @@ def data2png(log_client_name, log_server_name):
 
 if __name__ == "__main__":
     Round = 3
-    N_clients = 10
+    client_numbers = 10
     iid = True
     batch_size = 128
     dataset_name = "covid"
     log_name = "log_round{}_clients{}_iid{}_dataset-{}"
-    log_server_name = log_name.format(Round, N_clients, iid, dataset_name)
+    log_server_name = log_name.format(Round, client_numbers, iid, dataset_name)
     log_client_name = log_server_name + ".pkl"
 
     data2png(log_client_name, log_server_name)
