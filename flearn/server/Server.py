@@ -13,9 +13,6 @@ class Server(object):
                     "model_fpath" :     str
                                         模型存储路径
 
-                    "client_numbers":   int
-                                        客户端总数
-
                     "strategy_name":    str
                                         联邦学习策略名称
 
@@ -47,7 +44,6 @@ class Server(object):
         """
         listed_keys = [
             "model_fpath",
-            "client_numbers",
             "strategy_name",
             "strategy",
             "eval_conf",

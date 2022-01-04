@@ -1,15 +1,11 @@
 # coding: utf-8
 import concurrent.futures
 import copy
-import json
-import os
 import threading
 
 import requests
 
 from flearn.common import Logger
-
-from .Server import Server
 
 
 class Communicator(object):
@@ -29,14 +25,7 @@ class Communicator(object):
                                     "client_numbers":   1,
                                                         客户端数量
 
-                                    "model_fpath":      "",
-                                                        模型存储路径
-
-                                    "grad_norm":        False,
-
                                     "dataset_name":     "faces",
-
-                                    "strategy_name":    "pav",
 
                                     "log_name_fmt":     "",
 
@@ -51,14 +40,7 @@ class Communicator(object):
                                     "client_lst" :      [Client]
                                                         训练客户端的对象，多机情况可换为"client_url_lst"
                                 }
-
-            Server     :        Server
-                                自定义的服务端
-
-            strategy_p :        dict
-                                策略的额外参数，{"shared_key_layers": 共享的参数名称}
         """
-        # self.server = server(conf, **strategy_p)
         self.server = conf["server"]
 
         # 训练客户端配置
