@@ -13,7 +13,7 @@ from .Server import Server
 
 
 class Communicator(object):
-    def __init__(self, conf_fpath=None, conf=None, server=Server, **strategy_p):
+    def __init__(self, conf):
         """服务端的通信模块，用于发送指令
 
         Args:
@@ -58,13 +58,8 @@ class Communicator(object):
             strategy_p :        dict
                                 策略的额外参数，{"shared_key_layers": 共享的参数名称}
         """
-        if conf == None:
-            if conf_fpath != None and os.path.isfile(conf_fpath):
-                with open(conf_fpath, "r", encoding="utf-8") as f:
-                    conf = json.loads(f.read())
-            else:
-                raise SyntaxError("Please input conf or conf_fpath")
-        self.server = server(conf, **strategy_p)
+        # self.server = server(conf, **strategy_p)
+        self.server = conf["server"]
 
         # 训练客户端配置
         if "client_url_lst" in conf.keys():
@@ -99,7 +94,7 @@ class Communicator(object):
                 log_name_fmt = conf["log_name_fmt"]
 
             log_server_name = log_name_fmt.format(
-                conf["strategy_name"],
+                self.server.strategy_name,
                 conf["Round"],
                 client_numbers,
                 conf["dataset_name"],
