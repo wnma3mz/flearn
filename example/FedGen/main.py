@@ -2,19 +2,17 @@
 import argparse
 import copy
 import os
-import random
 
-import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
 
 from FedGen import Gen, GenClient, GenTrainer
-from flearn.client import Client
 from flearn.client.datasets import get_dataloader, get_datasets, get_split_loader
 from flearn.client.utils import get_free_gpu_id
 from flearn.common.utils import setup_seed
 from flearn.server import Communicator as sc
+from flearn.server import Server
 from generator import Generator
 from models import Net
 from split_data import iid as iid_f
@@ -141,17 +139,20 @@ if __name__ == "__main__":
         client_lst.append(GenClient(c_conf))
 
     s_conf = {
+        "model_fpath": model_fpath,
+        "strategy_name": args.strategy_name,
+        "strategy": Gen(model_fpath, model_base, generative_model, optimizer, device),
+    }
+    sc_conf = {
+        "server": Server(s_conf),
         "Round": 1000,
         "client_numbers": client_numbers,
-        "model_fpath": model_fpath,
         "iid": iid,
         "dataset_name": dataset_name,
-        "strategy": Gen(model_fpath, model_base, generative_model, optimizer, device),
-        "strategy_name": args.strategy_name,
         "log_suffix": args.suffix,
         "client_lst": client_lst,
     }
-    server_o = sc(conf=s_conf)
+    server_o = sc(conf=sc_conf)
     server_o.max_workers = 1
 
     if dataset_name == "cifar10":
@@ -166,5 +167,5 @@ if __name__ == "__main__":
         "device": device,
         "start_layer_idx": start_layer_idx,
     }
-    for ri in range(s_conf["Round"]):
+    for ri in range(sc_conf["Round"]):
         loss, train_acc, test_acc = server_o.run(ri, k=k, **kwargs)

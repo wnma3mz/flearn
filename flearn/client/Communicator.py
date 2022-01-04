@@ -1,8 +1,5 @@
 from flask import Flask, jsonify, make_response, request
 
-from flearn.client import Client
-from flearn.client.utils import load_client_conf
-
 
 # add route in class
 class EndpointAction(object):
@@ -21,34 +18,18 @@ class EndpointAction(object):
 class Communicator(object):
     app = None
 
-    def __init__(self, **conf):
+    def __init__(self, client):
         """通信模块.
 
         使用Flask进行HTTP通信
 
         Args:
-            conf (dict): {
-                "model" :        torchvision.models
-                                 模型,
+            Client :       object
+                           Flearn Client
 
-                "criterion" :    torch.nn.modules.loss
-                                 损失函数,
-
-                "optimizer" :    torch.optim
-                                 优化器,
-
-                "trainloader" :  torch.utils.data
-                                 训练数据集,
-
-                "testloader" :   torch.utils.data
-                                 测试数据集
-
-                "fpath" :        str
-                                 客户端配置文件路径名称
-            }
             客户端设置参数
         """
-        self.conf = load_client_conf(**conf)
+        self.client = client
 
         self.app = Flask(__name__)
         self.app.add_url_rule(
@@ -86,7 +67,7 @@ class Communicator(object):
             }
         """
         i = request.json["round"]
-        train_json = self.client_model.train(i)
+        train_json = self.client.train(i)
         return train_json
 
     def client_upload(self):
@@ -108,7 +89,7 @@ class Communicator(object):
             }
         """
         i = request.json["round"]
-        upload_json = self.client_model.upload(i)
+        upload_json = self.client.upload(i)
         return upload_json
 
     def client_revice(self):
@@ -126,7 +107,7 @@ class Communicator(object):
         r = request.json
         i = r["round"]
         w_glob_b64_str = r["glob_params"]
-        revice_json = self.client_model.revice(i, w_glob_b64_str)
+        revice_json = self.client.revice(i, w_glob_b64_str)
         return revice_json
 
     def client_evaluate(self):
@@ -145,18 +126,14 @@ class Communicator(object):
             }
         """
         i = request.json["round"]
-        evaluate_json = self.client_model.evaluate(i)
+        evaluate_json = self.client.evaluate(i)
         return evaluate_json
 
-    def run(self, client_model=Client, port=6000):
+    def run(self, port=6000):
         """启动Flask HTTP.
 
         Args:
-            CustomClient : object
-                           自定义客户端对象
-
             port :         int
                            HTTP端口号
         """
-        self.client_model = client_model(self.conf)
         self.app.run(host="0.0.0.0", port=port, debug=True)

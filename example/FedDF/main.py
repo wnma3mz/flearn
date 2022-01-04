@@ -2,9 +2,7 @@
 import argparse
 import copy
 import os
-import random
 
-import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -16,6 +14,7 @@ from flearn.client.utils import get_free_gpu_id
 from flearn.common import Trainer
 from flearn.common.utils import setup_seed
 from flearn.server import Communicator as sc
+from flearn.server import Server
 from models import LeNet5
 from resnet import ResNet_cifar
 from split_data import iid as iid_f
@@ -157,14 +156,17 @@ if __name__ == "__main__":
         c_conf = inin_single_client(client_id, trainloader_idx_lst, testloader_idx_lst)
         client_lst.append(Client(c_conf))
 
-    s_conf = {
-        "Round": 1000,
-        "client_numbers": client_numbers,
+    sc_conf = {
         "model_fpath": model_fpath,
-        "iid": iid,
-        "dataset_name": dataset_name,
         "strategy": DF(model_fpath, model_base, device),
         "strategy_name": args.strategy_name,
+    }
+    s_conf = {
+        "server": Server(sc_conf),
+        "Round": 1000,
+        "client_numbers": client_numbers,
+        "iid": iid,
+        "dataset_name": dataset_name,
         "log_suffix": args.suffix,
         "client_lst": client_lst,
     }
@@ -181,5 +183,5 @@ if __name__ == "__main__":
         "method": "avg_logits",
         "kd_loader": glob_testloader,
     }
-    for ri in range(s_conf["Round"]):
+    for ri in range(sc_conf["Round"]):
         loss, train_acc, test_acc = server_o.run(ri, k=k, **kwargs)

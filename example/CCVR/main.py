@@ -2,9 +2,7 @@
 import argparse
 import copy
 import os
-import random
 
-import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -14,6 +12,7 @@ from flearn.client import Client
 from flearn.client.utils import get_free_gpu_id
 from flearn.common.utils import setup_seed
 from flearn.server import Communicator as sc
+from flearn.server import Server
 from model import GlobModel, ModelFedCon
 from MyClients import MOONClient, ProxClient
 from utils import get_dataloader, partition_data
@@ -151,21 +150,23 @@ if __name__ == "__main__":
         client_lst.append(client_item)
 
     s_conf = {
-        "Round": 100,
-        "client_numbers": client_numbers,
         "model_fpath": model_fpath,
-        "iid": iid,
-        "dataset_name": dataset_name,
         "strategy": FedCCVR(model_fpath, glob_model_base),
         "strategy_name": args.strategy_name,
+    }
+    sc_conf = {
+        "server": Server(s_conf),
+        "Round": 100,
+        "client_numbers": client_numbers,
+        "iid": iid,
+        "dataset_name": dataset_name,
         "log_suffix": args.suffix,
         "client_lst": client_lst,
     }
 
-    server_o = sc(conf=s_conf)
+    server_o = sc(conf=sc_conf)
     server_o.max_workers = 1
-
     kwargs = {"device": device}
 
-    for ri in range(s_conf["Round"]):
+    for ri in range(sc_conf["Round"]):
         loss, train_acc, test_acc = server_o.run(ri, k=k, **kwargs)

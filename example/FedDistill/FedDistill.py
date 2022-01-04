@@ -1,10 +1,8 @@
 # coding: utf-8
 import copy
-import pickle
 
+import numpy as np
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
 
 from flearn.client import Client
 from flearn.common import Trainer
@@ -19,8 +17,13 @@ class LogitTracker:
 
     def __init__(self, unique_labels):
         self.unique_labels = unique_labels
-        self.labels = [i for i in range(unique_labels)]
-        self.label_counts = torch.ones(unique_labels)  # avoid division by zero error
+        self.clear()
+
+    def clear(self):
+        self.labels = [i for i in range(self.unique_labels)]
+        self.label_counts = torch.ones(
+            self.unique_labels
+        )  # avoid division by zero error
         self.logit_sums = torch.zeros((self.unique_labels, self.unique_labels))
 
     def update(self, logits, Y):
@@ -128,3 +131,19 @@ class DistillTrainer(Trainer):
         iter_loss = loss.data.item()
         iter_acc = self.metrics(output, target)
         return iter_loss, iter_acc
+
+    def train(self, data_loader, epochs=1):
+        self.model.train()
+        self.is_train = True
+        epoch_loss, epoch_accuracy = [], []
+        for ep in range(1, epochs + 1):
+            with torch.enable_grad():
+                loss, accuracy = self._iteration(data_loader)
+            epoch_loss.append(loss)
+            epoch_accuracy.append(accuracy)
+
+            # 非上传轮，清空特征
+            if ep != epochs:
+                self.logit_tracker.clear()
+
+        return np.mean(epoch_loss), np.mean(epoch_accuracy)

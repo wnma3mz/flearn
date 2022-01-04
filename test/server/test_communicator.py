@@ -8,6 +8,7 @@ import torch.optim as optim
 from flearn.client import Client
 from flearn.common import Trainer
 from flearn.common.utils import setup_seed
+from flearn.server import Server
 from flearn.server.Communicator import Communicator as sc
 
 setup_seed(0)
@@ -25,10 +26,10 @@ class MLP(nn.Module):
         return x
 
 
-def test_sc(s_conf):
-    server_o = sc(conf=s_conf)
+def test_sc(conf):
+    server_o = sc(conf=conf)
     server_o.max_workers = 1
-    for ri in range(s_conf["Round"]):
+    for ri in range(conf["Round"]):
         loss, train_acc, test_acc = server_o.run(ri, k=1)
     return loss, train_acc, test_acc
 
@@ -68,14 +69,18 @@ if __name__ == "__main__":
 
     # 常规情况
     s_conf = {
-        "Round": 1,
-        "client_numbers": len(client_lst),
         "model_fpath": ".",
-        "dataset_name": dataset_name,
         "strategy_name": strategy_name,
+    }
+    sc_conf = {
+        "server": Server(s_conf),
+        "client_numbers": len(client_lst),
+        "Round": 1,
+        "dataset_name": dataset_name,
         "client_lst": client_lst,
     }
-    test_sc(s_conf=s_conf)
+
+    test_sc(conf=sc_conf)
 
     # 服务器端进行测试, 但客户端不进行测试
     s_conf["eval_conf"] = {
@@ -87,8 +92,10 @@ if __name__ == "__main__":
         "eval_clients": False,
         "trainer": Trainer,
     }
-    test_sc(s_conf=s_conf)
+    sc_conf["server"] = Server(s_conf)
+    test_sc(conf=sc_conf)
 
     # 服务器端进行测试, 客户端也进行测试
     s_conf["eval_conf"]["eval_clients"] = True
-    test_sc(s_conf=s_conf)
+    sc_conf["server"] = Server(s_conf)
+    test_sc(conf=sc_conf)

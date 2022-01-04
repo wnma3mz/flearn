@@ -2,18 +2,16 @@
 import argparse
 import copy
 import os
-import random
 
-import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
 
 from flearn.client import Client
 from flearn.client.utils import get_free_gpu_id
-from flearn.common import Trainer
 from flearn.common.utils import setup_seed
 from flearn.server import Communicator as sc
+from flearn.server import Server
 from model import ModelFedCon
 from MyClients import (
     DistillClient,
@@ -182,23 +180,23 @@ if __name__ == "__main__":
             c_conf["strategy"] = dyn_strategy
         client_lst.append(client_d[base_strategy](c_conf))
 
-    s_conf = {
+    s_conf = {"model_fpath": model_fpath, "strategy_name": strategy_name}
+    sc_conf = {
+        "server": Server(s_conf),
         "Round": 100,
         "client_numbers": client_numbers,
-        "model_fpath": model_fpath,
-        "iid": iid,
-        "dataset_name": dataset_name,
-        "strategy_name": strategy_name,
         "log_suffix": args.suffix,
+        "dataset_name": dataset_name,
         "client_lst": client_lst,
     }
+
     if base_strategy == "dyn":
         s_conf["strategy"] = dyn_strategy
     elif base_strategy == "distill":
         s_conf["strategy"] = Distill(model_fpath)
 
-    server_o = sc(conf=s_conf)
+    server_o = sc(conf=sc_conf)
     # server_o.max_workers = min(20, client_numbers)
     server_o.max_workers = 1
-    for ri in range(s_conf["Round"]):
+    for ri in range(sc_conf["Round"]):
         loss, train_acc, test_acc = server_o.run(ri, k=k)

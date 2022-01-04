@@ -2,9 +2,7 @@
 import argparse
 import copy
 import os
-import random
 
-import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -15,6 +13,7 @@ from flearn.client.utils import get_free_gpu_id
 from flearn.common import Trainer
 from flearn.common.utils import setup_seed
 from flearn.server import Communicator as sc
+from flearn.server import Server
 from models import LeNet5
 from resnet import ResNet_cifar
 from split_data import iid as iid_f
@@ -142,18 +141,20 @@ if __name__ == "__main__":
         client_lst.append(PAVClient(c_conf))
 
     s_conf = {
+        "model_fpath": model_fpath,
+        "strategy_name": args.strategy_name,
+        **{"shared_key_layers": shared_key_layers},
+    }
+    sc_conf = {
+        "server": PAVServer(s_conf),
         "Round": 1000,
         "client_numbers": client_numbers,
-        "model_fpath": model_fpath,
         "iid": iid,
         "dataset_name": dataset_name,
-        "strategy_name": args.strategy_name,
         "log_suffix": args.suffix,
         "client_lst": client_lst,
     }
-    server_o = sc(
-        conf=s_conf, Server=PAVServer, **{"shared_key_layers": shared_key_layers}
-    )
+    server_o = sc(conf=sc_conf)
     server_o.max_workers = min(20, client_numbers)
 
     # 额外的公开数据集
@@ -168,5 +169,5 @@ if __name__ == "__main__":
         "device": device,
         "regularization": True,
     }
-    for ri in range(s_conf["Round"]):
+    for ri in range(sc_conf["Round"]):
         loss, train_acc, test_acc = server_o.run(ri, k=k, **kwargs)
