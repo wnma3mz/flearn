@@ -1,7 +1,4 @@
 # coding: utf-8
-import copy
-import pickle
-
 from .avg import AVG
 
 

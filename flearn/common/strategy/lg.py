@@ -1,7 +1,4 @@
 # coding: utf-8
-import pickle
-from functools import reduce
-
 from .strategy import Strategy
 
 

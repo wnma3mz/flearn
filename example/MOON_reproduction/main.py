@@ -9,6 +9,7 @@ import torch.optim as optim
 
 from flearn.client import Client
 from flearn.client.utils import get_free_gpu_id
+from flearn.common.strategy import LG
 from flearn.common.utils import setup_seed
 from flearn.server import Communicator as sc
 from flearn.server import Server
@@ -71,7 +72,7 @@ dataset_name = args.dataset_name
 dataset_fpath = args.dataset_fpath
 
 # 可运行策略
-avg_strategy_lst = ["moon", "lsd", "ssd", "lsdn", "prox", "dane"]
+avg_strategy_lst = ["moon", "lsd", "ssd", "lsdn", "prox", "dane", "lg"]
 trainer_d = {
     "avg": AVGTrainer,
     "moon": MOONTrainer,
@@ -81,6 +82,7 @@ trainer_d = {
     "lsdn": LSDTrainer,
     "dyn": DynTrainer,
     "distill": DistillTrainer,
+    "lg": AVGTrainer,
 }
 
 
@@ -93,6 +95,7 @@ client_d = {
     "ssd": SSDClient,
     "dyn": DynClient,
     "distill": DistillClient,
+    "lg": Client,
 }
 
 
@@ -110,8 +113,17 @@ elif dataset_name == "tinyimagenet":
 
 # 设置训练集以及策略
 trainer = trainer_d[base_strategy] if base_strategy in trainer_d.keys() else None
-strategy_name = "avg" if base_strategy in avg_strategy_lst else base_strategy
+# base_strategy = "avg" if base_strategy in avg_strategy_lst else base_strategy
 dyn_strategy = Dyn(model_fpath, copy.deepcopy(model_base).state_dict())
+shared_key_layers = [
+    "l1.weight",
+    "l1.bias",
+    "l2.weight",
+    "l2.bias",
+    "l3.weight",
+    "l3.bias",
+]
+lg_strategy = LG(model_fpath, shared_key_layers=shared_key_layers)
 
 
 def inin_single_client(model_base, client_id):
@@ -178,9 +190,16 @@ if __name__ == "__main__":
         c_conf = inin_single_client(model_base, client_id)
         if base_strategy == "dyn":
             c_conf["strategy"] = dyn_strategy
+        elif base_strategy == "lg":
+            c_conf["strategy"] = lg_strategy
         client_lst.append(client_d[base_strategy](c_conf))
 
-    s_conf = {"model_fpath": model_fpath, "strategy_name": strategy_name}
+    s_conf = {"model_fpath": model_fpath, "strategy_name": base_strategy}
+    if base_strategy == "dyn":
+        s_conf["strategy"] = dyn_strategy
+    elif base_strategy == "distill":
+        s_conf["strategy"] = Distill(model_fpath)
+
     sc_conf = {
         "server": Server(s_conf),
         "Round": 100,
@@ -189,11 +208,6 @@ if __name__ == "__main__":
         "dataset_name": dataset_name,
         "client_lst": client_lst,
     }
-
-    if base_strategy == "dyn":
-        s_conf["strategy"] = dyn_strategy
-    elif base_strategy == "distill":
-        s_conf["strategy"] = Distill(model_fpath)
 
     server_o = sc(conf=sc_conf)
     # server_o.max_workers = min(20, client_numbers)

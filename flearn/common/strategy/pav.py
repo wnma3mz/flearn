@@ -1,6 +1,5 @@
 # coding: utf-8
 import copy
-import pickle
 
 import numpy as np
 import torch

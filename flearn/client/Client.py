@@ -1,12 +1,9 @@
 # coding: utf-8
 import os
-import pickle
 from os.path import join as ospj
 
-import torch
-
 from flearn.client.utils import bool_key_lst, listed_keys, str_key_lst
-from flearn.common import Encrypt, Logger, Trainer, init_strategy
+from flearn.common import Encrypt, Logger, init_strategy
 
 
 class Client(object):
@@ -15,20 +12,20 @@ class Client(object):
 
         Args:
             conf (dict): {
+                "client_id" :       str or int,
+                                    客户端id
+
+                "epoch" :           int (default: 1)
+                                    本地训练轮数
+
+                "trainer" :         Trainer
+                                    训练器
+
                 "trainloader" :     torch.utils.data
                                     训练数据集
 
                 "testloader" :      torch.utils.data
                                     测试数据集
-
-                "scheduler" :       torch.optim.lr_scheduler
-                                    调整学习率, 待调整
-
-                "epoch" :           int (default: 1)
-                                    本地训练轮数
-
-                "client_id" :       str or int,
-                                    客户端id
 
                 "model_fpath" :     str
                                     本地保存模型的路径, /home/
@@ -36,23 +33,23 @@ class Client(object):
                 "model_fname" :     str
                                     本地保存模型的名称, "client{}.pth"
 
+                "restore_path" :    str
+                                    恢复已经训练模型的路径,
+
                 "save" :            bool
                                     是否存储最新模型，便于restore。(default: `True`)
+
+                "strategy" :        Strategy
+                                    自定义策略
+
+                "scheduler" :       torch.optim.lr_scheduler
+                                    调整学习率, 待调整
 
                 "log" :             bool (default: `True`)
                                     是否记录客户端log信息
 
                 "log_suffix" :      str
                                     log名称的后缀, ""
-
-                "restore_path" :    str
-                                    恢复已经训练模型的路径,
-
-                "trainer" :         Trainer
-                                    训练器
-
-                "strategy" :        Strategy
-                                    自定义策略
 
                 "log_name_fmt" :    str
                                     自定义客户端日志名称
