@@ -20,16 +20,12 @@ class OPT(AVG):
     .. [1] Reddi S, Charles Z, Zaheer M, et al. Adaptive federated optimization[J]. arXiv preprint arXiv:2003.00295, 2020.
     """
 
-    def client_revice(self, trainer, data_glob_d, method="Adagrad"):
-        w_local = trainer.weight
-        method = method.lower()
-        assert method in ["adagrad", "yogi", "adam"]
+    def adaptive_opt(self, w_local, w_glob, method):
         self.eta = 1e-1
         self.tau = 1e-9
         self.beta1 = 0.9
         self.beta2 = 0.99
 
-        w_glob = data_glob_d["w_glob"]
         delta_w = copy.deepcopy(w_glob)
         # 计算差值delta_w
         for k in w_glob.keys():
@@ -78,4 +74,11 @@ class OPT(AVG):
             w_local[k] = w_local[k].cpu() + self.eta * self.delta_t[k] / (
                 np.sqrt(self.v_t[k]) + self.tau
             )
+
+        return w_local
+
+    def client_revice(self, trainer, data_glob_d, method="Adagrad"):
+        method = method.lower()
+        assert method in ["adagrad", "yogi", "adam"]
+        w_local = self.adaptive_opt(trainer.weight, data_glob_d["w_glob"], method)
         return w_local

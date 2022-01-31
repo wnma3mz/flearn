@@ -15,11 +15,9 @@ class AVGM(AVG):
     .. [1] Hsu T M H, Qi H, Brown M. Measuring the effects of non-identical data distribution for federated visual classification[J]. arXiv preprint arXiv:1909.06335, 2019.
     """
 
-    def client_revice(self, trainer, data_glob_d, beta=0.9):
-        w_local = trainer.weight
+    def mean_momentum(self, w_local, w_glob, beta):
         self.beta = beta
 
-        w_glob = data_glob_d["w_glob"]
         delta_w = copy.deepcopy(w_glob)
         # 计算差值delta_w
         for k in w_glob.keys():
@@ -34,4 +32,8 @@ class AVGM(AVG):
 
         for k in w_glob.keys():
             w_local[k] = w_local[k].cpu() + self.v_t[k]
+        return w_local
+
+    def client_revice(self, trainer, data_glob_d, beta=0.9):
+        w_local = self.mean_momentum(trainer.weight, data_glob_d["w_glob"], beta)
         return w_local

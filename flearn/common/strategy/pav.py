@@ -112,7 +112,8 @@ class PAV(LG_R):
         distance = self.cdw_feature_distance(
             old_model, trainer.model, device, trainloader
         )
-        w_shared = {"agg_weight": np.float(distance)}
+        # 权重值太小，x100处理
+        w_shared = {"agg_weight": np.float(distance) * 100}
         w_local = trainer.weight
         w_shared["params"] = {
             k: v.cpu() for k, v in w_local.items() if k not in self.shared_key_layers
@@ -126,43 +127,7 @@ class PAV(LG_R):
         glob_model.load_state_dict(glob_model_dict)
         return glob_model
 
-    def server(self, ensemble_params_lst, round_, **kwargs):
-        """服务端聚合客户端模型并蒸馏
-
-        Args:
-            agg_weight_lst :    list
-                                模型参数所占权重组成的list（该客户端聚合所占权重）
-
-            w_local_lst :       list
-                                模型参数组成的list，model.state_dict()
-
-            round_ :            int or float
-                                第x轮
-
-            kwargs :            dict
-                                蒸馏所需参数
-
-        Returns:
-            dict : Dict {
-                'glob_params' : str
-                                编码后的全局模型
-
-                'code' :        int
-                                状态码,
-
-                'msg' :         str
-                                状态消息,
-            }
-        """
-        agg_weight_lst, w_local_lst = self.server_pre_processing(ensemble_params_lst)
-        # 同FedAVG一样先进行聚合，获得全局模型
-        try:
-            # 由于权重值过小，因此*100处理
-            agg_weight_lst = [x * 100 for x in agg_weight_lst]
-            w_glob = self.server_ensemble(agg_weight_lst, w_local_lst)
-        except Exception as e:
-            return self.server_exception(e)
-
+    def pav_kd(self, w_local_lst, w_glob, **kwargs):
         # 进行蒸馏
         if "kd" in kwargs.keys() and kwargs["kd"] == True:
             self.distiller = Distiller(
@@ -191,4 +156,15 @@ class PAV(LG_R):
             for k in w_glob.keys():
                 w_glob[k] = glob_model_d[k].cpu()
 
-        return {"w_glob": w_glob}
+        return w_glob
+
+    def server(self, ensemble_params_lst, round_, **kwargs):
+        """服务端聚合客户端模型并蒸馏
+        Args:
+            kwargs :            dict
+                                蒸馏所需参数
+        """
+        g_shared = super().server(ensemble_params_lst, round_)
+        w_local_lst = self.extract_lst(ensemble_params_lst, "params")
+        g_shared["w_glob"] = self.pav_kd(w_local_lst, g_shared["w_glob"], **kwargs)
+        return g_shared
