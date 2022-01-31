@@ -78,7 +78,7 @@ class Trainer:
         output = self.model(data)
         loss = self.criterion(output, target)
 
-        if self.is_train:
+        if self.model.training:
             loss += self.fed_loss()
             self.optimizer.zero_grad()
             loss.backward()
@@ -131,7 +131,6 @@ class Trainer:
                     N个epoch的accuracy取平均
         """
         self.model.train()
-        self.is_train = True
         for _ in range(1, epochs + 1):
             with torch.enable_grad():
                 loss, accuracy = self._iteration(data_loader)
@@ -153,7 +152,6 @@ class Trainer:
                     准确率
         """
         self.model.eval()
-        self.is_train = False
         with torch.no_grad():
             loss, accuracy = self._iteration(data_loader)
         return loss, accuracy

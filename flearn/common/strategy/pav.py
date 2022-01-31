@@ -120,11 +120,11 @@ class PAV(LG_R):
         return w_shared
 
     @staticmethod
-    def load_model(glob_w, w_dict):
-        for k in glob_w.keys():
-            if k in w_dict.keys():
-                glob_w[k] = w_dict[k]
-        return glob_w
+    def load_model(glob_model, w_dict):
+        glob_model_dict = glob_model.state_dict()
+        glob_model_dict.update(w_dict)
+        glob_model.load_state_dict(glob_model_dict)
+        return glob_model
 
     def server(self, ensemble_params_lst, round_, **kwargs):
         """服务端聚合客户端模型并蒸馏
