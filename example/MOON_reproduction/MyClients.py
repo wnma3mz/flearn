@@ -143,27 +143,3 @@ class LSDClient(Client):
             "client_id": self.client_id,
             "round": str(i),
         }
-
-
-class SSDClient(Client):
-    def revice(self, i, glob_params):
-        # decode
-        data_glob_d = self.strategy.revice_processing(glob_params)
-
-        # update
-        bak_w = copy.deepcopy(self.trainer.model.state_dict())
-        update_w = self.strategy.client_revice(self.trainer, data_glob_d)
-        if self.scheduler != None:
-            self.scheduler.step()
-        # 不直接覆盖本地模型
-        self.trainer.model.load_state_dict(update_w)
-
-        self.trainer.teacher_model = copy.deepcopy(self.trainer.model)
-        self.trainer.model.load_state_dict(bak_w)
-
-        return {
-            "code": 200,
-            "msg": "Model update completed",
-            "client_id": self.client_id,
-            "round": str(i),
-        }

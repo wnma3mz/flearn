@@ -42,7 +42,7 @@ class ReTrain:
 
 
 class CCVRTrainer(MOONTrainer, ProxTrainer):
-    # 从左至右继承，如果右侧不会覆盖左侧的变量/函数
+    # 从左至右继承，右侧不会覆盖左侧的变量/函数
     def __init__(
         self, model, optimizer, criterion, device, display=True, strategy=None
     ):

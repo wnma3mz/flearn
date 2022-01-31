@@ -3,7 +3,6 @@ import copy
 
 import numpy as np
 import torch
-import torch.nn.functional as F
 
 from flearn.common.distiller import Distiller, KDLoss
 from flearn.common.strategy import AVG
