@@ -12,8 +12,8 @@ class LG(Strategy):
     """
 
     def __init__(self, model_fpath, shared_key_layers):
-        kwargs = {"model_fpath": model_fpath, "shared_key_layers": shared_key_layers}
-        super(LG, self).__init__(**kwargs)
+        super(LG, self).__init__(model_fpath)
+        self.shared_key_layers = shared_key_layers
 
     def client(self, trainer, agg_weight=1.0):
         w_shared = {"agg_weight": agg_weight}
