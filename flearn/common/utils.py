@@ -11,12 +11,13 @@ def init_strategy(strategy_name, custom_strategy, model_fpath, shared_key_layers
     if custom_strategy != None:
         return custom_strategy
     strategy_name = strategy_name.lower()
+    kwargs = {"model_fpath": model_fpath}
     strategy_d = {
-        "avg": AVG(model_fpath),
-        "sgd": SGD(model_fpath),
-        "opt": OPT(model_fpath),
-        "avgm": AVGM(model_fpath),
-        "bn": BN(model_fpath),
+        "avg": AVG(**kwargs),
+        "sgd": SGD(**kwargs),
+        "opt": OPT(**kwargs),
+        "avgm": AVGM(**kwargs),
+        "bn": BN(**kwargs),
         "lg": LG(model_fpath, shared_key_layers),
         "pav": PAV(model_fpath, shared_key_layers),
         "lg_r": LG_R(model_fpath, shared_key_layers),

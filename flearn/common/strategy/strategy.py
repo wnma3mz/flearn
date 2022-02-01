@@ -13,14 +13,19 @@ from flearn.common import Encrypt
 class Strategy(ABC):
     """联邦学习策略的基类，包含对客户端模型处理、服务端聚合等"""
 
-    def __init__(self, model_fpath):
+    def __init__(self, **kwargs):
         """
 
         Args:
-            model_fpath : str
-                          模型存储的路径
+            kwargs  :   dict
+                        {
+                            model_fpath : str
+                                        模型存储的路径
+                        }
+
         """
-        self.model_fpath = model_fpath
+        for k in kwargs.keys():
+            self.__dict__[k] = kwargs[k]
         self.encrypt = Encrypt()
 
     @staticmethod
