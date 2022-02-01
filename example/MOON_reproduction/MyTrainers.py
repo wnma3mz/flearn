@@ -16,7 +16,7 @@ class AVGTrainer(Trainer):
         _, _, output = self.model(data)
         loss = self.criterion(output, target)
 
-        if self.is_train:
+        if self.model.training:
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
@@ -75,7 +75,7 @@ class MOONTrainer(Trainer):
     def batch(self, data, target):
         _, pro1, output = self.model(data)
         loss = self.criterion(output, target)
-        if self.is_train:
+        if self.model.training:
             loss += self.moon_loss(data, pro1)
             self.optimizer.zero_grad()
             loss.backward()
@@ -106,7 +106,7 @@ class ProxTrainer(Trainer):
         _, _, output = self.model(data)
         loss = self.criterion(output, target)
 
-        if self.is_train:
+        if self.model.training:
             loss += self.prox_loss()
             self.optimizer.zero_grad()
             loss.backward()
@@ -171,7 +171,7 @@ class DynTrainer(Trainer):
         _, _, output = self.model(data)
         loss = self.criterion(output, target)
 
-        if self.is_train:
+        if self.model.training:
             loss += self.dyn_loss()
             self.optimizer.zero_grad()
             loss.backward()
@@ -212,7 +212,7 @@ class LSDTrainer(Trainer):
     def batch(self, data, target):
         h, _, output = self.model(data)
         loss = self.criterion(output, target)
-        if self.is_train:
+        if self.model.training:
             loss += self.lsd_loss(data, output)
             self.optimizer.zero_grad()
             loss.backward()
@@ -262,7 +262,6 @@ class DistillTrainer(Trainer):
 
     def train(self, data_loader, epochs=1):
         self.model.train()
-        self.is_train = True
         epoch_loss, epoch_accuracy = [], []
         for ep in range(1, epochs + 1):
             with torch.enable_grad():
@@ -287,7 +286,7 @@ class DistillTrainer(Trainer):
         _, _, output = self.model(data)
         loss = self.criterion(output, target)
 
-        if self.is_train:
+        if self.model.training:
             loss += self.distill_loss(output, target)
             self.optimizer.zero_grad()
             loss.backward()
@@ -323,7 +322,6 @@ class CCVRTrainer(MOONTrainer, ProxTrainer, LSDTrainer, DistillTrainer, DynTrain
         self.lsd_eval_model()
 
         self.model.train()
-        self.is_train = True
         epoch_loss, epoch_accuracy = [], []
         for ep in range(1, epochs + 1):
             with torch.enable_grad():
@@ -341,16 +339,17 @@ class CCVRTrainer(MOONTrainer, ProxTrainer, LSDTrainer, DistillTrainer, DynTrain
 
         return np.mean(epoch_loss), np.mean(epoch_accuracy)
 
-    def update_feat(self, h, target):
+    def update_feat(self, h, target, output):
         # 保存中间特征
-        self.feat_lst.append(h)
-        self.label_lst.append(target)
+        idx = output.data.max(1)[1] == target.data
+        self.feat_lst.append(h[idx])
+        self.label_lst.append(target[idx])
 
     def batch(self, data, target):
         h, pro1, output = self.model(data)
         loss = self.criterion(output, target)
 
-        if self.is_train:
+        if self.model.training:
             if self.strategy == "lsd":
                 loss += self.lsd_loss(data, output)
             elif self.strategy == "distill":
@@ -364,7 +363,7 @@ class CCVRTrainer(MOONTrainer, ProxTrainer, LSDTrainer, DistillTrainer, DynTrain
             loss.backward()
             self.optimizer.step()
 
-            self.update_feat(h, target)
+            self.update_feat(h, target, output)
             if self.strategy == "distill":
                 self.logit_tracker.update(output, target)
             elif self.strategy == "dyn":

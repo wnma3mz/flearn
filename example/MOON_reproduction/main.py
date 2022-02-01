@@ -8,8 +8,9 @@ import torch.nn as nn
 import torch.optim as optim
 
 from flearn.client import Client, datasets
-from flearn.client import utils as fl_utils
+from flearn.client.utils import get_free_gpu_id
 from flearn.common.strategy import LG
+from flearn.common.utils import setup_seed
 from flearn.server import Communicator as sc
 from flearn.server import Server
 from model import GlobModel, ModelFedCon
@@ -27,8 +28,8 @@ from MyTrainers import (
 from utils import get_dataloader, partition_data
 
 # 设置随机数种子
-fl_utils.setup_seed(0)
-idx = fl_utils.get_free_gpu_id()
+setup_seed(0)
+idx = get_free_gpu_id()
 print("使用{}号GPU".format(idx))
 if idx != -1:
     os.environ["CUDA_VISIBLE_DEVICES"] = str(idx)

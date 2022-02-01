@@ -60,7 +60,6 @@ class CCVRTrainer(MOONTrainer, ProxTrainer):
         self.eval_model()
 
         self.model.train()
-        self.is_train = True
         epoch_loss, epoch_accuracy = [], []
         for ep in range(1, epochs + 1):
             with torch.enable_grad():
@@ -84,7 +83,7 @@ class CCVRTrainer(MOONTrainer, ProxTrainer):
         h, pro1, output = self.model(data)
         loss = self.criterion(output, target)
 
-        if self.is_train:
+        if self.model.training:
             loss += self.fed_loss_d[self.strategy](data, pro1)
 
             self.optimizer.zero_grad()

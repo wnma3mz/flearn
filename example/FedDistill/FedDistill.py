@@ -115,7 +115,7 @@ class DistillTrainer(Trainer):
         output = self.model(data)
         loss = self.criterion(output, target)
 
-        if self.is_train:
+        if self.model.training:
             if self.glob_logit != None:
                 self.glob_logit = self.glob_logit.to(self.device)
                 target_p = self.glob_logit[target, :]
@@ -134,7 +134,6 @@ class DistillTrainer(Trainer):
 
     def train(self, data_loader, epochs=1):
         self.model.train()
-        self.is_train = True
         epoch_loss, epoch_accuracy = [], []
         for ep in range(1, epochs + 1):
             with torch.enable_grad():

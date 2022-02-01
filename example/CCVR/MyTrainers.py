@@ -15,7 +15,7 @@ class AVGTrainer(Trainer):
         _, _, output = self.model(data)
         loss = self.criterion(output, target)
 
-        if self.is_train:
+        if self.model.training:
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
@@ -74,7 +74,7 @@ class MOONTrainer(Trainer):
     def batch(self, data, target):
         _, pro1, output = self.model(data)
         loss = self.criterion(output, target)
-        if self.is_train:
+        if self.model.training:
             loss += self.moon_loss(data, pro1)
             self.optimizer.zero_grad()
             loss.backward()
@@ -105,7 +105,7 @@ class ProxTrainer(Trainer):
         _, _, output = self.model(data)
         loss = self.criterion(output, target)
 
-        if self.is_train:
+        if self.model.training:
             loss += self.prox_loss()
             self.optimizer.zero_grad()
             loss.backward()
@@ -166,7 +166,7 @@ class DynTrainer(Trainer):
         _, _, output = self.model(data)
         loss = self.criterion(output, target)
 
-        if self.is_train:
+        if self.model.training:
             loss += self.fed_loss()
             self.optimizer.zero_grad()
             loss.backward()
@@ -203,7 +203,7 @@ class LSDTrainer(Trainer):
     def batch(self, data, target):
         h, _, output = self.model(data)
         loss = self.criterion(output, target)
-        if self.is_train:
+        if self.model.training:
             if self.teacher_model != None:
                 with torch.no_grad():
                     t_h, _, t_output = self.teacher_model(data)
@@ -261,7 +261,7 @@ class DistillTrainer(Trainer):
         _, _, output = self.model(data)
         loss = self.criterion(output, target)
 
-        if self.is_train:
+        if self.model.training:
             if self.glob_logit != None:
                 self.glob_logit = self.glob_logit.to(self.device)
                 target_p = self.glob_logit[target, :]

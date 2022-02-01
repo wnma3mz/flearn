@@ -38,7 +38,7 @@ class FMLTrainer(Trainer):
     def batch(self, data, target):
         _, _, output = self.model(data)
         loss = self.criterion(output, target)
-        if self.is_train:
+        if self.model.training:
             _, _, local_output = self.local_model(data)
             local_loss = self.criterion(local_output, target)
 

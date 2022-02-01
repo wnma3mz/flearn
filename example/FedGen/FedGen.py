@@ -290,7 +290,7 @@ class GenTrainer(Trainer):
         output = self.model(data)
         loss = self.criterion(output, target)
 
-        if self.is_train:
+        if self.model.training:
             if self.generative_model != None:
                 ### get generator output(latent representation) of the same label
                 with torch.no_grad():

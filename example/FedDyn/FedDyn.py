@@ -92,7 +92,7 @@ class DynTrainer(Trainer):
         output = self.model(data)
         loss = self.criterion(output, target)
 
-        if self.is_train:
+        if self.model.training:
             loss += self.fed_loss()
             self.optimizer.zero_grad()
             loss.backward()

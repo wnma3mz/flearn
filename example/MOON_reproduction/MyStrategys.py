@@ -6,6 +6,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
+from flearn.common import Encrypt
 from flearn.common.distiller import Distiller, KDLoss
 from flearn.common.strategy import AVG
 
@@ -38,9 +39,9 @@ class Distill(AVG):
 
 class Dyn(AVG):
     def __init__(self, model_fpath, h):
-        super(Dyn, self).__init__(model_fpath)
+        super().__init__(model_fpath)
         self.h = h
-        self.theta = copy.deepcopy(self.h)
+        self.theta = copy.deepcopy(h)
         self.alpha = 0.01
 
     def dyn_f(self, w_glob, w_local_lst):
@@ -129,7 +130,7 @@ class DF(AVG):
     """
 
     def __init__(self, model_fpath, model_base):
-        super(DF, self).__init__(model_fpath)
+        super().__init__(model_fpath)
         self.model_base = model_base
 
     def ensemble_w(self, ensemble_params_lst, w_glob, **kwargs):
@@ -213,14 +214,20 @@ class CCVR(Distill, Dyn, DF):
         self,
         model_fpath,
         glob_model_base,
+        model_base=None,
         strategy=None,
         h=None,
         shared_key_layers=None,
     ):
-        super(CCVR, self).__init__(model_fpath, h)
+        # kwargs = {"model_fpath": model_fpath, "model_base": model_base, "h": h}
+        # super().__init__(**kwargs)
+        self.model_fpath = model_fpath
+        self.model_base = model_base
+        self.h = h
         self.glob_model = glob_model_base
         self.strategy = strategy
         self.shared_key_layers = shared_key_layers
+        self.encrypt = Encrypt()
 
     @staticmethod
     def client_mean_feat(feat_lst, label_lst):
@@ -262,14 +269,21 @@ class CCVR(Distill, Dyn, DF):
         w_shared["fd"] = self.client_mean_feat(trainer.feat_lst, trainer.label_lst)
         return w_shared
 
+    # @staticmethod
+    # def load_model(glob_model, glob_agg):
+    #     glob_w = {}
+    #     for k in glob_model.state_dict().keys():
+    #         if k in glob_agg.keys():
+    #             glob_w[k] = glob_agg[k]
+    #     glob_model.load_state_dict(glob_w)
+    #     return glob_model
+
     @staticmethod
-    def load_model(glob_model, glob_agg):
-        glob_w = {}
-        for k in glob_model.state_dict().keys():
-            if k in glob_agg.keys():
-                glob_w[k] = glob_agg[k]
-        glob_model.load_state_dict(glob_w)
-        return glob_model
+    def load_model(model_base, new_model_dict):
+        model_base_dict = model_base.state_dict()
+        model_base_dict.update(new_model_dict)
+        model_base.load_state_dict(model_base_dict)
+        return model_base
 
     def server_mean_feat(self, fd_lst):
         # 获取每个客户端的标签，集成一起
