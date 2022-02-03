@@ -46,7 +46,6 @@ class Trainer:
         self.criterion = criterion
         self.display = display
         self.model.to(self.device)
-        self.is_train = None
         self.history_loss = []
         self.history_accuracy = []
 
@@ -57,6 +56,10 @@ class Trainer:
     @staticmethod
     def metrics(output, target):
         return (output.data.max(1)[1] == target.data).sum().item() / len(target) * 100
+
+    def forward(self, data):
+        output = self.model(data)
+        return output
 
     def batch(self, data, target):
         """训练/测试每个batch的数据
@@ -75,7 +78,7 @@ class Trainer:
             float : iter_acc
                     对应batch的accuracy
         """
-        output = self.model(data)
+        output = self.forward(data)
         loss = self.criterion(output, target)
 
         if self.model.training:
@@ -125,10 +128,10 @@ class Trainer:
 
         Returns:
             float :
-                    N个epoch的loss取平均
+                    最后一轮epoch的loss
 
             float :
-                    N个epoch的accuracy取平均
+                    最后一轮epoch的accuracy
         """
         self.model.train()
         for _ in range(1, epochs + 1):
