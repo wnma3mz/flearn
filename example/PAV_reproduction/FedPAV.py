@@ -1,8 +1,5 @@
 # coding: utf-8
-
 import copy
-
-import torch.nn as nn
 
 from flearn.client import Client
 

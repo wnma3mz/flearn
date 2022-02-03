@@ -237,6 +237,12 @@ class ReTrain:
 
 
 class CCVR(ParentStrategy):
+    """
+    Federated learning via Classifier Calibration with Virtual Representations
+
+    [1] Luo M, Chen F, Hu D, et al. No Fear of Heterogeneity: Classifier Calibration for Federated Learning with Non-IID Data[J]. arXiv preprint arXiv:2106.05001, 2021.
+    """
+
     def __init__(self, model_fpath, glob_model_base, strategy=None, **kwargs):
         super().__init__(model_fpath, strategy, **kwargs)
         self.glob_model_base = glob_model_base

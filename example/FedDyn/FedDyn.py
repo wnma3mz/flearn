@@ -16,13 +16,7 @@ class Dyn(AVG):
         self.theta = copy.deepcopy(self.h)
         self.alpha = 0.01
 
-    def server(self, ensemble_params_lst, round_):
-        agg_weight_lst, w_local_lst = self.server_pre_processing(ensemble_params_lst)
-        try:
-            w_glob = self.server_ensemble(agg_weight_lst, w_local_lst)
-        except Exception as e:
-            return self.server_exception(e)
-
+    def dyn_f(self, w_glob, w_local_lst):
         delta_theta = {}
         # assume agg_weight_lst all is 1.0
         for k in self.h.keys():
@@ -34,8 +28,16 @@ class Dyn(AVG):
         for k in self.h.keys():
             w_glob[k] = w_glob[k] - self.alpha * self.h[k]
         self.theta = w_glob
+        return w_glob
 
-        return {"w_glob": w_glob}
+    def server_post_processing(self, ensemble_params_lst, ensemble_params):
+        w_local_lst = self.extract_lst(ensemble_params_lst, "params")
+        ensemble_params["w_glob"] = self.dyn_f(ensemble_params["w_glob"], w_local_lst)
+        return ensemble_params
+
+    def server(self, ensemble_params_lst, round_):
+        ensemble_params = super().server(ensemble_params_lst, round_)
+        return self.server_post_processing(ensemble_params_lst, ensemble_params)
 
 
 class DynTrainer(Trainer):
@@ -51,8 +53,7 @@ class DynTrainer(Trainer):
 
     def __init__(self, model, optimizer, criterion, device, display=True):
         super(DynTrainer, self).__init__(model, optimizer, criterion, device, display)
-        self.server_model = copy.deepcopy(self.model)
-        self.server_state_dict = self.server_model.state_dict()
+        self.server_state_dict = {}
 
         # save client's gradient
         self.prev_grads = None
@@ -66,7 +67,7 @@ class DynTrainer(Trainer):
         self.alpha = 0.01
 
     def fed_loss(self):
-        if self.server_model != None:
+        if self.server_state_dict != {}:
             # Linear penalty
             curr_params = None
             for name, param in self.model.named_parameters():
@@ -88,28 +89,15 @@ class DynTrainer(Trainer):
         else:
             return 0
 
-    def batch(self, data, target):
-        output = self.model(data)
-        loss = self.criterion(output, target)
-
-        if self.model.training:
-            loss += self.fed_loss()
-            self.optimizer.zero_grad()
-            loss.backward()
-            self.optimizer.step()
-
-            # update prev_grads
-            self.prev_grads = None
-            for param in self.model.parameters():
-                real_grad = param.grad.view(-1).clone()
-                if not isinstance(self.prev_grads, torch.Tensor):
-                    self.prev_grads = real_grad
-                else:
-                    self.prev_grads = torch.cat((self.prev_grads, real_grad), dim=0)
-
-        iter_loss = loss.data.item()
-        iter_acc = self.metrics(output, target)
-        return iter_loss, iter_acc
+    def update_info(self):
+        # update prev_grads
+        self.prev_grads = None
+        for param in self.model.parameters():
+            real_grad = param.grad.view(-1).clone()
+            if not isinstance(self.prev_grads, torch.Tensor):
+                self.prev_grads = real_grad
+            else:
+                self.prev_grads = torch.cat((self.prev_grads, real_grad), dim=0)
 
 
 class DynClient(Client):
@@ -124,9 +112,6 @@ class DynClient(Client):
             self.scheduler.step()
         # self.trainer.model.load_state_dict(self.w_local_bak)
         self.trainer.model.load_state_dict(update_w)
-        self.trainer.server_model = copy.deepcopy(self.self.trainer.model)
-        self.trainer.server_model.load_state_dict(update_w)
-        self.trainer.server_model.eval()
         self.trainer.server_state_dict = copy.deepcopy(update_w)
         return {
             "code": 200,

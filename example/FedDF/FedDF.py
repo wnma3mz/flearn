@@ -89,29 +89,26 @@ class DF(AVG):
                             "kd_loader": 蒸馏数据集，仅需输入，无需标签
                         }
         """
+        ensemble_params = super().server(ensemble_params_lst, round_)
         agg_weight_lst, w_local_lst = self.server_pre_processing(ensemble_params_lst)
-        try:
-            w_glob = self.server_ensemble(agg_weight_lst, w_local_lst)
-        except Exception as e:
-            return self.server_exception(e)
 
         teacher_lst = []
         for w_local in w_local_lst:
             self.model_base.load_state_dict(w_local)
             teacher_lst.append(copy.deepcopy(self.model_base))
 
-        self.model_base.load_state_dict(w_glob)
+        self.model_base.load_state_dict(ensemble_params["w_glob"])
         student = copy.deepcopy(self.model_base)
 
-        self.distiller = DFDistiller(
+        distiller = DFDistiller(
             kwargs.pop("kd_loader"), self.device, kd_loss=KDLoss(kwargs.pop("T"))
         )
 
         molecular = np.sum(agg_weight_lst)
         weight_lst = [w / molecular for w in agg_weight_lst]
         # agg_weight_lst：应该依照每个模型在验证集上的性能来进行分配
-        w_glob = self.distiller.multi(
+        ensemble_params["w_glob"] = distiller.multi(
             teacher_lst, student, kwargs.pop("method"), weight_lst=weight_lst, **kwargs
         )
 
-        return {"w_glob": w_glob}
+        return ensemble_params

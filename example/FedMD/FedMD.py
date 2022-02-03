@@ -1,6 +1,5 @@
 # coding: utf-8
 import copy
-import pickle
 
 import torch
 
@@ -23,11 +22,9 @@ class MD(LG_R):
         self.glob_model.train()
 
     @staticmethod
-    def load_model(glob_w, w_dict):
-        for k in glob_w.keys():
-            if k in w_dict.keys():
-                glob_w[k] = w_dict[k]
-        return glob_w
+    def load_model(model_base_dict, w_dict):
+        model_base_dict.update(w_dict)
+        return model_base_dict
 
     def client_revice(self, trainer, data_glob_d):
         w_local = trainer.weight
@@ -84,7 +81,5 @@ class MD(LG_R):
 
     def server(self, ensemble_params_lst, round_, **kwargs):
         w_local_lst = self.extract_lst(ensemble_params_lst, "params")
-
         x_lst, logits_lst = self.client_pub_predict(w_local_lst, **kwargs)
-
         return {"x_lst": x_lst, "logits_lst": logits_lst}

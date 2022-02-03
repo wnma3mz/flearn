@@ -1,7 +1,6 @@
 # coding: utf-8
 import copy
 
-import numpy as np
 import torch
 
 from flearn.client import Client
@@ -54,27 +53,26 @@ class Distill(AVG):
     """
 
     def client(self, trainer, agg_weight=1.0):
-        w_shared = super(Distill, self).client(trainer, agg_weight)
+        w_shared = super().client(trainer, agg_weight)
         # upload logits
         w_shared["logits"] = trainer.logit_tracker.avg()
         return w_shared
 
-    def client_revice(self, trainer, data_glob_d):
-        w_local = trainer.weight
-        w_glob, logits_glob = data_glob_d["w_glob"], data_glob_d["logits_glob"]
-        for k in w_glob.keys():
-            w_local[k] = w_glob[k]
-        return w_local, logits_glob
-
     def server(self, ensemble_params_lst, round_):
-        g_shared = super(Distill, self).client(ensemble_params_lst, round_)
+        g_shared = super().client(ensemble_params_lst, round_)
 
         logits_lst = self.extract_lst(ensemble_params_lst, "logits")
         g_shared["logits_glob"] = self.aggregate_logits(logits_lst)
 
         return g_shared
 
-    def aggregate_logits(self, logits_lst):
+    def client_revice(self, trainer, data_glob_d):
+        w_local = super().client_revice(trainer, data_glob_d)
+        logits_glob = data_glob_d["logits_glob"]
+        return w_local, logits_glob
+
+    @staticmethod
+    def aggregate_logits(logits_lst):
         user_logits = 0
         for item in logits_lst:
             user_logits += item
@@ -111,38 +109,22 @@ class DistillTrainer(Trainer):
         self.kd_mu = 1
         self.kd_loss = KDLoss(2)
 
-    def batch(self, data, target):
+    def fed_loss(self):
+        if self.glob_logit != None:
+            output, target = self.output, self.target
+            self.glob_logit = self.glob_logit.to(self.device)
+            target_p = self.glob_logit[target, :]
+            return self.kd_mu * self.kd_loss(output, target_p)
+        return 0
+
+    def update_info(self):
+        # 更新上传的logits
+        self.logit_tracker.update(self.output, self.target)
+
+    def clear_info(self):
+        self.logit_tracker.clear()
+
+    def forward(self, data, target):
         output = self.model(data)
-        loss = self.criterion(output, target)
-
-        if self.model.training:
-            if self.glob_logit != None:
-                self.glob_logit = self.glob_logit.to(self.device)
-                target_p = self.glob_logit[target, :]
-                loss += self.kd_mu * self.kd_loss(output, target_p)
-
-            self.optimizer.zero_grad()
-            loss.backward()
-            self.optimizer.step()
-
-            # 更新上传的logits
-            self.logit_tracker.update(output, target)
-
-        iter_loss = loss.data.item()
-        iter_acc = self.metrics(output, target)
-        return iter_loss, iter_acc
-
-    def train(self, data_loader, epochs=1):
-        self.model.train()
-        epoch_loss, epoch_accuracy = [], []
-        for ep in range(1, epochs + 1):
-            with torch.enable_grad():
-                loss, accuracy = self._iteration(data_loader)
-            epoch_loss.append(loss)
-            epoch_accuracy.append(accuracy)
-
-            # 非上传轮，清空特征
-            if ep != epochs:
-                self.logit_tracker.clear()
-
-        return np.mean(epoch_loss), np.mean(epoch_accuracy)
+        self.output, self.target = output, target
+        return output

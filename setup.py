@@ -6,7 +6,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="flearn",
-    version="0.0.3",
+    version="0.0.4",
     author="wnma3mz",
     author_email="wnma3mz@gmail.com",
     description="Federated Learning Framework",

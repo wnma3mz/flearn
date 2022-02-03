@@ -1,7 +1,6 @@
 # coding: utf-8
 import copy
 import os
-import pickle
 
 import numpy as np
 import torch
@@ -34,7 +33,7 @@ class Gen(AVG):
         self.generative_model.to(self.device)
 
     def client(self, trainer, agg_weight=1.0):
-        w_shared = super(Gen, self).client(trainer, agg_weight)
+        w_shared = super().client(trainer, agg_weight)
         # 上传客户端的标签数量
         w_shared["label_counts"] = trainer.label_counts
         return w_shared
@@ -168,7 +167,8 @@ class Gen(AVG):
             "device": device,
         }
         """
-        agg_weight_lst, w_local_lst = self.server_pre_processing(ensemble_params_lst)
+        ensemble_params = super().server(ensemble_params_lst, round_)
+        w_local_lst = self.extract_lst(ensemble_params_lst, "params")
         label_counts_lst = self.extract_lst(ensemble_params_lst, "label_counts")
 
         unique_labels = []
@@ -182,12 +182,7 @@ class Gen(AVG):
         kwargs["label_weights"] = label_weights
         kwargs["unique_labels"] = unique_labels
 
-        try:
-            w_glob = self.server_ensemble(agg_weight_lst, w_local_lst)
-        except Exception as e:
-            return self.server_exception(e)
-
-        self.model_base.load_state_dict(w_glob)
+        self.model_base.load_state_dict(ensemble_params["w_glob"])
         student_model = copy.deepcopy(self.model_base)
 
         discriminator_model_lst = []
@@ -205,14 +200,11 @@ class Gen(AVG):
 
         self.visualize_images(self.generative_model, round_, unique_labels, repeats=10)
 
-        return {"w_glob": w_glob, "gen_model": self.generative_model.state_dict()}
+        ensemble_params["gen_model"] = self.generative_model.state_dict()
+        return ensemble_params
 
     def client_revice(self, trainer, data_glob_d):
-        w_local = trainer.weight
-        w_glob = data_glob_d["w_glob"]
-        for k in w_glob.keys():
-            w_local[k] = w_glob[k]
-
+        w_local = super().client_revice(trainer, data_glob_d)
         w_gen_glob = data_glob_d["gen_model"]
         self.generative_model.load_state_dict(w_gen_glob)
         return w_local, self.generative_model

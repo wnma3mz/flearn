@@ -31,9 +31,8 @@ class FMLTrainer(Trainer):
         self.kd_loss = KDLoss(2)
         self.mu = 2
 
-    def train(self, data_loader, epochs=1):
+    def eval_model(self):
         self.local_model.train()
-        return super(FMLTrainer, self).train(data_loader, epochs)
 
     def batch(self, data, target):
         _, _, output = self.model(data)
