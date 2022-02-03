@@ -158,13 +158,21 @@ class PAV(LG_R):
 
         return w_glob
 
+    def server_post_processing(self, ensemble_params_lst, ensemble_params, **kwargs):
+        w_local_lst = self.extract_lst(ensemble_params_lst, "params")
+        ensemble_params["w_glob"] = self.pav_kd(
+            w_local_lst, ensemble_params["w_glob"], **kwargs
+        )
+
+        return ensemble_params
+
     def server(self, ensemble_params_lst, round_, **kwargs):
         """服务端聚合客户端模型并蒸馏
         Args:
             kwargs :            dict
                                 蒸馏所需参数
         """
-        g_shared = super().server(ensemble_params_lst, round_)
-        w_local_lst = self.extract_lst(ensemble_params_lst, "params")
-        g_shared["w_glob"] = self.pav_kd(w_local_lst, g_shared["w_glob"], **kwargs)
-        return g_shared
+        ensemble_params = super().server(ensemble_params_lst, round_)
+        return self.server_post_processing(
+            ensemble_params_lst, ensemble_params, **kwargs
+        )

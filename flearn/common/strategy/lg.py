@@ -35,5 +35,5 @@ class LG(Strategy):
                 agg_weight_lst, w_local_lst, key_lst=self.shared_key_layers
             )
         except Exception as e:
-            return self.server_exception(e)
+            self.server_exception(e)
         return {"w_glob": w_glob}

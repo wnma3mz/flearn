@@ -28,7 +28,7 @@ class Strategy(ABC):
         return list(map(lambda x: x[key], lst))
 
     def server_pre_processing(self, ensemble_params_lst):
-        """提取服务器端收到的的参数
+        """服务器端对参数的预处理, 提取服务器端收到的的参数
 
         Args:
             ensemble_params_lst :   list
@@ -46,6 +46,23 @@ class Strategy(ABC):
             agg_weight_lst.append(p["agg_weight"])
             w_local_lst.append(p["params"])
         return agg_weight_lst, w_local_lst
+
+    def server_post_processing(self, ensemble_params_lst, ensemble_params, **kwargs):
+        """服务器端对参数的后处理, 对集成后的参数做进一步的更新
+
+        Args:
+            ensemble_params_lst :   list
+                                    每个客户端发送的参数组成的列表
+
+            ensemble_params     :   dict
+                                    集成后的参数，准备发回客户端的参数
+
+
+        Returns:
+            dict :
+                同ensemble_params结构
+        """
+        return ensemble_params
 
     def revice_processing(self, data):
         """数据加密并转为二进制流
@@ -97,22 +114,9 @@ class Strategy(ABC):
         Args:
             e :                 Exception
                                 异常消息
-
-        Returns:
-            dict : Dict {
-                'glob_params' : str
-                                编码后的全局模型
-
-                'code' :        int
-                                状态码,
-
-                'msg' :         str
-                                状态消息,
-            }
         """
         print(e)
-        print("检查客户端模型参数是否正常")
-        return ""
+        raise SystemExit("检查客户端模型参数是否正常")
 
     def server_ensemble(self, agg_weight_lst, w_local_lst, key_lst=None):
         """服务端集成函数
@@ -149,8 +153,8 @@ class Strategy(ABC):
         """获取客户端需要上传的模型参数及所占全局模型的权重
 
         Args:
-            w_local :       collections.OrderedDict
-                            模型参数，model.state_dict()
+            trainer :       Object
+                            训练器
 
             agg_weight :    float
                             模型参数所占权重（该客户端聚合所占权重）
@@ -164,11 +168,6 @@ class Strategy(ABC):
                                 模型参数所占权重（该客户端聚合所占权重）
             }
         """
-        w_shared = {"params": {}, "agg_weight": agg_weight}
-        # for k in self.shared_key_layers:
-        #     w_shared['params'][k] = w_local[k].cpu()
-        # return w_shared
-
         return NotImplemented
 
     @abstractmethod
@@ -184,23 +183,11 @@ class Strategy(ABC):
 
         Returns:
             dict : Dict {
-                'glob_params' : str
-                                编码后的全局模型
-
-                'code' :        int
-                                状态码,
-
-                'msg' :         str
-                                状态消息,
+                'w_glob' :      collections.OrderedDict
+                                集成后的模型参数字典
             }
         """
-        agg_weight_lst, w_local_lst = self.server_pre_processing(ensemble_params_lst)
-        # N, idxs_users, w_glob = self.server_pre_processing(w_local_lst)
-        try:
-            return NotImplemented
-        except Exception as e:
-            return self.server_exception(e)
-        return {"w_glob": w_glob}
+        return NotImplemented
 
     @abstractmethod
     def client_revice(self, trainer, w_glob_b):
@@ -217,7 +204,4 @@ class Strategy(ABC):
             collections.OrderedDict
             更新后的模型参数，model.state_dict()
         """
-        w_glob = pickle.loads(w_glob_b)
-        # for k in self.shared_key_layers:
-        #     w_local[k] = w_glob[k]
         return NotImplemented

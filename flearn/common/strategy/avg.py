@@ -24,7 +24,7 @@ class AVG(Strategy):
         try:
             w_glob = self.server_ensemble(agg_weight_lst, w_local_lst)
         except Exception as e:
-            return self.server_exception(e)
+            self.server_exception(e)
 
         return {"w_glob": w_glob}
 

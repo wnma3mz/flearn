@@ -28,5 +28,5 @@ class BN(AVG):
 
             w_glob = self.server_ensemble(agg_weight_lst, w_local_lst, key_lst=key_lst)
         except Exception as e:
-            return self.server_exception(e)
+            self.server_exception(e)
         return {"w_glob": w_glob}
