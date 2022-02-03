@@ -61,10 +61,10 @@ class Client(object):
                         {"shared_key_layers": 共享的参数名称}
         """
         # 设置属性，两种方法均可
-        for k in conf.keys():
+        for k, v in conf.items():
             if k in listed_keys:
-                self.__dict__[k] = conf[k]
-                # self.__setattr__(k, kwargs[k])
+                self.__dict__[k] = v
+                # self.__setattr__(k, v)
 
         for bool_k in bool_key_lst:
             if bool_k not in self.__dict__.keys():
