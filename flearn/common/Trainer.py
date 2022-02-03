@@ -57,11 +57,15 @@ class Trainer:
         """每次训练后的更新操作，保存信息。如特征等"""
         pass
 
+    def clear_info(self):
+        """如果不是最后一轮，则无需上传。需要对保存的信息进行清空"""
+        pass
+
     @staticmethod
     def metrics(output, target):
         return (output.data.max(1)[1] == target.data).sum().item() / len(target) * 100
 
-    def forward(self, data):
+    def forward(self, data, target):
         output = self.model(data)
         return output
 
@@ -82,7 +86,7 @@ class Trainer:
             float : iter_acc
                     对应batch的accuracy
         """
-        output = self.forward(data)
+        output = self.forward(data, target)
         loss = self.criterion(output, target)
 
         if self.model.training:
@@ -140,11 +144,14 @@ class Trainer:
                     最后一轮epoch的accuracy
         """
         self.model.train()
-        for _ in range(1, epochs + 1):
+        for ep in range(1, epochs + 1):
             with torch.enable_grad():
                 loss, accuracy = self._iteration(data_loader)
             self.history_loss.append(loss)
             self.history_accuracy.append(accuracy)
+
+            if ep != epochs:
+                self.clear_info()
         return loss, accuracy
 
     def test(self, data_loader):
