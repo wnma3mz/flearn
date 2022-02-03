@@ -269,15 +269,6 @@ class CCVR(Distill, Dyn, DF):
         w_shared["fd"] = self.client_mean_feat(trainer.feat_lst, trainer.label_lst)
         return w_shared
 
-    # @staticmethod
-    # def load_model(glob_model, glob_agg):
-    #     glob_w = {}
-    #     for k in glob_model.state_dict().keys():
-    #         if k in glob_agg.keys():
-    #             glob_w[k] = glob_agg[k]
-    #     glob_model.load_state_dict(glob_w)
-    #     return glob_model
-
     @staticmethod
     def load_model(model_base, new_model_dict):
         model_base_dict = model_base.state_dict()

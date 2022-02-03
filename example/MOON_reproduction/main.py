@@ -208,6 +208,8 @@ if __name__ == "__main__":
             c_conf["strategy"] = copy.deepcopy(ccvr_strategy)
         elif base_strategy in strategy_d.keys():
             c_conf["strategy"] = copy.deepcopy(strategy_d[base_strategy])
+        else:
+            c_conf["strategy_name"] = "avg"
         client_lst.append(client_d[base_strategy](c_conf))
 
     s_conf = {"model_fpath": model_fpath, "strategy_name": base_strategy}
@@ -215,6 +217,8 @@ if __name__ == "__main__":
         s_conf["strategy"] = copy.deepcopy(ccvr_strategy)
     elif base_strategy in strategy_d.keys():
         s_conf["strategy"] = copy.deepcopy(strategy_d[base_strategy])
+    else:
+        s_conf["strategy_name"] = "avg"
 
     sc_conf = {
         "server": Server(s_conf),

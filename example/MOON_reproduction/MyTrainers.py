@@ -339,11 +339,10 @@ class CCVRTrainer(MOONTrainer, ProxTrainer, LSDTrainer, DistillTrainer, DynTrain
 
         return np.mean(epoch_loss), np.mean(epoch_accuracy)
 
-    def update_feat(self, h, target, output):
+    def update_feat(self, h, target):
         # 保存中间特征
-        idx = output.data.max(1)[1] == target.data
-        self.feat_lst.append(h[idx])
-        self.label_lst.append(target[idx])
+        self.feat_lst.append(h)
+        self.label_lst.append(target)
 
     def batch(self, data, target):
         h, pro1, output = self.model(data)
@@ -363,7 +362,7 @@ class CCVRTrainer(MOONTrainer, ProxTrainer, LSDTrainer, DistillTrainer, DynTrain
             loss.backward()
             self.optimizer.step()
 
-            self.update_feat(h, target, output)
+            self.update_feat(h, target)
             if self.strategy == "distill":
                 self.logit_tracker.update(output, target)
             elif self.strategy == "dyn":
