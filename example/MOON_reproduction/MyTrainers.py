@@ -236,6 +236,9 @@ class CCVRTrainer(AVGTrainer):
         )
         self.feat_lst, self.label_lst = [], []
         self.base_trainer = base_trainer
+        for k, v in base_trainer.__dict__.items():
+            if k not in self.__dict__.keys():
+                self.__dict__[k] = v
         self.eval_model = self.base_trainer.eval_model
 
     def update_info(self):
