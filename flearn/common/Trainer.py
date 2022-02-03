@@ -53,6 +53,10 @@ class Trainer:
         """联邦学习中，客户端可能需要自定义其他的损失函数"""
         return 0
 
+    def update_info(self):
+        """每次训练后的更新操作，保存信息。如特征等"""
+        pass
+
     @staticmethod
     def metrics(output, target):
         return (output.data.max(1)[1] == target.data).sum().item() / len(target) * 100
@@ -86,6 +90,8 @@ class Trainer:
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
+
+            self.update_info()
 
         iter_loss = loss.data.item()
         iter_acc = self.metrics(output, target)
