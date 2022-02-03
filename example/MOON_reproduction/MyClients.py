@@ -1,5 +1,4 @@
 # coding: utf-8
-
 import copy
 
 from flearn.client import Client
@@ -91,10 +90,7 @@ class DynClient(Client):
             self.scheduler.step()
         # self.trainer.model.load_state_dict(self.w_local_bak)
         self.trainer.model.load_state_dict(update_w)
-        self.trainer.server_model = copy.deepcopy(self.trainer.model)
-        self.trainer.server_model.load_state_dict(update_w)
 
-        self.trainer.server_model.eval()
         self.trainer.server_state_dict = copy.deepcopy(update_w)
         return {
             "code": 200,

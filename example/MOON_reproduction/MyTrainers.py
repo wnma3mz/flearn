@@ -12,18 +12,9 @@ from flearn.common.distiller import KDLoss
 
 
 class AVGTrainer(Trainer):
-    def batch(self, data, target):
+    def forward(self, data, target):
         _, _, output = self.model(data)
-        loss = self.criterion(output, target)
-
-        if self.model.training:
-            self.optimizer.zero_grad()
-            loss.backward()
-            self.optimizer.step()
-
-        iter_loss = loss.data.item()
-        iter_acc = self.metrics(output, target)
-        return iter_loss, iter_acc
+        return output
 
 
 class MOONTrainer(Trainer):
@@ -37,8 +28,9 @@ class MOONTrainer(Trainer):
         #  CIFAR-10, CIFAR-100, and Tiny-Imagenet are 5, 1, and 1
         self.mu = 5
 
-    def moon_loss(self, data, pro1):
+    def fed_loss(self):
         if self.global_model != None:
+            data, pro1 = self.data, self.pro1
             # 全局与本地的对比损失，越小越好
             with torch.no_grad():
                 _, pro2, _ = self.global_model(data)
@@ -59,7 +51,7 @@ class MOONTrainer(Trainer):
         else:
             return 0
 
-    def moon_eval_model(self):
+    def eval_model(self):
         for previous_net in self.previous_model_lst:
             previous_net.eval()
             previous_net.to(self.device)
@@ -68,32 +60,20 @@ class MOONTrainer(Trainer):
             self.global_model.eval()
             self.global_model.to(self.device)
 
-    def train(self, data_loader, epochs=1):
-        self.moon_eval_model()
-        return super(MOONTrainer, self).train(data_loader, epochs)
-
-    def batch(self, data, target):
+    def forward(self, data, target):
         _, pro1, output = self.model(data)
-        loss = self.criterion(output, target)
-        if self.model.training:
-            loss += self.moon_loss(data, pro1)
-            self.optimizer.zero_grad()
-            loss.backward()
-            self.optimizer.step()
-
-        iter_loss = loss.data.item()
-        iter_acc = self.metrics(output, target)
-        return iter_loss, iter_acc
+        self.data, self.pro1 = data, pro1
+        return output
 
 
-class ProxTrainer(Trainer):
+class ProxTrainer(AVGTrainer):
     def __init__(self, model, optimizer, criterion, device, display=True):
         super(ProxTrainer, self).__init__(model, optimizer, criterion, device, display)
         self.global_model = None
         #  CIFAR-10, CIFAR-100, and Tiny-Imagenet are 0.01, 0.001, and 0.001
         self.prox_mu = 0.01
 
-    def prox_loss(self):
+    def fed_loss(self):
         if self.global_model != None:
             w_diff = torch.tensor(0.0, device=self.device)
             for w, w_t in zip(self.model.parameters(), self.global_model.parameters()):
@@ -102,26 +82,16 @@ class ProxTrainer(Trainer):
         else:
             return 0
 
-    def batch(self, data, target):
-        _, _, output = self.model(data)
-        loss = self.criterion(output, target)
-
-        if self.model.training:
-            loss += self.prox_loss()
-            self.optimizer.zero_grad()
-            loss.backward()
-            self.optimizer.step()
-
-        iter_loss = loss.data.item()
-        iter_acc = self.metrics(output, target)
-        return iter_loss, iter_acc
+    def eval_model(self):
+        if self.global_model != None:
+            self.global_model.eval()
+            self.global_model.to(self.device)
 
 
-class DynTrainer(Trainer):
+class DynTrainer(AVGTrainer):
     def __init__(self, model, optimizer, criterion, device, display=True):
         super(DynTrainer, self).__init__(model, optimizer, criterion, device, display)
-        self.server_model = copy.deepcopy(self.model)
-        self.server_state_dict = self.server_model.state_dict()
+        self.server_state_dict = {}
 
         # save client's gradient
         self.prev_grads = None
@@ -134,8 +104,8 @@ class DynTrainer(Trainer):
 
         self.alpha = 0.01
 
-    def dyn_loss(self):
-        if self.server_model != None:
+    def fed_loss(self):
+        if self.server_state_dict != {}:
             # Linear penalty
             curr_params = None
             for name, param in self.model.named_parameters():
@@ -149,15 +119,14 @@ class DynTrainer(Trainer):
             # Quadratic Penalty, 全局模型与客户端模型尽可能小
             quad_penalty = 0.0
             for name, param in self.model.named_parameters():
-                quad_penalty += F.mse_loss(
-                    param, self.server_state_dict[name], reduction="sum"
-                )
+                server_param = self.server_state_dict[name].to(self.device)
+                quad_penalty += F.mse_loss(param, server_param, reduction="sum")
 
             return -lin_penalty + self.alpha / 2.0 * quad_penalty
         else:
             return 0
 
-    def update_prev_grads(self):
+    def update_info(self):
         # update prev_grads
         self.prev_grads = None
         for param in self.model.parameters():
@@ -166,22 +135,6 @@ class DynTrainer(Trainer):
                 self.prev_grads = real_grad
             else:
                 self.prev_grads = torch.cat((self.prev_grads, real_grad), dim=0)
-
-    def batch(self, data, target):
-        _, _, output = self.model(data)
-        loss = self.criterion(output, target)
-
-        if self.model.training:
-            loss += self.dyn_loss()
-            self.optimizer.zero_grad()
-            loss.backward()
-            self.optimizer.step()
-
-            self.update_prev_grads()
-
-        iter_loss = loss.data.item()
-        iter_acc = self.metrics(output, target)
-        return iter_loss, iter_acc
 
 
 class LSDTrainer(Trainer):
@@ -192,7 +145,7 @@ class LSDTrainer(Trainer):
         # self.mu_kd = 0.5
         self.kd_loss = KDLoss(2)
 
-    def lsd_eval_model(self):
+    def eval_model(self):
         if self.teacher_model != None:
             self.teacher_model.eval()
             self.teacher_model.to(self.device)
@@ -201,26 +154,18 @@ class LSDTrainer(Trainer):
         self.lsd_eval_model()
         return super(LSDTrainer, self).train(data_loader, epochs)
 
-    def lsd_loss(self, data, output):
+    def fed_loss(self):
         if self.teacher_model != None:
+            data, output = self.data, self.output
             with torch.no_grad():
                 t_h, _, t_output = self.teacher_model(data)
-
             return self.mu_kd * self.kd_loss(output, t_output.detach())
         return 0
 
-    def batch(self, data, target):
-        h, _, output = self.model(data)
-        loss = self.criterion(output, target)
-        if self.model.training:
-            loss += self.lsd_loss(data, output)
-            self.optimizer.zero_grad()
-            loss.backward()
-            self.optimizer.step()
-
-        iter_loss = loss.data.item()
-        iter_acc = self.metrics(output, target)
-        return iter_loss, iter_acc
+    def forward(self, data, target):
+        _, _, output = self.model(data)
+        self.data, self.output = data, output
+        return output
 
 
 class LogitTracker:
@@ -252,122 +197,61 @@ class LogitTracker:
 
 class DistillTrainer(Trainer):
     def __init__(self, model, optimizer, criterion, device, display=True):
-        super(DistillTrainer, self).__init__(
-            model, optimizer, criterion, device, display
-        )
+        super().__init__(model, optimizer, criterion, device, display)
         self.logit_tracker = LogitTracker(10)  # cifar10
         self.glob_logit = None
         self.kd_mu = 1
         self.kd_loss = KDLoss(2)
 
-    def train(self, data_loader, epochs=1):
-        self.model.train()
-        epoch_loss, epoch_accuracy = [], []
-        for ep in range(1, epochs + 1):
-            with torch.enable_grad():
-                loss, accuracy = self._iteration(data_loader)
-            epoch_loss.append(loss)
-            epoch_accuracy.append(accuracy)
-
-            # 非上传轮，清空特征
-            if ep != epochs:
-                self.logit_tracker.clear()
-
-        return np.mean(epoch_loss), np.mean(epoch_accuracy)
-
-    def distill_loss(self, output, target):
+    def fed_loss(self):
         if self.glob_logit != None:
+            output, target = self.output, self.target
             self.glob_logit = self.glob_logit.to(self.device)
             target_p = self.glob_logit[target, :]
             return self.kd_mu * self.kd_loss(output, target_p)
         return 0
 
-    def batch(self, data, target):
+    def update_info(self):
+        # 更新上传的logits
+        self.logit_tracker.update(self.output, self.target)
+
+    def clear_info(self):
+        self.logit_tracker.clear()
+
+    def forward(self, data, target):
         _, _, output = self.model(data)
-        loss = self.criterion(output, target)
-
-        if self.model.training:
-            loss += self.distill_loss(output, target)
-            self.optimizer.zero_grad()
-            loss.backward()
-            self.optimizer.step()
-
-            # 更新上传的logits
-            self.logit_tracker.update(output, target)
-
-        iter_loss = loss.data.item()
-        iter_acc = self.metrics(output, target)
-        return iter_loss, iter_acc
+        self.output, self.target = output, target
+        return output
 
 
-class CCVRTrainer(MOONTrainer, ProxTrainer, LSDTrainer, DistillTrainer, DynTrainer):
+class CCVRTrainer(AVGTrainer):
     # 从左至右继承，右侧不会覆盖左侧的变量/函数
-    def __init__(
-        self, model, optimizer, criterion, device, display=True, strategy=None
-    ):
-        super(CCVRTrainer, self).__init__(model, optimizer, criterion, device, display)
-        self.feat_lst = []
-        self.label_lst = []
-        self.fed_loss_d = {
-            "avg": 0,
-            "lg": 0,
-            "prox": self.prox_loss(),
-            "dyn": self.dyn_loss(),
-        }
-        assert strategy in ["avg", "moon", "prox", "dyn", "lsd", "distill", "lg"]
-        self.strategy = strategy
+    def __init__(self, base_trainer):
+        super().__init__(
+            base_trainer.model,
+            base_trainer.optimizer,
+            base_trainer.criterion,
+            base_trainer.device,
+            base_trainer.display,
+        )
+        self.feat_lst, self.label_lst = [], []
+        self.base_trainer = base_trainer
+        self.eval_model = self.base_trainer.eval_model
 
-    def train(self, data_loader, epochs=1):
-        self.moon_eval_model()
-        self.lsd_eval_model()
-
-        self.model.train()
-        epoch_loss, epoch_accuracy = [], []
-        for ep in range(1, epochs + 1):
-            with torch.enable_grad():
-                loss, accuracy = self._iteration(data_loader)
-            epoch_loss.append(loss)
-            epoch_accuracy.append(accuracy)
-
-            # 非上传轮，清空特征
-            if ep != epochs:
-                self.feat_lst = []
-                self.label_lst = []
-
-                if self.strategy == "distill":
-                    self.logit_tracker.clear()
-
-        return np.mean(epoch_loss), np.mean(epoch_accuracy)
-
-    def update_feat(self, h, target):
+    def update_info(self):
         # 保存中间特征
+        h, target = self.h, self.target
         self.feat_lst.append(h)
         self.label_lst.append(target)
+        self.base_trainer.update_info()
 
-    def batch(self, data, target):
+    def clear_info(self):
+        self.feat_lst, self.label_lst = [], []
+        self.base_trainer.clear_info()
+
+    def forward(self, data, target):
         h, pro1, output = self.model(data)
-        loss = self.criterion(output, target)
-
-        if self.model.training:
-            if self.strategy == "lsd":
-                loss += self.lsd_loss(data, output)
-            elif self.strategy == "distill":
-                loss += self.distill_loss(output, target)
-            elif self.strategy == "moon":
-                loss += self.moon_loss(data, pro1)
-            else:
-                loss += self.fed_loss_d[self.strategy]
-
-            self.optimizer.zero_grad()
-            loss.backward()
-            self.optimizer.step()
-
-            self.update_feat(h, target)
-            if self.strategy == "distill":
-                self.logit_tracker.update(output, target)
-            elif self.strategy == "dyn":
-                self.update_prev_grads()
-
-        iter_loss = loss.data.item()
-        iter_acc = self.metrics(output, target)
-        return iter_loss, iter_acc
+        # 更新所有可能需要的数据
+        self.h, self.data, self.pro1 = h, data, pro1
+        self.output, self.target = output, target
+        return output
