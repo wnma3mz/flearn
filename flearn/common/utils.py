@@ -7,20 +7,19 @@ import torch
 from .strategy import AVG, AVGM, BN, LG, LG_R, OPT, PAV, SGD
 
 
-def init_strategy(strategy_name, custom_strategy, model_fpath, shared_key_layers=None):
+def init_strategy(strategy_name, custom_strategy, shared_key_layers=None):
     if custom_strategy != None:
         return custom_strategy
     strategy_name = strategy_name.lower()
-    kwargs = {"model_fpath": model_fpath}
     strategy_d = {
-        "avg": AVG(**kwargs),
-        "sgd": SGD(**kwargs),
-        "opt": OPT(**kwargs),
-        "avgm": AVGM(**kwargs),
-        "bn": BN(**kwargs),
-        "lg": LG(model_fpath, shared_key_layers),
-        "pav": PAV(model_fpath, shared_key_layers),
-        "lg_r": LG_R(model_fpath, shared_key_layers),
+        "avg": AVG(),
+        "sgd": SGD(),
+        "opt": OPT(),
+        "avgm": AVGM(),
+        "bn": BN(),
+        "lg": LG(shared_key_layers),
+        "pav": PAV(shared_key_layers),
+        "lg_r": LG_R(shared_key_layers),
     }
     if strategy_name not in strategy_d.keys():
         raise SystemError("Please input valid strategy name or strategy object!")

@@ -7,7 +7,7 @@ import torch.nn as nn
 import torch.optim as optim
 
 from flearn.common.distiller import Distiller, KDLoss
-from flearn.common.strategy import AVG
+from flearn.common.strategy import AVG, ParentStrategy
 
 
 class Distill(AVG):
@@ -66,32 +66,6 @@ class Dyn(AVG):
     def server(self, ensemble_params_lst, round_):
         ensemble_params = super().server(ensemble_params_lst, round_)
         return self.server_post_processing(ensemble_params_lst, ensemble_params)
-
-
-class ParentStrategy(AVG):
-    def __init__(self, model_fpath, strategy=None, **kwargs):
-        self.strategy = strategy
-        if self.strategy != None:
-            key_lst = list(self.strategy.__dict__.keys())
-            for k, v in kwargs.items():
-                if k in key_lst:
-                    self.__dict__[k] = v
-        super().__init__(model_fpath)
-
-    def client(self, trainer, agg_weight=1.0):
-        if self.strategy != None:
-            return self.strategy.client(trainer, agg_weight)
-        return super().client(trainer, agg_weight)
-
-    def server(self, ensemble_params_lst, round_):
-        if self.strategy != None:
-            return self.strategy.server(ensemble_params_lst, round_)
-        return super().server(ensemble_params_lst, round_)
-
-    def client_revice(self, trainer, data_glob_d):
-        if self.strategy != None:
-            return self.strategy.client_revice(trainer, data_glob_d)
-        return super().client_revice(trainer, data_glob_d)
 
 
 class DFDistiller(Distiller):
@@ -154,8 +128,8 @@ class DFDistiller(Distiller):
 
 
 class DF(ParentStrategy):
-    def __init__(self, model_fpath, model_base, strategy=None, **kwargs):
-        super().__init__(model_fpath, strategy, **kwargs)
+    def __init__(self, model_base, strategy):
+        super().__init__(strategy)
         self.model_base = model_base
 
     def server_post_processing(self, ensemble_params_lst, ensemble_params, **kwargs):
@@ -243,8 +217,8 @@ class CCVR(ParentStrategy):
     [1] Luo M, Chen F, Hu D, et al. No Fear of Heterogeneity: Classifier Calibration for Federated Learning with Non-IID Data[J]. arXiv preprint arXiv:2106.05001, 2021.
     """
 
-    def __init__(self, model_fpath, glob_model_base, strategy=None, **kwargs):
-        super().__init__(model_fpath, strategy, **kwargs)
+    def __init__(self, glob_model_base, strategy):
+        super().__init__(strategy)
         self.glob_model_base = glob_model_base
 
     @staticmethod
@@ -346,12 +320,10 @@ class CCVR(ParentStrategy):
 
 
 class DFCCVR(CCVR):
-    def __init__(
-        self, model_fpath, model_base, glob_model_base, strategy=None, **kwargs
-    ):
-        super().__init__(model_fpath, glob_model_base, strategy, **kwargs)
+    def __init__(self, model_base, glob_model_base, strategy):
+        super().__init__(glob_model_base, strategy)
         self.model_base = model_base
-        self.df = DF(model_fpath, model_base, strategy, **kwargs)
+        self.df = DF(model_base, strategy)
 
     def server(self, ensemble_params_lst, round_, **kwargs):
         # 先DF后CCVR

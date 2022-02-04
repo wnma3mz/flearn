@@ -6,4 +6,4 @@ from .lg_reverse import LG_R
 from .opt import OPT
 from .pav import PAV
 from .sgd import SGD
-from .strategy import Strategy
+from .strategy import ParentStrategy, Strategy

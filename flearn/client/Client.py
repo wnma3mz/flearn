@@ -76,7 +76,6 @@ class Client(object):
 
         self.fname_fmt = ospj(self.model_fpath, self.model_fname)
 
-        strategy_p["model_fpath"] = self.model_fpath
         self.strategy = init_strategy(self.strategy_name, self.strategy, **strategy_p)
 
         if self.restore_path != None:

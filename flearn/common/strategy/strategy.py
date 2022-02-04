@@ -1,5 +1,4 @@
 # coding: utf-8
-import os
 import pickle
 from abc import ABC, abstractmethod
 from functools import reduce
@@ -13,14 +12,7 @@ from flearn.common import Encrypt
 class Strategy(ABC):
     """联邦学习策略的基类，包含对客户端模型处理、服务端聚合等"""
 
-    def __init__(self, model_fpath):
-        """
-
-        Args:
-            model_fpath :   str
-                            模型存储的路径
-        """
-        self.model_fpath = model_fpath
+    def __init__(self):
         self.encrypt = Encrypt()
 
     @staticmethod
@@ -149,7 +141,7 @@ class Strategy(ABC):
         return w_glob
 
     @abstractmethod
-    def client(self, trainer, i, agg_weight=1.0):
+    def client(self, trainer, agg_weight=1.0):
         """获取客户端需要上传的模型参数及所占全局模型的权重
 
         Args:
@@ -205,3 +197,25 @@ class Strategy(ABC):
             更新后的模型参数，model.state_dict()
         """
         return NotImplemented
+
+
+class ParentStrategy(Strategy):
+    def __init__(self, strategy):
+        """方便策略X可以同时配合其他策略Y使用。如CCVR、FedDF。Notice: 策略X的属性与Y不能使用相同的名字
+
+        Args:
+            strategy :      object
+                            实例化后的策略Y，如AVG(model_fpath)
+        """
+        self.strategy = strategy
+        # 将策略Y的属性赋给策略X
+        self.__dict__.update(self.strategy.__dict__)
+
+    def client(self, trainer, agg_weight):
+        return self.strategy.client(trainer, agg_weight)
+
+    def server(self, ensemble_params_lst, round_):
+        return self.strategy.server(ensemble_params_lst, round_)
+
+    def client_revice(self, trainer, w_glob_b):
+        return self.strategy.client_revice(trainer, w_glob_b)

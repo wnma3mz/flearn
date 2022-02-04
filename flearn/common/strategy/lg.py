@@ -11,8 +11,8 @@ class LG(Strategy):
     .. [1] Liang P P, Liu T, Ziyin L, et al. Think locally, act globally: Federated learning with local and global representations[J]. arXiv preprint arXiv:2001.01523, 2020.
     """
 
-    def __init__(self, model_fpath, shared_key_layers):
-        super(LG, self).__init__(model_fpath)
+    def __init__(self, shared_key_layers):
+        super().__init__()
         self.shared_key_layers = shared_key_layers
 
     def client(self, trainer, agg_weight=1.0):
