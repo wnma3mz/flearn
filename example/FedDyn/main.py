@@ -93,7 +93,7 @@ def inin_single_client(client_id, trainloader_idx_lst, testloader_idx_lst):
 
     return {
         "trainer": DynTrainer(model_, optim_, nn.CrossEntropyLoss(), device, False),
-        "strategy": Dyn(model_fpath, h=copy.deepcopy(model_base).state_dict()),
+        "strategy": Dyn(h=copy.deepcopy(model_base).state_dict()),
         "trainloader": trainloader,
         "testloader": [testloader, glob_testloader],
         "model_fname": "client{}_round_{}.pth".format(client_id, "{}"),
@@ -137,7 +137,7 @@ if __name__ == "__main__":
         client_lst.append(DynClient(c_conf))
 
     s_conf = {
-        "strategy": Dyn(model_fpath, copy.deepcopy(model_base).state_dict()),
+        "strategy": Dyn(copy.deepcopy(model_base).state_dict()),
         "model_fpath": model_fpath,
         "strategy_name": args.strategy_name,
     }

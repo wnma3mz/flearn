@@ -35,7 +35,7 @@ class MyTrainer(Trainer):
 if __name__ == "__main__":
     model_fpath = ""
     mytrainer = MyTrainer(MLP())
-    s = init_strategy("avg", None, model_fpath="")
+    s = init_strategy("avg", None)
     upload_res = s.client(mytrainer)
     global_res = s.server([upload_res], 0)
     revice_res = s.client_revice(mytrainer, {"w_glob": s.client(mytrainer)["params"]})
@@ -48,31 +48,31 @@ if __name__ == "__main__":
     assert (revice_res["fc.weight"] == global_res["w_glob"]["fc.weight"]).all()
     assert (revice_res["fc.bias"] == global_res["w_glob"]["fc.bias"]).all()
 
-    s = init_strategy("opt", None, model_fpath="")
+    s = init_strategy("opt", None)
     revice_res = s.client_revice(mytrainer, {"w_glob": s.client(mytrainer)["params"]})
 
     # todo
-    s = init_strategy("avgm", None, model_fpath="")
+    s = init_strategy("avgm", None)
     revice_res = s.client_revice(mytrainer, {"w_glob": s.client(mytrainer)["params"]})
 
-    s = init_strategy("bn", None, model_fpath="")
+    s = init_strategy("bn", None)
     upload_res = s.client(mytrainer)
     global_res = s.server([upload_res], 0)
 
-    s = init_strategy("sgd", None, model_fpath="")
+    s = init_strategy("sgd", None)
     upload_res = s.client(mytrainer)
     revice_res = s.client_revice([upload_res], 0)
 
-    s = init_strategy("lg", None, model_fpath="")
+    s = init_strategy("lg", None)
     upload_res = s.client(mytrainer)
     global_res = s.server([upload_res], 0)
     revice_res = s.client_revice(mytrainer, {"w_glob": s.client(mytrainer)["params"]})
 
-    s = init_strategy("lg_r", None, model_fpath="")
+    s = init_strategy("lg_r", None)
     upload_res = s.client(mytrainer)
     global_res = s.server([upload_res], 0)
     revice_res = s.client_revice(mytrainer, {"w_glob": s.client(mytrainer)["params"]})
 
-    s = init_strategy("pav", None, model_fpath="")
+    s = init_strategy("pav", None)
     upload_res = s.client(mytrainer)
     global_res = s.server([upload_res], 0)

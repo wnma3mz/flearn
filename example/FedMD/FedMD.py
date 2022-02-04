@@ -13,8 +13,8 @@ class MD(LG_R):
     [1] Li D, Wang J. Fedmd: Heterogenous federated learning via model distillation[J]. arXiv preprint arXiv:1910.03581, 2019.
     """
 
-    def __init__(self, model_fpath, shared_key_layers, glob_model, optimizer, device):
-        super(MD, self).__init__(model_fpath, shared_key_layers)
+    def __init__(self, shared_key_layers, glob_model, optimizer, device):
+        super(MD, self).__init__(shared_key_layers)
         self.glob_model = glob_model
         self.optimizer = optimizer
         self.device = device

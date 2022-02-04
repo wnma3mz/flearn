@@ -101,7 +101,7 @@ def inin_single_client(client_id, trainloader_idx_lst, testloader_idx_lst):
         "epoch": args.local_epoch,
         "dataset_name": dataset_name,
         "strategy_name": args.strategy_name,
-        "strategy": Distill(model_fpath),
+        "strategy": Distill(),
         "save": False,
         "log": False,
     }
@@ -138,7 +138,7 @@ if __name__ == "__main__":
 
     sc_conf = {
         "model_fpath": model_fpath,
-        "strategy": Distill(model_fpath),
+        "strategy": Distill(),
         "strategy_name": args.strategy_name,
     }
     s_conf = {

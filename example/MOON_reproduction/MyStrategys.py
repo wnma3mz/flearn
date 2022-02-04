@@ -38,8 +38,8 @@ class Distill(AVG):
 
 
 class Dyn(AVG):
-    def __init__(self, model_fpath, h):
-        super().__init__(model_fpath)
+    def __init__(self, h):
+        super().__init__()
         self.h = h
         self.theta = copy.deepcopy(h)
         self.alpha = 0.01

@@ -84,26 +84,26 @@ shared_key_layers = [
     "l3.weight",
     "l3.bias",
 ]
-custom_strategy_d = defaultdict(lambda: AVG(model_fpath))
+custom_strategy_d = defaultdict(lambda: AVG())
 custom_strategy_d.update(
     {
-        "dyn": Dyn(model_fpath, h=model_base.state_dict()),
-        "distill": Distill(model_fpath),
+        "dyn": Dyn(h=model_base.state_dict()),
+        "distill": Distill(),
     }
 )
 strategy = init_strategy(
-    strategy_name, custom_strategy_d[strategy_name], model_fpath, shared_key_layers
+    strategy_name, custom_strategy_d[strategy_name], shared_key_layers
 )
 kwargs = {
     "h": model_base.state_dict(),
     "shared_key_layers": shared_key_layers,
 }
 if args.ccvr and args.df:
-    strategy = DFCCVR(model_fpath, model_base, glob_model_base, strategy, **kwargs)
+    strategy = DFCCVR(model_base, glob_model_base, strategy)
 elif args.ccvr:
-    strategy = CCVR(model_fpath, glob_model_base, strategy, **kwargs)
+    strategy = CCVR(glob_model_base, strategy)
 elif args.df:
-    strategy = DF(model_fpath, model_base, strategy, **kwargs)
+    strategy = DF(model_base, strategy)
 
 # 设置 训练器-客户端
 conf_d = {

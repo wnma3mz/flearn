@@ -20,8 +20,8 @@ class Gen(AVG):
     [1] Zhu Z, Hong J, Zhou J. Data-Free Knowledge Distillation for Heterogeneous Federated Learning[J]. arXiv preprint arXiv:2105.10056, 2021.
     """
 
-    def __init__(self, model_fpath, model_base, generative_model, optimizer, device):
-        super(Gen, self).__init__(model_fpath)
+    def __init__(self, model_base, generative_model, optimizer, device):
+        super(self).__init__()
         self.model_base = model_base
         self.generative_model = generative_model
         self.optimizer = optimizer

@@ -114,7 +114,7 @@ def inin_single_client(client_id, trainloader_idx_lst, testloader_idx_lst):
         "epoch": args.local_epoch,
         "dataset_name": dataset_name,
         "strategy_name": args.strategy_name,
-        "strategy": MD(model_fpath, key_lst, glob_model, optim_glob, device),
+        "strategy": MD(key_lst, glob_model, optim_glob, device),
         "save": False,
         "log": False,
     }
@@ -151,7 +151,7 @@ if __name__ == "__main__":
 
     s_conf = {
         "model_fpath": model_fpath,
-        "strategy": MD(model_fpath, key_lst, glob_model, optim_glob, device),
+        "strategy": MD(key_lst, glob_model, optim_glob, device),
         "strategy_name": args.strategy_name,
     }
     sc_conf = {
