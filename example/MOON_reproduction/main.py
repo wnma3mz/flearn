@@ -11,7 +11,6 @@ import torch.optim as optim
 import MyTrainers
 from flearn.client import Client, datasets
 from flearn.client.utils import get_free_gpu_id
-from flearn.common.strategy import AVG
 from flearn.common.utils import init_strategy, setup_seed
 from flearn.server import Communicator as sc
 from flearn.server import Server
@@ -84,7 +83,7 @@ shared_key_layers = [
     "l3.weight",
     "l3.bias",
 ]
-custom_strategy_d = defaultdict(lambda: AVG())
+custom_strategy_d = defaultdict(lambda: None)
 custom_strategy_d.update(
     {
         "dyn": Dyn(h=model_base.state_dict()),
