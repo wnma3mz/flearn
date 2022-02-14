@@ -101,12 +101,12 @@ class Client(object):
 
     def init_log(self, log_name_fmt):
         if log_name_fmt == None:
-            log_name_fmt = "{}_client{}_dataset_{}{}.log"
+            log_name_fmt = "[Client-{}]{}_dataset_{}{}.log"
         if self.log_suffix == None:
             self.log_suffix = ""
 
         log_client_name = log_name_fmt.format(
-            self.strategy_name, self.client_id, self.dataset_name, self.log_suffix
+            self.client_id, self.strategy_name, self.dataset_name, self.log_suffix
         )
         self.log_client = Logger(log_client_name, level="info")
         self.log_fmt = (

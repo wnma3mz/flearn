@@ -71,7 +71,7 @@ class Communicator(object):
             log_suffix = conf["log_suffix"] if "log_suffix" in conf.keys() else ""
 
             if "log_name_fmt" not in conf.keys():
-                log_name_fmt = "{}_server_round{}_clients{}_{}{}.log"
+                log_name_fmt = "[Server]{}_round{}_clients{}_{}{}.log"
             else:
                 log_name_fmt = conf["log_name_fmt"]
 
