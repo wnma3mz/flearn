@@ -3,7 +3,7 @@ import os
 from os.path import join as ospj
 
 from flearn.client.utils import bool_key_lst, listed_keys, str_key_lst
-from flearn.common import Encrypt, Logger, init_strategy
+from flearn.common import Encrypt, Logger, setup_strategy
 
 
 class Client(object):
@@ -76,7 +76,7 @@ class Client(object):
 
         self.fname_fmt = ospj(self.model_fpath, self.model_fname)
 
-        self.strategy = init_strategy(self.strategy_name, self.strategy, **strategy_p)
+        self.strategy = setup_strategy(self.strategy_name, self.strategy, **strategy_p)
 
         if self.restore_path != None:
             self.trainer.restore(self.restore_path)

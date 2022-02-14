@@ -6,9 +6,11 @@ import torch
 
 from .strategy import AVG, AVGM, BN, LG, LG_R, OPT, PAV, SGD
 
+__all__ = ["setup_strategy", "setup_seed", "get_free_gpu_id"]
 
-def init_strategy(strategy_name, custom_strategy, shared_key_layers=None):
-    """初始化框架内已有的策略
+
+def setup_strategy(strategy_name, custom_strategy, shared_key_layers=None):
+    """设置框架内已有的策略
     Args:
         strategy_name     :  str
                              策略名称
@@ -43,6 +45,7 @@ def init_strategy(strategy_name, custom_strategy, shared_key_layers=None):
 
 
 def setup_seed(seed):
+    """设置随机种子，以便于复现实验"""
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
     np.random.seed(seed)

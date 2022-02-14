@@ -1,7 +1,7 @@
 # coding: utf-8
 import numpy as np
 
-from flearn.common import Encrypt, init_strategy
+from flearn.common import Encrypt, setup_strategy
 
 
 class Server(object):
@@ -57,7 +57,7 @@ class Server(object):
         self.strategy = conf["strategy"] if "strategy" in conf.keys() else None
         self.eval_conf = conf["eval_conf"] if "eval_conf" in conf.keys() else None
 
-        self.strategy = init_strategy(self.strategy_name, self.strategy, **strategy_p)
+        self.strategy = setup_strategy(self.strategy_name, self.strategy, **strategy_p)
 
         self.encrypt = Encrypt()
 
