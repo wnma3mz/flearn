@@ -42,12 +42,7 @@ class Server(object):
                         联邦学习策略配置文件。
                         {"shared_key_layers": 共享的参数名称}
         """
-        listed_keys = [
-            "model_fpath",
-            "strategy_name",
-            "strategy",
-            "eval_conf",
-        ]
+        listed_keys = ["model_fpath", "strategy_name", "strategy", "eval_conf"]
         # 设置属性，两种方法均可
         for k in conf.keys():
             if k in listed_keys:
