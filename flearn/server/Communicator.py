@@ -84,7 +84,7 @@ class Communicator(object):
             )
             self.log_server = Logger(log_server_name, level="info")
             self.log_fmt = (
-                "Id: Server; Round: {}; Loss: {:.4f}; TrainAcc: {:.4f}; TestAcc: {};"
+                "Server; Round: {}; Loss: {:.4f}; TrainAcc: {:.4f}; TestAcc: {};"
             )
 
         self.active_client_id_lst = copy.deepcopy(self.client_id_lst)  # 每轮选中的客户端进行训练、上传

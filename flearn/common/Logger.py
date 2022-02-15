@@ -19,10 +19,12 @@ class Logger(object):
         when="D",
         maxBytes=1024 * 1024 * 10,  # 10M
         backCount=3,
-        fmt="%(asctime)s - %(levelname)s: %(message)s",
+        # fmt="%(asctime)s - %(levelname)s: %(message)s",
+        fmt="%(asctime)s - Id: %(message)s",
+        DATE_FORMAT="%Y-%m-%d %H:%M:%S",
     ):
         self.logger = logging.getLogger(filename)
-        format_str = logging.Formatter(fmt)  # 设置日志格式
+        format_str = logging.Formatter(fmt, datefmt=DATE_FORMAT)  # 设置日志格式
         self.logger.setLevel(self.level_relations.get(level))  # 设置日志级别
         sh = logging.StreamHandler()  # 往屏幕上输出
         sh.setFormatter(format_str)  # 设置屏幕上显示的格式
@@ -49,14 +51,13 @@ class Logger(object):
 
 
 if __name__ == "__main__":
-    log = Logger("all.log", level="debug")
-    # log.logger.debug('debug')
+    log = Logger("t.log")
     import time
 
     for _ in range(10):
-        log.logger.info("info")
+        log.logger.info("xxxx")
         time.sleep(3)
     # log.logger.warning('警告')
     # log.logger.error('报错')
     # log.logger.critical('严重')
-    Logger("error.log", level="error").logger.error("error")
+    # Logger("error.log", level="error").logger.error("error")

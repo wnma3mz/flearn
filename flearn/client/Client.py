@@ -110,8 +110,7 @@ class Client(object):
         )
         self.log_client = Logger(log_client_name, level="info")
         self.log_fmt = (
-            "Id: {}".format(self.client_id)
-            + "; Round: {}; Loss: {:.4f}; TrainAcc: {:.4f}; TestAcc: {};"
+            self.client_id + "; Round: {}; Loss: {:.4f}; TrainAcc: {:.4f}; TestAcc: {};"
         )
 
     def train(self, i):
