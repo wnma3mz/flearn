@@ -6,17 +6,16 @@ import os
 import torch
 import torch.nn as nn
 import torch.optim as optim
-
 from FedPAV import PAVClient, PAVServer
-from flearn.client.datasets import get_dataloader, get_datasets, get_split_loader
-from flearn.client.utils import get_free_gpu_id
-from flearn.common import Trainer
-from flearn.common.utils import setup_seed
-from flearn.server import Communicator as sc
 from models import LeNet5
 from resnet import ResNet_cifar
 from split_data import iid as iid_f
 from split_data import noniid
+
+from flearn.client.datasets import get_dataloader, get_datasets, get_split_loader
+from flearn.common import Trainer
+from flearn.common.utils import get_free_gpu_id, setup_seed
+from flearn.server import Communicator as sc
 
 # 设置随机数种子
 setup_seed(0)

@@ -6,14 +6,13 @@ import os
 import torch
 import torch.nn as nn
 import torch.optim as optim
-
-from flearn.client.utils import get_free_gpu_id
-from flearn.common.utils import setup_seed
-from flearn.server import Communicator as sc
-from flearn.server import Server
 from FML import FMLClient, FMLTrainer
 from model import ModelFedCon
 from utils import get_dataloader, partition_data
+
+from flearn.common.utils import get_free_gpu_id, setup_seed
+from flearn.server import Communicator as sc
+from flearn.server import Server
 
 # 设置随机数种子
 setup_seed(0)

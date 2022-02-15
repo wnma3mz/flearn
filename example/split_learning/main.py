@@ -8,13 +8,12 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
-
-from flearn.client.datasets import get_dataloader, get_datasets, get_split_loader
-from flearn.client.utils import get_free_gpu_id
-from flearn.common.utils import setup_seed
 from models import LeNet5Client, LeNet5Server, ResNet_cifarClient, ResNet_cifarServer
 from split_data import iid as iid_f
 from split_data import noniid
+
+from flearn.client.datasets import get_dataloader, get_datasets, get_split_loader
+from flearn.common.utils import get_free_gpu_id, setup_seed
 
 # 设置随机数种子
 setup_seed(0)

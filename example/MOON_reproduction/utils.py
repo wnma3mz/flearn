@@ -8,11 +8,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.utils.data as data
 import torchvision.transforms as transforms
+from datasets import CIFAR10_truncated, CIFAR100_truncated, ImageFolder_custom
 from sklearn.metrics import confusion_matrix
 from torch.autograd import Variable
-
-from datasets import CIFAR10_truncated, CIFAR100_truncated, ImageFolder_custom
-from model import *
 
 # logging.basicConfig()
 # logger = logging.getLogger()
@@ -398,10 +396,15 @@ def get_dataloader(dataset, datadir, train_bs, test_bs, dataidxs=None, noise_lev
             batch_size=train_bs,
             drop_last=True,
             shuffle=True,
-            num_workers=32,
+            num_workers=0,
+            pin_memory=True,
         )
         test_dl = data.DataLoader(
-            dataset=test_ds, batch_size=test_bs, shuffle=False, num_workers=32
+            dataset=test_ds,
+            batch_size=test_bs,
+            shuffle=False,
+            num_workers=0,
+            pin_memory=True,
         )
 
     elif dataset == "tinyimagenet":

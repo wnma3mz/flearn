@@ -7,17 +7,15 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
-
-from flearn.client.utils import get_free_gpu_id
-from flearn.common import Logger, Trainer
-from flearn.common.utils import setup_seed
 from model import ModelFedCon
 from utils import get_dataloader, partition_data
+
+from flearn.common import Logger, Trainer
+from flearn.common.utils import get_free_gpu_id, setup_seed
 
 # 设置随机数种子
 setup_seed(0)
 idx = get_free_gpu_id()
-idx = 0
 print("使用{}号GPU".format(idx))
 if idx != -1:
     os.environ["CUDA_VISIBLE_DEVICES"] = str(idx)
@@ -28,7 +26,6 @@ else:
 
 parser = argparse.ArgumentParser(description="Please input conf")
 parser.add_argument("--local_epoch", dest="local_epoch", default=1, type=int)
-parser.add_argument("--frac", dest="frac", default=1, type=float)
 parser.add_argument("--suffix", dest="suffix", default="", type=str)
 parser.add_argument("--iid", dest="iid", action="store_true")
 parser.add_argument(
@@ -51,8 +48,6 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # 设置数据集
 dataset_name = args.dataset_name
 dataset_fpath = args.dataset_fpath
-num_classes = 10
-batch_size = 128
 
 # 设置模型
 if dataset_name == "cifar10":
@@ -128,8 +123,6 @@ if __name__ == "__main__":
 
     # 客户端数量，及每轮上传客户端数量
     client_numbers = 10
-    k = int(client_numbers * args.frac)
-    print("客户端总数: {}; 每轮上传客户端数量: {}".format(client_numbers, k))
 
     # 设置数据集
     batch_size = 64
@@ -235,6 +228,11 @@ if __name__ == "__main__":
 
         # 测试
         for id_, client in enumerate(client_lst):
+            # 载入最新的权重
+            # client["trainer"].model = load_shared_weight(
+            #     client["trainer"], shared_weight
+            # )
+
             # print(client["trainer"].weight["features.fc1.weight"][0][:10])
             testloss, testacc = client["trainer"].test(client["testloader"])
             round_testacc_lst.append(testacc)

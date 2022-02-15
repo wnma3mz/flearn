@@ -8,11 +8,10 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.utils.data as data
 import torchvision.transforms as transforms
-from sklearn.metrics import confusion_matrix
-from torch.autograd import Variable
-
 from datasets import CIFAR10_truncated, CIFAR100_truncated, ImageFolder_custom
 from model import *
+from sklearn.metrics import confusion_matrix
+from torch.autograd import Variable
 
 # logging.basicConfig()
 # logger = logging.getLogger()

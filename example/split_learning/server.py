@@ -8,10 +8,9 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from flask import Flask, jsonify, make_response, request
-
-from flearn.client.utils import get_free_gpu_id
-from flearn.common.utils import setup_seed
 from models import LeNet5Client, LeNet5Server, ResNet_cifarClient, ResNet_cifarServer
+
+from flearn.common.utils import get_free_gpu_id, setup_seed
 
 parser = argparse.ArgumentParser(description="Please input conf")
 parser.add_argument("--local_epoch", dest="local_epoch", default=1, type=int)

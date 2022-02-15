@@ -4,20 +4,20 @@ import copy
 import os
 from collections import defaultdict
 
+import MyClients
+import MyStrategys
+import MyTrainers
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from model import GlobModel, ModelFedCon
+from utils import get_dataloader, partition_data
 
-import MyTrainers
 from flearn.client import Client, datasets
-from flearn.client.utils import get_free_gpu_id
-from flearn.common.utils import init_strategy, setup_seed
+from flearn.common.strategy import AVG
+from flearn.common.utils import get_free_gpu_id, setup_seed, setup_strategy
 from flearn.server import Communicator as sc
 from flearn.server import Server
-from model import GlobModel, ModelFedCon
-from MyClients import DistillClient, DynClient, LSDClient, MOONClient, ProxClient
-from MyStrategys import CCVR, DF, DFCCVR, Distill, Dyn
-from utils import get_dataloader, partition_data
 
 # 设置随机数种子
 setup_seed(0)
@@ -83,14 +83,15 @@ shared_key_layers = [
     "l3.weight",
     "l3.bias",
 ]
-custom_strategy_d = defaultdict(lambda: None)
+# 默认情况为FedAVG策略，即除了输入dyn和distill外，都是FedAVG策略
+custom_strategy_d = defaultdict(lambda: AVG())
 custom_strategy_d.update(
     {
-        "dyn": Dyn(h=model_base.state_dict()),
-        "distill": Distill(),
+        "dyn": MyStrategys.Dyn(h=model_base.state_dict()),
+        "distill": MyStrategys.Distill(),
     }
 )
-strategy = init_strategy(
+strategy = setup_strategy(
     strategy_name, custom_strategy_d[strategy_name], shared_key_layers
 )
 kwargs = {
@@ -98,21 +99,24 @@ kwargs = {
     "shared_key_layers": shared_key_layers,
 }
 if args.ccvr and args.df:
-    strategy = DFCCVR(model_base, glob_model_base, strategy)
+    strategy = MyStrategys.DFCCVR(model_base, glob_model_base, strategy)
 elif args.ccvr:
-    strategy = CCVR(glob_model_base, strategy)
+    strategy = MyStrategys.CCVR(glob_model_base, strategy)
 elif args.df:
-    strategy = DF(model_base, strategy)
+    strategy = MyStrategys.DF(model_base, strategy)
 
 # 设置 训练器-客户端
 conf_d = {
     "avg": {"trainer": MyTrainers.AVGTrainer, "client": Client},
-    "moon": {"trainer": MyTrainers.MOONTrainer, "client": MOONClient},
-    "prox": {"trainer": MyTrainers.ProxTrainer, "client": ProxClient},
-    "lsd": {"trainer": MyTrainers.LSDTrainer, "client": LSDClient},
-    "dyn": {"trainer": MyTrainers.DynTrainer, "client": DynClient},
+    "moon": {"trainer": MyTrainers.MOONTrainer, "client": MyClients.MOONClient},
+    "prox": {"trainer": MyTrainers.ProxTrainer, "client": MyClients.ProxClient},
+    "lsd": {"trainer": MyTrainers.LSDTrainer, "client": MyClients.LSDClient},
+    "dyn": {"trainer": MyTrainers.DynTrainer, "client": MyClients.DynClient},
     "lg": {"trainer": MyTrainers.AVGTrainer, "client": Client},
-    "distill": {"trainer": MyTrainers.DistillTrainer, "client": DistillClient},
+    "distill": {
+        "trainer": MyTrainers.DistillTrainer,
+        "client": MyClients.DistillClient,
+    },
 }
 
 
