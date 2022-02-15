@@ -52,7 +52,8 @@ class Server(object):
         self.strategy = conf["strategy"] if "strategy" in conf.keys() else None
         self.eval_conf = conf["eval_conf"] if "eval_conf" in conf.keys() else None
 
-        self.strategy = setup_strategy(self.strategy_name, self.strategy, **strategy_p)
+        if self.strategy == None:
+            self.strategy = setup_strategy(self.strategy_name, None, **strategy_p)
 
         self.encrypt = Encrypt()
 

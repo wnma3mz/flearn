@@ -9,7 +9,7 @@ from .strategy import AVG, AVGM, BN, LG, LG_R, OPT, PAV, SGD
 __all__ = ["setup_strategy", "setup_seed", "get_free_gpu_id"]
 
 
-def setup_strategy(strategy_name, custom_strategy, shared_key_layers=None):
+def setup_strategy(strategy_name, custom_strategy, **strategy_p):
     """设置框架内已有的策略
     Args:
         strategy_name     :  str
@@ -25,6 +25,10 @@ def setup_strategy(strategy_name, custom_strategy, shared_key_layers=None):
         flearn.common.Strategy
         策略
     """
+    if "shared_key_layers" in strategy_p.keys():
+        shared_key_layers = strategy_p["strategy_p"]
+    else:
+        shared_key_layers = None
     strategy_name = strategy_name.lower()
     strategy_d = {
         "avg": AVG(),
