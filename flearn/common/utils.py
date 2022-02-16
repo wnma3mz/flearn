@@ -26,7 +26,7 @@ def setup_strategy(strategy_name, custom_strategy, **strategy_p):
         策略
     """
     if "shared_key_layers" in strategy_p.keys():
-        shared_key_layers = strategy_p["strategy_p"]
+        shared_key_layers = strategy_p["shared_key_layers"]
     else:
         shared_key_layers = None
     strategy_name = strategy_name.lower()
