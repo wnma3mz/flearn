@@ -91,13 +91,9 @@ custom_strategy_d.update(
         "distill": MyStrategys.Distill(),
     }
 )
-strategy = setup_strategy(
-    strategy_name, custom_strategy_d[strategy_name], shared_key_layers
-)
-kwargs = {
-    "h": model_base.state_dict(),
-    "shared_key_layers": shared_key_layers,
-}
+
+strategy_p = {"shared_key_layers": shared_key_layers}
+strategy = setup_strategy(strategy_name, custom_strategy_d[strategy_name], **strategy_p)
 if args.ccvr and args.df:
     strategy = MyStrategys.DFCCVR(model_base, glob_model_base, strategy)
 elif args.ccvr:
@@ -126,7 +122,12 @@ def inin_single_client(model_base, client_id):
     criterion = nn.CrossEntropyLoss()
 
     trainloader, testloader, _, _ = get_dataloader(
-        dataset_name, dataset_fpath, batch_size, batch_size, net_dataidx_map[client_id]
+        dataset_name,
+        dataset_fpath,
+        batch_size,
+        batch_size,
+        net_dataidx_map[client_id],
+        num_workers=4,
     )
 
     trainer = conf_d[strategy_name]["trainer"]
@@ -181,9 +182,9 @@ if __name__ == "__main__":
     )
     print("beta: {}".format(beta))
 
-    train_dl_global, test_dl, train_ds_global, test_ds_global = get_dataloader(
-        dataset_name, dataset_fpath, batch_size, test_bs=batch_size
-    )
+    # train_dl_global, test_dl, train_ds_global, test_ds_global = get_dataloader(
+    #     dataset_name, dataset_fpath, batch_size, test_bs=batch_size, num_workers=4
+    # )
 
     print("初始化客户端")
     client_lst = []
@@ -214,7 +215,7 @@ if __name__ == "__main__":
     if args.df:
         trainset, testset = datasets.get_datasets("cifar100", dataset_fpath)
         _, glob_testloader = datasets.get_dataloader(
-            trainset, testset, 100, num_workers=0
+            trainset, testset, 100, num_workers=4
         )
         kwargs = {
             "lr": 1e-2,

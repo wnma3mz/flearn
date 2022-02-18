@@ -160,12 +160,10 @@ if __name__ == "__main__":
     Round, per_round_ep = 100, 10
     shared_weight = {}
     log_server = Logger(
-        "Server_round{}_clients{}_{}.log".format(Round, len(client_lst), args.suffix),
+        "[Server]round{}_clients{}_{}.log".format(Round, len(client_lst), args.suffix),
         level="info",
     )
-    log_fmt = (
-        "[Server]: " + "Round: {}; Loss: {:.4f}; TrainAcc: {:.4f}; TestAcc: {:.4f};"
-    )
+    log_fmt = "Server; Round: {}; Loss: {:.4f}; TrainAcc: {:.4f}; TestAcc: {:.4f};"
     for ri in range(Round):
         round_loss_lst, round_trainacc_lst, round_testacc_lst = [], [], []
         # 为贴近真实情况，每次训练的顺序不同。使用np.random.shuffle来实现
@@ -228,16 +226,9 @@ if __name__ == "__main__":
 
         # 测试
         for id_, client in enumerate(client_lst):
-            # 载入最新的权重
-            # client["trainer"].model = load_shared_weight(
-            #     client["trainer"], shared_weight
-            # )
-
-            # print(client["trainer"].weight["features.fc1.weight"][0][:10])
             testloss, testacc = client["trainer"].test(client["testloader"])
             round_testacc_lst.append(testacc)
-            # break
-        # break
+
         log_server.logger.info(
             log_fmt.format(
                 ri,

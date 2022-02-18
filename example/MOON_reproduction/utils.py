@@ -1,7 +1,5 @@
 import os
-import random
 
-# import logging
 import numpy as np
 import torch
 import torch.nn as nn
@@ -11,10 +9,6 @@ import torchvision.transforms as transforms
 from datasets import CIFAR10_truncated, CIFAR100_truncated, ImageFolder_custom
 from sklearn.metrics import confusion_matrix
 from torch.autograd import Variable
-
-# logging.basicConfig()
-# logger = logging.getLogger()
-# logger.setLevel(logging.INFO)
 
 
 def mkdirs(dirpath):
@@ -326,7 +320,9 @@ def load_model(model, model_index, device="cpu"):
     return model
 
 
-def get_dataloader(dataset, datadir, train_bs, test_bs, dataidxs=None, noise_level=0):
+def get_dataloader(
+    dataset, datadir, train_bs, test_bs, dataidxs=None, noise_level=0, num_workers=0
+):
     if dataset in ("cifar10", "cifar100"):
         if dataset == "cifar10":
             dl_obj = CIFAR10_truncated
@@ -396,14 +392,14 @@ def get_dataloader(dataset, datadir, train_bs, test_bs, dataidxs=None, noise_lev
             batch_size=train_bs,
             drop_last=True,
             shuffle=True,
-            num_workers=0,
+            num_workers=num_workers,
             pin_memory=True,
         )
         test_dl = data.DataLoader(
             dataset=test_ds,
             batch_size=test_bs,
             shuffle=False,
-            num_workers=0,
+            num_workers=num_workers,
             pin_memory=True,
         )
 
@@ -423,13 +419,24 @@ def get_dataloader(dataset, datadir, train_bs, test_bs, dataidxs=None, noise_lev
         )
 
         train_ds = dl_obj(
-            datadir + "./train/", dataidxs=dataidxs, transform=transform_train
+            os.path.join(datadir, "train"), dataidxs=dataidxs, transform=transform_train
         )
-        test_ds = dl_obj(datadir + "./val/", transform=transform_test)
+        test_ds = dl_obj(os.path.join(datadir, "val"), transform=transform_test)
 
         train_dl = data.DataLoader(
-            dataset=train_ds, batch_size=train_bs, drop_last=True, shuffle=True
+            dataset=train_ds,
+            batch_size=train_bs,
+            drop_last=True,
+            shuffle=True,
+            num_workers=num_workers,
+            pin_memory=True,
         )
-        test_dl = data.DataLoader(dataset=test_ds, batch_size=test_bs, shuffle=False)
+        test_dl = data.DataLoader(
+            dataset=test_ds,
+            batch_size=test_bs,
+            shuffle=False,
+            num_workers=num_workers,
+            pin_memory=True,
+        )
 
     return train_dl, test_dl, train_ds, test_ds
