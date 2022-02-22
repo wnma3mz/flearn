@@ -37,3 +37,11 @@ class Encrypt(object):
         w_glob_encode = glob_params.encode()
         w_glob_b = base64.b64decode(w_glob_encode)
         return pickle.loads(w_glob_b)
+
+
+class EmptyEncrypt(object):
+    def encode(self, params):
+        return params
+
+    def decode(self, glob_params):
+        return glob_params
