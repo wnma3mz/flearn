@@ -1,5 +1,6 @@
 # coding: utf-8
 import base64
+import pickle
 
 
 class Encrypt(object):
@@ -18,7 +19,7 @@ class Encrypt(object):
             str: 编码后的模型参数
         """
         # 加密参数为字符串
-        model_parambs_b64 = base64.b64encode(params)
+        model_parambs_b64 = base64.b64encode(pickle.dumps(params))
         model_b64_str = model_parambs_b64.decode()
 
         return model_b64_str
@@ -35,4 +36,4 @@ class Encrypt(object):
         # Client-side copy
         w_glob_encode = glob_params.encode()
         w_glob_b = base64.b64decode(w_glob_encode)
-        return w_glob_b
+        return pickle.loads(w_glob_b)

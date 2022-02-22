@@ -1,7 +1,7 @@
 # coding: utf-8
 import numpy as np
 
-from flearn.common import Encrypt, setup_strategy
+from flearn.common import setup_strategy
 
 
 class Server(object):
@@ -54,8 +54,6 @@ class Server(object):
 
         if self.strategy == None:
             self.strategy = setup_strategy(self.strategy_name, None, **strategy_p)
-
-        self.encrypt = Encrypt()
 
     @staticmethod
     def active_client(lst, k):

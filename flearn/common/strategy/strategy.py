@@ -1,5 +1,4 @@
 # coding: utf-8
-import pickle
 from abc import ABC, abstractmethod
 from functools import reduce
 
@@ -12,8 +11,8 @@ from flearn.common import Encrypt
 class Strategy(ABC):
     """联邦学习策略的基类，包含对客户端模型处理、服务端聚合等"""
 
-    def __init__(self):
-        self.encrypt = Encrypt()
+    def __init__(self, encrypt=Encrypt()):
+        self.encrypt = encrypt
 
     @staticmethod
     def extract_lst(lst, key):
@@ -65,7 +64,7 @@ class Strategy(ABC):
         Returns:
 
         """
-        return pickle.loads(self.encrypt.decode(data))
+        return self.encrypt.decode(data)
 
     def upload_processing(self, data):
         """数据转为Python数据结构并解密
@@ -77,7 +76,7 @@ class Strategy(ABC):
         Returns:
 
         """
-        return self.encrypt.encode(pickle.dumps(data))
+        return self.encrypt.encode(data)
 
     @staticmethod
     def cdw_feature_distance(old_model, new_model, device, train_loader):

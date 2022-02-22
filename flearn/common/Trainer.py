@@ -19,6 +19,16 @@ class Trainer:
     # this flag allows you to enable the inbuilt cudnn auto-tuner
     # to find the best algorithm to use for your hardware.
     torch.backends.cudnn.benchmark = True
+    """
+    每轮训练/测试时函数调用顺序
+    train/test --> eval_model       训练时调用其他模型, 设定eval模式
+        --> _iteration              每轮的迭代器, 将数据传输至GPU上
+        --> batch --> forward       每个batch的操作->模型forward, 模型输出不止一个变量/需要保存forward产生的数据
+                  --> fed_loss      联邦学习的损失计算
+                  --> update_info   存储训练中产生的特征、标签等信息, 以便上传至服务器端
+                  --> metrics       评估模型训练的准确率
+        --> clear_info              训练大于一轮的情况下, 只需要保存最后一轮的信息, 清空其余轮的信息
+    """
 
     def __init__(self, model, optimizer, criterion, device, display=True):
         """模型训练器
@@ -50,19 +60,19 @@ class Trainer:
         self.history_accuracy = []
 
     def fed_loss(self):
-        """联邦学习中，客户端可能需要自定义其他的损失函数"""
+        """联邦学习中, 客户端可能需要自定义其他的损失函数"""
         return 0
 
     def update_info(self):
-        """每次训练后的更新操作，保存信息。如特征等"""
+        """每次训练后的更新操作, 保存信息。如特征等"""
         pass
 
     def clear_info(self):
-        """如果不是最后一轮，则无需上传。需要对保存的信息进行清空"""
+        """如果不是最后一轮, 则无需上传。需要对保存的信息进行清空"""
         pass
 
     def eval_model(self):
-        """在训练时，由于联邦学习算法可能引入其他模型来指导当前模型，所以需要提前将其他模型转为eval模式"""
+        """在训练时, 由于联邦学习算法可能引入其他模型来指导当前模型, 所以需要提前将其他模型转为eval模式"""
         pass
 
     @staticmethod
@@ -160,7 +170,7 @@ class Trainer:
         return loss, accuracy
 
     def test(self, data_loader):
-        """模型测试的初始入口，由于只有一轮，所以不需要loop
+        """模型测试的初始入口, 由于只有一轮, 所以不需要loop
         Args:
             data_loader :  torch.utils.data
                            测试集

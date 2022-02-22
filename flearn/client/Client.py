@@ -3,7 +3,7 @@ import os
 from os.path import join as ospj
 
 from flearn.client.utils import bool_key_lst, listed_keys, str_key_lst
-from flearn.common import Encrypt, Logger, setup_strategy
+from flearn.common import Logger, setup_strategy
 
 
 class Client(object):
@@ -89,7 +89,6 @@ class Client(object):
             self.testloader = [self.testloader]
 
         self.best_acc = 0.0
-        self.encrypt = Encrypt()
 
         name = "client{}_model.pth".format(self.client_id)
         self.update_fpath = ospj(self.model_fpath, name)
