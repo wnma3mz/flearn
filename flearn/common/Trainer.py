@@ -82,10 +82,7 @@ class Trainer:
     def forward(self, data, target):
         data, target = data.to(self.device), target.to(self.device)
         output = self.model(data)
-
-        loss = self.criterion(output, target)
-        iter_acc = self.metrics(output, target)
-        return output, loss, iter_acc
+        return output
 
     def batch(self, data, target):
         """训练/测试每个batch的数据
@@ -104,7 +101,9 @@ class Trainer:
             float : iter_acc
                     对应batch的accuracy
         """
-        _, loss, iter_acc = self.forward(data, target)
+        output = self.forward(data, target)
+        loss = self.criterion(output, target)
+
         if self.model.training:
             loss += self.fed_loss()
             self.optimizer.zero_grad()
@@ -112,6 +111,8 @@ class Trainer:
             self.optimizer.step()
 
             self.update_info()
+
+        iter_acc = self.metrics(output, target)
         return loss.data.item(), iter_acc
 
     @show_f
