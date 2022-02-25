@@ -23,7 +23,7 @@ class Trainer:
     每轮训练/测试时函数调用顺序
     train/test --> eval_model       训练时调用其他模型, 设定eval模式
         --> _iteration              每轮的迭代器, 将数据传输至GPU上
-        --> batch --> forward       每个batch的操作->模型forward, 模型输出不止一个变量/需要保存forward产生的数据
+        --> batch --> forward       每个batch的操作->模型forward, 考虑数据加载方式, 模型输出不止一个变量, 保存forward产生的数据等情况
                   --> fed_loss      联邦学习的损失计算
                   --> update_info   存储训练中产生的特征、标签等信息, 以便上传至服务器端
                   --> metrics       评估模型训练的准确率
@@ -80,8 +80,12 @@ class Trainer:
         return (output.data.max(1)[1] == target.data).sum().item() / len(target) * 100
 
     def forward(self, data, target):
+        data, target = data.to(self.device), target.to(self.device)
         output = self.model(data)
-        return output
+
+        loss = self.criterion(output, target)
+        iter_acc = self.metrics(output, target)
+        return loss, iter_acc
 
     def batch(self, data, target):
         """训练/测试每个batch的数据
@@ -100,9 +104,7 @@ class Trainer:
             float : iter_acc
                     对应batch的accuracy
         """
-        output = self.forward(data, target)
-        loss = self.criterion(output, target)
-
+        loss, iter_acc = self.forward(data, target)
         if self.model.training:
             loss += self.fed_loss()
             self.optimizer.zero_grad()
@@ -110,10 +112,7 @@ class Trainer:
             self.optimizer.step()
 
             self.update_info()
-
-        iter_loss = loss.data.item()
-        iter_acc = self.metrics(output, target)
-        return iter_loss, iter_acc
+        return loss.data.item(), iter_acc
 
     @show_f
     def _iteration(self, loader):
@@ -132,7 +131,6 @@ class Trainer:
         """
         loop_loss, loop_accuracy = [], []
         for data, target in loader:
-            data, target = data.to(self.device), target.to(self.device)
             iter_loss, iter_acc = self.batch(data, target)
             loop_accuracy.append(iter_acc)
             loop_loss.append(iter_loss)

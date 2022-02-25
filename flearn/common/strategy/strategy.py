@@ -5,13 +5,13 @@ from functools import reduce
 import numpy as np
 import torch
 
-from flearn.common import Encrypt
+from flearn.common import EmptyEncrypt, Encrypt
 
 
 class Strategy(ABC):
     """联邦学习策略的基类，包含对客户端模型处理、服务端聚合等"""
 
-    def __init__(self, encrypt=Encrypt()):
+    def __init__(self, encrypt=EmptyEncrypt()):
         self.encrypt = encrypt
 
     @staticmethod
