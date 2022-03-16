@@ -30,8 +30,7 @@ if idx != -1:
 else:
     raise SystemError("No Free GPU Device")
 
-parser = argparse.ArgumentParser(description="Please input strategy_name")
-parser.add_argument("--strategy_name", dest="strategy_name")
+parser = argparse.ArgumentParser(description="")
 parser.add_argument("--local_epoch", dest="local_epoch", default=1, type=int)
 parser.add_argument("--frac", dest="frac", default=1, type=float)
 parser.add_argument("--suffix", dest="suffix", default="", type=str)
@@ -74,6 +73,8 @@ elif "cifar" in dataset_name:
         freeze_bn_affine=False,
     )
 
+strategy_name = "df"
+strategy = DF(model_base, device)
 
 model_fpath = "./client_checkpoint"
 if not os.path.isdir(model_fpath):
@@ -102,8 +103,8 @@ def inin_single_client(client_id, trainloader_idx_lst, testloader_idx_lst):
         "model_fpath": model_fpath,
         "epoch": args.local_epoch,
         "dataset_name": dataset_name,
-        "strategy_name": args.strategy_name,
-        "strategy": DF(model_base, device),
+        "strategy_name": strategy_name,
+        "strategy": copy.deepcopy(strategy),
         "save": False,
         "log": False,
     }
@@ -158,7 +159,7 @@ if __name__ == "__main__":
     sc_conf = {
         "model_fpath": model_fpath,
         "strategy": DF(model_base, device),
-        "strategy_name": args.strategy_name,
+        "strategy_name": copy.deepcopy(strategy),
     }
     s_conf = {
         "server": Server(sc_conf),

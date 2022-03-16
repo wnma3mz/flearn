@@ -17,12 +17,6 @@ from torchvision.datasets import (
     utils,
 )
 
-# import logging
-
-# logging.basicConfig()
-# logger = logging.getLogger()
-# logger.setLevel(logging.INFO)
-
 IMG_EXTENSIONS = (
     ".jpg",
     ".jpeg",

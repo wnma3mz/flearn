@@ -142,7 +142,6 @@ if __name__ == "__main__":
         "client_lst": client_lst,
     }
     server_o = sc(conf=sc_conf)
-    server_o.max_workers = min(20, client_numbers)
-    # server_o.max_workers = 20
+    server_o.max_workers = 1
     for ri in range(sc_conf["Round"]):
         loss, train_acc, test_acc = server_o.run(ri, k=k)

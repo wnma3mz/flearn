@@ -30,8 +30,7 @@ if idx != -1:
 else:
     raise SystemError("No Free GPU Device")
 
-parser = argparse.ArgumentParser(description="Please input strategy_name")
-parser.add_argument("--strategy_name", dest="strategy_name")
+parser = argparse.ArgumentParser(description="")
 parser.add_argument("--local_epoch", dest="local_epoch", default=1, type=int)
 parser.add_argument("--frac", dest="frac", default=1, type=float)
 parser.add_argument("--suffix", dest="suffix", default="", type=str)
@@ -90,6 +89,10 @@ if not os.path.isdir(model_fpath):
     os.mkdir(model_fpath)
 
 
+strategy_name = "md"
+strategy = MD(key_lst, glob_model, optim_glob, device)
+
+
 def inin_single_client(client_id, trainloader_idx_lst, testloader_idx_lst):
     model_ = copy.deepcopy(model_base)
     optim_ = optim.SGD(model_.parameters(), lr=1e-1)
@@ -113,7 +116,7 @@ def inin_single_client(client_id, trainloader_idx_lst, testloader_idx_lst):
         "epoch": args.local_epoch,
         "dataset_name": dataset_name,
         "strategy_name": args.strategy_name,
-        "strategy": MD(key_lst, glob_model, optim_glob, device),
+        "strategy": copy.deepcopy(strategy),
         "save": False,
         "log": False,
     }
@@ -150,8 +153,8 @@ if __name__ == "__main__":
 
     s_conf = {
         "model_fpath": model_fpath,
-        "strategy": MD(key_lst, glob_model, optim_glob, device),
-        "strategy_name": args.strategy_name,
+        "strategy_name": strategy_name,
+        "strategy": copy.deepcopy(strategy),
     }
     sc_conf = {
         "server": Server(s_conf),

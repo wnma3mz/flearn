@@ -29,26 +29,30 @@
 见[README.md](https://github.com/wnma3mz/flearn/tree/master/example/PAV_reproduction)
 
 ### 支持策略
-
-- [X] FedSGD/FedAVG [论文](https://arxiv.org/pdf/1602.05629)
-- [X] FedAVGM [论文](https://arxiv.org/pdf/1909.06335)
-- [X] FedBN [论文](https://arxiv.org/pdf/2102.07623) [代码](https://github.com/med-air/FedBN)
-- [X] LG-FedAVG [论文](https://arxiv.org/pdf/2001.01523) [代码](https://github.com/pliang279/LG-FedAvg)
-- [X] FedOPT [论文](https://arxiv.org/pdf/2003.00295) [代码](https://github.com/adap/flower/blob/main/src/py/flwr/server/strategy/fedadagrad.py)(非官方)
-- [x] FedPAV [论文](https://arxiv.org/pdf/2008.11560) [代码](https://github.com/cap-ntu/FedReID)
-- [x] FedProx [论文](https://arxiv.org/abs/1812.06127) [代码](https://github.com/litian96/FedProx)
-- [ ] 复现计划
-  - [X] FedDistill [论文](https://arxiv.org/pdf/2011.02367) [代码](<https://github.com/zhuangdizhu/FedGen>)(非官方)
-  - [X] FedDyn [论文](https://arxiv.org/pdf/2111.04263) [代码]( https://github.com/AntixK/FedDyn)
-  - [X] FedMD [论文](https://arxiv.org/pdf/1910.03581) [代码](https://github.com/diogenes0319/FedMD_clean)
-  - [X] FedMutual [论文](https://arxiv.org/pdf/2006.16765)
-  - [X] MOON [论文](https://arxiv.org/pdf/2103.16257.pdf) [代码](https://github.com/QinbinLi/MOON)
-  - [X] CCVR [论文](https://arxiv.org/pdf/2106.05001) 
-  - [X] FedGen [论文](arXiv preprint arXiv:2105.10056, 2021.) [代码](https://github.com/zhuangdizhu/FedGen)
-  - [X] FedDF(Ensemble Distillation) [论文](https://arxiv.org/pdf/2006.07242) [代码](<https://github.com/epfml/federated-learning-public-code/>)
-  - [ ] FedBE [论文](https://arxiv.org/abs/2009.01974) [代码](https://github.com/hongyouc/FedBE)
+- 2016
+   - [X] FedSGD/FedAVG [论文](https://arxiv.org/pdf/1602.05629)
+- 2018
+   - [x] FedProx [论文](https://arxiv.org/abs/1812.06127) [代码](https://github.com/litian96/FedProx)
+- 2019
+   - [X] FedAVGM [论文](https://arxiv.org/pdf/1909.06335)
+   - [X] FedMD [论文](https://arxiv.org/pdf/1910.03581) [代码](https://github.com/diogenes0319/FedMD_clean)
+- 2020
+   - [X] LG-FedAVG [论文](https://arxiv.org/pdf/2001.01523) [代码](https://github.com/pliang279/LG-FedAvg)
+   - [X] FedOPT [论文](https://arxiv.org/pdf/2003.00295) [代码](https://github.com/adap/flower/blob/main/src/py/flwr/server/strategy/fedadagrad.py)(非官方)
+   - [x] FedPAV [论文](https://arxiv.org/pdf/2008.11560) [代码](https://github.com/cap-ntu/FedReID)
+   - [X] FedDistill [论文](https://arxiv.org/pdf/2011.02367) [代码](<https://github.com/zhuangdizhu/FedGen>)(非官方)
+   - [X] FedMutual [论文](https://arxiv.org/pdf/2006.16765)
+   - [X] FedDF(Ensemble Distillation) [论文](https://arxiv.org/pdf/2006.07242) [代码](<https://github.com/epfml/federated-learning-public-code/>)
+   - [ ] FedBE [论文](https://arxiv.org/abs/2009.01974) [代码](https://github.com/hongyouc/FedBE)
   - [ ] FedNova [论文](https://arxiv.org/pdf/2007.07481)
+- 2021
+   - [x] FedBN [论文](https://arxiv.org/pdf/2102.07623) [代码](https://github.com/med-air/FedBN)
+  - [X] FedDyn [论文](https://arxiv.org/pdf/2111.04263) [代码]( https://github.com/AntixK/FedDyn)
+  - [x] MOON [论文](https://arxiv.org/pdf/2103.16257.pdf) [代码](https://github.com/QinbinLi/MOON)
+  - [x] CCVR [论文](https://arxiv.org/pdf/2106.05001) 
+  - [x] FedGen [论文](https://arxiv.org/pdf/2105.10056) [代码](https://github.com/zhuangdizhu/FedGen)
   - [ ] FedDist [论文](https://arxiv.org/pdf/2110.10223)
+- 2022
 
 split-learning可见[README.md](https://github.com/wnma3mz/flearn/tree/master/example/split_learning)，尚存在loss爆炸问题。
 

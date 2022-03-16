@@ -14,7 +14,7 @@ from model import GlobModel, ModelFedCon
 from utils import get_dataloader, partition_data
 
 from flearn.client import Client, datasets
-from flearn.common.strategy import AVG
+from flearn.common.strategy import AVG, LG_R
 from flearn.common.utils import get_free_gpu_id, setup_seed, setup_strategy
 from flearn.server import Communicator as sc
 from flearn.server import Server
@@ -109,6 +109,7 @@ conf_d = {
     "lsd": {"trainer": MyTrainers.LSDTrainer, "client": MyClients.LSDClient},
     "dyn": {"trainer": MyTrainers.DynTrainer, "client": MyClients.DynClient},
     "lg": {"trainer": MyTrainers.AVGTrainer, "client": Client},
+    "lg_r": {"trainer": MyTrainers.AVGTrainer, "client": Client},
     "distill": {
         "trainer": MyTrainers.DistillTrainer,
         "client": MyClients.DistillClient,

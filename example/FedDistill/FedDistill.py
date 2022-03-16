@@ -125,6 +125,6 @@ class DistillTrainer(Trainer):
         self.logit_tracker.clear()
 
     def forward(self, data, target):
-        output = self.model(data)
-        self.output, self.target = output, target
-        return output
+        output, loss, iter_acc = super().forward(data, target)
+        self.output, self.target = output, target.to(self.device)
+        return output, loss, iter_acc

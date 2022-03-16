@@ -39,7 +39,7 @@ parser.add_argument("--public_fpath", dest="public_fpath", type=str)
 
 
 args = parser.parse_args()
-args.strategy_name = "pav"
+strategy_name = "pav"
 args.dataset_name = "cifar10"
 args.public_dataset = "cifar100"
 
@@ -102,7 +102,7 @@ def inin_single_client(client_id, trainloader_idx_lst, testloader_idx_lst):
         "model_fpath": model_fpath,
         "epoch": args.local_epoch,
         "dataset_name": dataset_name,
-        "strategy_name": args.strategy_name,
+        "strategy_name": strategy_name,
         "shared_key_layers": shared_key_layers,
         "save": False,
         "log": False,
@@ -138,11 +138,8 @@ if __name__ == "__main__":
         c_conf = inin_single_client(client_id, trainloader_idx_lst, testloader_idx_lst)
         client_lst.append(PAVClient(c_conf))
 
-    s_conf = {
-        "model_fpath": model_fpath,
-        "strategy_name": args.strategy_name,
-        **{"shared_key_layers": shared_key_layers},
-    }
+    strategy_p = {"shared_key_layers": shared_key_layers}
+    s_conf = {"model_fpath": model_fpath, "strategy_name": strategy_name, **strategy_p}
     sc_conf = {
         "server": PAVServer(s_conf),
         "Round": 1000,

@@ -28,8 +28,7 @@ if idx != -1:
 else:
     raise SystemError("No Free GPU Device")
 
-parser = argparse.ArgumentParser(description="Please input strategy_name")
-parser.add_argument("--strategy_name", dest="strategy_name")
+parser = argparse.ArgumentParser(description="")
 parser.add_argument("--local_epoch", dest="local_epoch", default=1, type=int)
 parser.add_argument("--frac", dest="frac", default=1, type=float)
 parser.add_argument("--suffix", dest="suffix", default="", type=str)
@@ -76,6 +75,9 @@ model_fpath = "./client_checkpoint"
 if not os.path.isdir(model_fpath):
     os.mkdir(model_fpath)
 
+strategy_name = "dyn"
+strategy = Dyn(copy.deepcopy(model_base).state_dict())
+
 
 def inin_single_client(client_id, trainloader_idx_lst, testloader_idx_lst):
     model_ = copy.deepcopy(model_base)
@@ -92,7 +94,7 @@ def inin_single_client(client_id, trainloader_idx_lst, testloader_idx_lst):
 
     return {
         "trainer": DynTrainer(model_, optim_, nn.CrossEntropyLoss(), device, False),
-        "strategy": Dyn(h=copy.deepcopy(model_base).state_dict()),
+        "strategy": copy.deepcopy(strategy),
         "trainloader": trainloader,
         "testloader": [testloader, glob_testloader],
         "model_fname": "client{}_round_{}.pth".format(client_id, "{}"),
@@ -100,7 +102,7 @@ def inin_single_client(client_id, trainloader_idx_lst, testloader_idx_lst):
         "model_fpath": model_fpath,
         "epoch": args.local_epoch,
         "dataset_name": dataset_name,
-        "strategy_name": args.strategy_name,
+        "strategy_name": strategy_name,
         "save": False,
         "log": False,
     }
@@ -136,9 +138,9 @@ if __name__ == "__main__":
         client_lst.append(DynClient(c_conf))
 
     s_conf = {
-        "strategy": Dyn(copy.deepcopy(model_base).state_dict()),
+        "strategy": copy.deepcopy(strategy),
         "model_fpath": model_fpath,
-        "strategy_name": args.strategy_name,
+        "strategy_name": strategy_name,
     }
     sc_conf = {
         "server": Server(s_conf),

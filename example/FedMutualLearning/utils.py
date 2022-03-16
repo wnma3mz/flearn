@@ -1,7 +1,5 @@
 import os
-import random
 
-# import logging
 import numpy as np
 import torch
 import torch.nn as nn
@@ -12,10 +10,6 @@ from datasets import CIFAR10_truncated, CIFAR100_truncated, ImageFolder_custom
 from model import *
 from sklearn.metrics import confusion_matrix
 from torch.autograd import Variable
-
-# logging.basicConfig()
-# logger = logging.getLogger()
-# logger.setLevel(logging.INFO)
 
 
 def mkdirs(dirpath):
