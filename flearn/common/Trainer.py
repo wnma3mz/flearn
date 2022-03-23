@@ -139,6 +139,9 @@ class Trainer:
 
             if self.display:
                 loader.postfix = "loss: {:.4f}; acc: {:.2f}".format(iter_loss, iter_acc)
+        
+        if len(loop_accuracy) == 0:
+            raise SystemExit("no training")
         return np.mean(loop_loss), np.mean(loop_accuracy)
 
     def train(self, data_loader, epochs=1):

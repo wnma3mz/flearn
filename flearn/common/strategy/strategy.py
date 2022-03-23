@@ -79,6 +79,18 @@ class Strategy(ABC):
         return self.encrypt.encode(data)
 
     @staticmethod
+    def swa_moving_average(w1, w2, alpha=1.0):
+        """
+        # https://github.com/timgaripov/swa/blob/411b2fcad59bec60c6c9eb1eb19ab906540e5ea2/utils.py#L74-L77
+        w1: 原模型
+        w2: 新模型
+        alpha: 1.0 / (swa_n + 1)
+        """
+        for k in w2.keys():
+            w2[k] = w2[k] * alpha + w1[k] * (1 - alpha)
+        return w2
+
+    @staticmethod
     def cdw_feature_distance(old_model, new_model, device, train_loader):
         """cosine distance weight (cdw): calculate feature distance of
         the features of a batch of data by cosine distance.

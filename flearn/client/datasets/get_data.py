@@ -9,6 +9,56 @@ from torchvision.datasets import CIFAR10, CIFAR100, EMNIST, MNIST
 from .partition_data import DataPartitioner
 
 
+def create_data_randomly(sample_number, pn_normalize=True):
+    # create pseudo_data and map to [0, 1].
+    # cifar10
+    pseudo_data = torch.randn((sample_number, 3, 32, 32), requires_grad=False)
+    pseudo_data = (pseudo_data - torch.min(pseudo_data)) / (
+        torch.max(pseudo_data) - torch.min(pseudo_data)
+    )
+
+    # map values to [-1, 1] if necessary.
+    if pn_normalize:
+        pseudo_data = (pseudo_data - 0.5) * 2
+    return pseudo_data, [0] * sample_number
+
+
+class RandomDataset(Dataset):
+    "Characterizes a dataset for PyTorch"
+
+    def __init__(self, sample_number):
+        "Initialization"
+        self.data, self.labels = create_data_randomly(sample_number)
+
+    def __len__(self):
+        "Denotes the total number of samples"
+        return len(self.data)
+
+    def __getitem__(self, index):
+        "Generates one sample of data"
+        return self.data[index], self.labels[index]
+
+
+class DictDataset(Dataset):
+    def __init__(self, label_data_d):
+        "Initialization"
+        self.data, self.labels = [], []
+        for label, data in label_data_d.items():
+            self.data.append(data)
+            self.labels.append(label)
+
+        self.data = torch.tensor(self.data)
+        self.labels = torch.tensor(self.labels)
+
+    def __len__(self):
+        "Denotes the total number of samples"
+        return len(self.data)
+
+    def __getitem__(self, index):
+        "Generates one sample of data"
+        return self.data[index], self.labels[index]
+
+
 class DatasetSplit(Dataset):
     def __init__(self, dataset, idxs):
         super(DatasetSplit, self).__init__()

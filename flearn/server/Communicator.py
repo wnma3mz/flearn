@@ -223,3 +223,103 @@ class Communicator(object):
         if self.log:
             self.log_server.logger.info(self.log_fmt.format(*log_msg))
         return loss, train_acc, test_acc
+
+    def run2(self, model_base, data_lst, **args):
+        """
+        # 单机模拟联邦学习
+
+        model_base: 全局模型，用以训练
+        data_lst: 每个客户端的数据，相互之间无法访问
+        """
+        import copy
+        import glob
+        import os
+
+        import numpy as np
+        import torch.nn as nn
+        import torch.optim as optim
+        from torch.optim.lr_scheduler import CosineAnnealingLR
+
+        client_numbers = args.client_numbers
+        min_lr = args.min_lr
+        rounds = args.rounds
+        device = args.device
+        trainer = args.trainer
+        model_fpath = args.model_fpath
+        fname = args.fname
+
+        w_glob = model_base.state_dict()
+        # 每个客户端最后几层的参数不一样
+        w_glob_lst = [w_glob for _ in range(client_numbers)]
+        criterion = nn.CrossEntropyLoss()
+
+        optim_base = optim.AdamW(model_base.parameters(), lr=lr)
+        lr_scheduler = CosineAnnealingLR(optim_base, T_max=rounds, eta_min=min_lr)
+
+        best_avg_acc = 0.0
+        for ri in range(rounds):
+            if args.lr_scheduler:
+                lr_scheduler.step()
+                # lr_scheduler.step(ri)
+                lr = optim_base.param_groups[0]["lr"]
+
+            ensemble_params_lst = []  # 本地模型参数+聚合权重组成的列表，取平均得到w_glob
+            round_loss_lst, round_trainacc_lst = [], []
+            round_testacc_lst = []
+            # 训练
+            for epoch in range(args.local_epoch):
+                for client_id in range(client_numbers):
+                    trainloader, testloader, _ = data_lst[client_id]
+
+                    # 载入全局参数
+                    model_base.load_state_dict(w_glob_lst[client_id])
+
+                    # 训练, 默认优化器
+                    optim_ = optim.AdamW(
+                        model_base.parameters(), lr=lr, weight_decay=0.05
+                    )
+                    c_trainer = trainer(model_base, optim_, criterion, device, False)
+
+                    # 集成后，训练前的模型测试
+                    _, test_accuracy = c_trainer.test(testloader)
+
+                    loss, accuracy = c_trainer.train(trainloader, epochs=1)
+
+                    # 只保留上传前的最后参数
+                    if epoch == args.local_epoch - 1:
+                        round_loss_lst.append(loss)
+                        round_trainacc_lst.append(accuracy)
+                        round_testacc_lst.append(test_accuracy)
+
+                        # 获取本地模型参数
+                        agg_weight = len(trainloader)
+                        w_local = copy.deepcopy(c_trainer.weight)
+                        ensemble_params_lst.append(
+                            {"agg_weight": agg_weight, "params": w_local}
+                        )
+
+            # 聚合参数
+            w_glob = self.server.strategy.server(ensemble_params_lst, round_=ri)[
+                "w_glob"
+            ]
+            # 仅更新需要更新的参数
+            new_w_glob_lst = []
+            for w_glob_item in w_glob_lst:
+                w_glob_item.update(w_glob)
+                new_w_glob_lst.append(w_glob_item)
+            w_glob_lst = new_w_glob_lst
+
+            x = np.mean(round_testacc_lst)
+            self.log.logger.info(
+                self.log_fmt.format(
+                    ri, np.mean(round_loss_lst), np.mean(round_trainacc_lst), x
+                )
+            )
+            # 保存平均最佳模型
+            if best_avg_acc < np.mean(round_testacc_lst):
+                best_avg_acc = np.mean(round_testacc_lst)
+                for pth in glob.glob(os.path.join(model_fpath, fname + "_round*.pth")):
+                    os.system("rm -rf {}".format(pth))
+                c_trainer.save(
+                    os.path.join(model_fpath, fname + "_round{}.pth".format(ri))
+                )
