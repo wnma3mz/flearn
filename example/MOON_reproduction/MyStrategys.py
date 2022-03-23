@@ -186,9 +186,9 @@ class CCVR(ParentStrategy):
     [1] Luo M, Chen F, Hu D, et al. No Fear of Heterogeneity: Classifier Calibration for Federated Learning with Non-IID Data[J]. arXiv preprint arXiv:2106.05001, 2021.
     """
 
-    def __init__(self, glob_model_base, strategy):
+    def __init__(self, head_model_base, strategy):
         super().__init__(strategy)
-        self.glob_model_base = glob_model_base
+        self.head_model_base = head_model_base
 
     @staticmethod
     def client_mean_feat(feat_lst, label_lst):
@@ -275,16 +275,16 @@ class CCVR(ParentStrategy):
         trainset = DictDataset(fd_d)
         trainloader, _ = get_dataloader(trainset, trainset, batch_size=64)
         optimizer = optim.SGD(
-            self.glob_model_base.parameters(), lr=1e-2, momentum=0.9, weight_decay=0.05
+            self.head_model_base.parameters(), lr=1e-2, momentum=0.9, weight_decay=0.05
         )
         criterion = nn.CrossEntropyLoss()
         self.glob_model_base = self.load_model(
-            self.glob_model_base, ensemble_params["w_glob"]
+            self.head_model_base, ensemble_params["w_glob"]
         )
 
         # 重新训练分类器
         trainer = Trainer(
-            self.glob_model_base, optimizer, criterion, trainer.device, False
+            self.head_model_base, optimizer, criterion, trainer.device, False
         )
         trainer.train(trainloader, epochs=1)
         w_train = trainer.weight
@@ -302,8 +302,8 @@ class CCVR(ParentStrategy):
 
 
 class DFCCVR(CCVR):
-    def __init__(self, model_base, glob_model_base, strategy):
-        super().__init__(glob_model_base, strategy)
+    def __init__(self, model_base, head_model_base, strategy):
+        super().__init__(head_model_base, strategy)
         self.model_base = model_base
         self.df = DF(model_base, strategy)
 

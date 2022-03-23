@@ -1,18 +1,13 @@
 import math
 
-import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torchvision.models as models
 from resnetcifar import ResNet18_cifar10, ResNet50_cifar10
 
-# import pytorch_lightning as pl
-
 
 class MLP_header(nn.Module):
-    def __init__(
-        self,
-    ):
+    def __init__(self):
         super(MLP_header, self).__init__()
         self.fc1 = nn.Linear(28 * 28, 512)
         self.fc2 = nn.Linear(512, 512)
@@ -707,57 +702,16 @@ class ModelFedCon_noheader(nn.Module):
         return h, h, y
 
 
-class GlobModel(nn.Module):
-    def __init__(self, base_model, out_dim, n_classes, net_configs=None):
-        super(GlobModel, self).__init__()
+class BackboneModel(ModelFedCon):
+    def forward(self, x):
+        h = self.features(x)
+        return h
 
-        if (
-            base_model == "resnet50-cifar10"
-            or base_model == "resnet50-cifar100"
-            or base_model == "resnet50-smallkernel"
-            or base_model == "resnet50"
-        ):
-            basemodel = ResNet50_cifar10()
-            self.features = nn.Sequential(*list(basemodel.children())[:-1])
-            num_ftrs = basemodel.fc.in_features
-        elif base_model == "resnet18-cifar10" or base_model == "resnet18":
-            basemodel = ResNet18_cifar10()
-            self.features = nn.Sequential(*list(basemodel.children())[:-1])
-            num_ftrs = basemodel.fc.in_features
-        elif base_model == "mlp":
-            self.features = MLP_header()
-            num_ftrs = 512
-        elif base_model == "simple-cnn":
-            self.features = SimpleCNN_header(
-                input_dim=(16 * 5 * 5), hidden_dims=[120, 84], output_dim=n_classes
-            )
-            num_ftrs = 84
-        elif base_model == "simple-cnn-mnist":
-            self.features = SimpleCNNMNIST_header(
-                input_dim=(16 * 4 * 4), hidden_dims=[120, 84], output_dim=n_classes
-            )
-            num_ftrs = 84
 
-        # summary(self.features.to('cuda:0'), (3,32,32))
-        # print("features:", self.features)
-        # projection MLP
-        self.l1 = nn.Linear(num_ftrs, num_ftrs)
-        self.l2 = nn.Linear(num_ftrs, out_dim)
-
-        # last layer
-        self.l3 = nn.Linear(out_dim, n_classes)
-
-    def _get_basemodel(self, model_name):
-        try:
-            model = self.model_dict[model_name]
-            # print("Feature extractor:", model_name)
-            return model
-        except:
-            raise (
-                "Invalid model name. Check the config file and pass one of: resnet18 or resnet50"
-            )
-
-    def forward(self, h):
+class HeadModel(ModelFedCon):
+    def forward(self, y):
+        h = h.squeeze()
+        # print("h after:", h)
         x = self.l1(h)
         x = F.relu(x)
         x = self.l2(x)

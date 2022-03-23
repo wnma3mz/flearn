@@ -10,11 +10,11 @@ import MyTrainers
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from model import GlobModel, ModelFedCon
+from model import BackboneModel, HeadModel, ModelFedCon
 from utils import get_dataloader, partition_data
 
 from flearn.client import Client, datasets
-from flearn.common.strategy import AVG, LG_R
+from flearn.common.strategy import AVG
 from flearn.common.utils import get_free_gpu_id, setup_seed, setup_strategy
 from flearn.server import Communicator as sc
 from flearn.server import Server
@@ -78,14 +78,16 @@ if not os.path.isdir(model_fpath):
 # 设置模型
 if dataset_name == "cifar10":
     model_base = ModelFedCon("simple-cnn", out_dim=256, n_classes=10)
-    glob_model_base = GlobModel("simple-cnn", out_dim=256, n_classes=10)
+    backbone_model_base = BackboneModel("simple-cnn", out_dim=256, n_classes=10)
+    head_model_base = HeadModel("simple-cnn", out_dim=256, n_classes=10)
 elif dataset_name == "cifar100":
     model_base = ModelFedCon("resnet50-cifar100", out_dim=256, n_classes=100)
-    glob_model_base = GlobModel("resnet50-cifar100", out_dim=256, n_classes=100)
+    backbone_model_base = BackboneModel("resnet50-cifar100", out_dim=256, n_classes=100)
+    head_model_base = HeadModel("resnet50-cifar100", out_dim=256, n_classes=100)
 elif dataset_name == "tinyimagenet":
     model_base = ModelFedCon("resnet50-cifar100", out_dim=256, n_classes=200)
-    glob_model_base = GlobModel("resnet50-cifar100", out_dim=256, n_classes=200)
-
+    backbone_model_base = BackboneModel("resnet50-cifar100", out_dim=256, n_classes=200)
+    head_model_base = HeadModel("resnet50-cifar100", out_dim=256, n_classes=200)
 # 设置策略
 shared_key_layers = [
     "l1.weight",
@@ -107,9 +109,9 @@ custom_strategy_d.update(
 strategy_p = {"shared_key_layers": shared_key_layers}
 strategy = setup_strategy(strategy_name, custom_strategy_d[strategy_name], **strategy_p)
 if args.ccvr and args.df:
-    strategy = MyStrategys.DFCCVR(model_base, glob_model_base, strategy)
+    strategy = MyStrategys.DFCCVR(model_base, head_model_base, strategy)
 elif args.ccvr:
-    strategy = MyStrategys.CCVR(glob_model_base, strategy)
+    strategy = MyStrategys.CCVR(head_model_base, strategy)
 elif args.df:
     strategy = MyStrategys.DF(model_base, strategy)
 
