@@ -7,6 +7,5 @@ try:
     from .TFTrainer import TFTrainer
 except:
     pass
-from .utils import setup_strategy
 
 __all__ = ["Encrypt", "EmptyEncrypt", "Logger", "Trainer", "Distiller"]

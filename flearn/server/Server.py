@@ -1,7 +1,7 @@
 # coding: utf-8
 import numpy as np
 
-from flearn.common import setup_strategy
+from flearn.common.utils import setup_strategy
 
 
 class Server(object):

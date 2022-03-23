@@ -3,7 +3,7 @@ import os
 from os.path import join as ospj
 
 from flearn.client.utils import bool_key_lst, init_log, listed_keys, str_key_lst
-from flearn.common import setup_strategy
+from flearn.common.utils import setup_strategy
 
 
 class Client(object):

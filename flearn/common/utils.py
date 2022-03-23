@@ -4,7 +4,7 @@ import random
 import numpy as np
 import torch
 
-from .strategy import AVG, AVGM, BN, LG, LG_R, OPT, PAV, SGD
+from flearn.common.strategy import AVG, AVGM, BN, LG, LG_R, OPT, PAV, SGD
 
 __all__ = ["setup_strategy", "setup_seed", "get_free_gpu_id"]
 
