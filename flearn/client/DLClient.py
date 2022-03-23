@@ -19,17 +19,8 @@ class DLClient(object):
                 "model" :           torchvision.models
                                     模型,
 
-                "epoch" :           int (default: 1)
-                                    本地训练轮数
-
                 "client_id" :       str or int,
                                     客户端id
-
-                "criterion" :       torch.nn.modules.loss
-                                    损失函数
-
-                "optimizer" :       torch.optim
-                                    优化器
 
                 "trainloader" :     torch.utils.data
                                     训练数据集
@@ -52,11 +43,8 @@ class DLClient(object):
                 "restore_path" :    str
                                     恢复已经训练模型的路径,
 
-                "custom_trainer" :  object
-                                    自定义训练器,
-
-                "device" :          torch.device
-                                    使用GPU还是CPU,
+                "trainer" :         Trainer
+                                    训练器
 
                 "scheduler" :       torch.optim.lr_scheduler
                                     调整学习率
@@ -105,12 +93,9 @@ class DLClient(object):
             self.log_suffix,
         )
         self.log_client = Logger(log_client_name, level="info")
-        self.log_fmt = (
-            "Id: {}".format(self.client_id)
-            + "; Round: {}; Loss: {:.4f}; TrainAcc: {:.4f}; TestAcc: {:.4f};"
-        )
+        self.log_fmt = self.client_id + "; Round: {}; Loss: {:.4f}; TrainAcc: {:.4f};{}"
 
-    def run(self, i):
+    def run(self, i, print_freq=1):
         """训练客户端模型.
 
         Args:
@@ -118,12 +103,15 @@ class DLClient(object):
                 进行到第i轮
         """
 
-        train_loss, train_acc = self.trainer.train(self.trainloader, self.epoch)
+        train_loss, train_acc = self.trainer.train(self.trainloader)
 
         # save，最新的客户端模型
-        if self.save:
-            self.trainer.save(self.update_fpath)
-        _, test_acc = self.trainer.test(self.testloader)
+        if i % print_freq == 0:
+            _, test_acc = self.trainer.test(self.testloader)
+            test_log = " TestAcc: {:.4f};".format(test_acc)
+        else:
+            test_log = ""
+
         if self.scheduler:
             self.scheduler.step()
 
@@ -131,7 +119,7 @@ class DLClient(object):
             self.trainer.save(self.best_fpath)
             self.best_acc = test_acc
 
-        log_i = i, train_loss, train_acc, test_acc
+        log_i = i, train_loss, train_acc, test_log
         if self.log == True:
             self.log_client.logger.info(self.log_fmt.format(*log_i))
         return log_i
