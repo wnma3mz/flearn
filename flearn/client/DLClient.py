@@ -1,8 +1,6 @@
 # coding: utf-8
 from os.path import join as ospj
 
-import torch
-
 from flearn.common import Logger
 
 from .utils import bool_key_lst, listed_keys, str_key_lst
@@ -16,9 +14,6 @@ class DLClient(object):
 
         Args:
             conf (dict): {
-                "model" :           torchvision.models
-                                    模型,
-
                 "client_id" :       str or int,
                                     客户端id
 
@@ -68,7 +63,7 @@ class DLClient(object):
         self.fname_fmt = ospj(self.model_fpath, self.model_fname)
 
         if self.restore_path:
-            self.model.load_state_dict(torch.load(self.restore_path))
+            self.trainer.restore(self.restore_path)
 
         if self.log == True:
             self.init_log(self.log_name_fmt)

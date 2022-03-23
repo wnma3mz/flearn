@@ -45,10 +45,10 @@ class DictDataset(Dataset):
         self.data, self.labels = [], []
         for label, data in label_data_d.items():
             self.data.append(data)
-            self.labels.append(label)
+            self.labels.append(torch.tensor([label] * len(data)))
 
-        self.data = torch.tensor(self.data)
-        self.labels = torch.tensor(self.labels)
+        self.data = torch.cat(self.data).type(torch.float32)
+        self.labels = torch.cat(self.labels).type(torch.long)
 
     def __len__(self):
         "Denotes the total number of samples"
