@@ -30,31 +30,22 @@ if __name__ == "__main__":
     input_ = torch.rand(size=(32, 10, 10))
     target = torch.randint(0, 2, size=(32,), dtype=torch.long)
     trainloader = ((input_, target), (input_, target))
-    testloader = ((input_, target), (input_, target))
     device = "cpu"
+    dataset_name = "test"
 
     model_fpath = "."
     if not os.path.isdir(model_fpath):
         os.mkdir(model_fpath)
-    dataset_name = "test"
-    strategy_name = "avg"
-    epoch = 1
 
     client_id = 0
     c_conf = {
         "trainer": Trainer(model, optim_, nn.CrossEntropyLoss(), device, True),
-        "model": model,
-        "criterion": nn.CrossEntropyLoss(),
-        "optimizer": optim_,
         "trainloader": trainloader,
-        "testloader": testloader,
+        "testloader": trainloader,
         "model_fname": "client{}_round_{}.pth".format(client_id, "{}"),
         "client_id": client_id,
-        "device": device,
         "model_fpath": model_fpath,
-        "epoch": epoch,
         "dataset_name": dataset_name,
-        "strategy_name": strategy_name,
         "save": False,
         "display": True,
         "log": False,

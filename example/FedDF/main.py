@@ -76,7 +76,7 @@ elif "cifar" in dataset_name:
 strategy_name = "df"
 strategy = DF(model_base, device)
 
-model_fpath = "./client_checkpoint"
+model_fpath = "./ckpts{}".format(args.suffix)
 if not os.path.isdir(model_fpath):
     os.mkdir(model_fpath)
 

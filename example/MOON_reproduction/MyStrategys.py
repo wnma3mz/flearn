@@ -6,6 +6,8 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
+from flearn.client.datasets.get_data import DictDataset, get_dataloader
+from flearn.common import Trainer
 from flearn.common.distiller import Distiller, KDLoss
 from flearn.common.strategy import AVG, ParentStrategy
 
@@ -177,39 +179,6 @@ class DF(ParentStrategy):
         )
 
 
-class ReTrain:
-    def __init__(self, fd_d, device):
-        self.fd_d = fd_d
-        self.device = device
-
-    def run(self, student, lr=0.01):
-        student.train()
-        student.to(self.device)
-        CELoss = nn.CrossEntropyLoss().to(self.device)
-
-        print(lr)
-        optimizer = optim.SGD(
-            student.parameters(), lr=lr, weight_decay=5e-4, momentum=0.9
-        )
-        for _ in range(1):
-            loss_lst = []
-            for target, x in self.fd_d.items():
-                target = torch.tensor([target] * x.size()[0])
-                x = x.type(torch.float32)
-                x, target = x.to(self.device), target.to(self.device)
-
-                output = student(x)
-
-                loss = CELoss(output, target)
-
-                optimizer.zero_grad()
-                loss.backward()
-                optimizer.step()
-                loss_lst.append(loss.data.item())
-            print("Loss: SUM {:.4f}".format(np.mean(loss_lst)))
-        return student.state_dict()
-
-
 class CCVR(ParentStrategy):
     """
     Federated learning via Classifier Calibration with Virtual Representations
@@ -241,6 +210,8 @@ class CCVR(ParentStrategy):
         for k, v in d.items():
             v_item = torch.stack(v).detach().cpu()
             # 考虑样本数量过少不上传的情况
+            if len(v_item) < 10:
+                continue
             # if len(v_item) * label_len * 2 < sum_:
             #     continue
             mu, sigma = v_item.mean(dim=0), v_item.var(dim=0)
@@ -300,12 +271,23 @@ class CCVR(ParentStrategy):
         fd_lst = self.extract_lst(ensemble_params_lst, "fd")
         fd_d = self.server_mean_feat(fd_lst)
 
-        # 重新训练分类器
-        self.retrainer = ReTrain(fd_d, kwargs["device"])
+        # 准备好数据集，模型、优化器等等
+        trainset = DictDataset(fd_d)
+        trainloader, _ = get_dataloader(trainset, trainset, batch_size=64)
+        optimizer = optim.SGD(
+            self.glob_model_base.parameters(), lr=1e-2, momentum=0.9, weight_decay=0.05
+        )
+        criterion = nn.CrossEntropyLoss()
         self.glob_model_base = self.load_model(
             self.glob_model_base, ensemble_params["w_glob"]
         )
-        w_train = self.retrainer.run(self.glob_model_base)
+
+        # 重新训练分类器
+        trainer = Trainer(
+            self.glob_model_base, optimizer, criterion, trainer.device, False
+        )
+        trainer.train(trainloader, epochs=1)
+        w_train = trainer.weight
 
         for k in w_train.keys():
             ensemble_params["w_glob"][k] = w_train[k].cpu()

@@ -22,10 +22,10 @@ def load_cifar10_data(datadir):
     transform = transforms.Compose([transforms.ToTensor()])
 
     cifar10_train_ds = CIFAR10_truncated(
-        datadir, train=True, download=True, transform=transform
+        datadir, train=True, download=False, transform=transform
     )
     cifar10_test_ds = CIFAR10_truncated(
-        datadir, train=False, download=True, transform=transform
+        datadir, train=False, download=False, transform=transform
     )
 
     X_train, y_train = cifar10_train_ds.data, cifar10_train_ds.target
@@ -41,10 +41,10 @@ def load_cifar100_data(datadir):
     transform = transforms.Compose([transforms.ToTensor()])
 
     cifar100_train_ds = CIFAR100_truncated(
-        datadir, train=True, download=True, transform=transform
+        datadir, train=True, download=False, transform=transform
     )
     cifar100_test_ds = CIFAR100_truncated(
-        datadir, train=False, download=True, transform=transform
+        datadir, train=False, download=False, transform=transform
     )
 
     X_train, y_train = cifar100_train_ds.data, cifar100_train_ds.target
@@ -383,9 +383,9 @@ def get_dataloader(
             dataidxs=dataidxs,
             train=True,
             transform=transform_train,
-            download=True,
+            download=False,
         )
-        test_ds = dl_obj(datadir, train=False, transform=transform_test, download=True)
+        test_ds = dl_obj(datadir, train=False, transform=transform_test, download=False)
 
         train_dl = data.DataLoader(
             dataset=train_ds,

@@ -76,7 +76,7 @@ elif "cifar" in dataset_name:
 optim_server = optim.SGD(model_server.parameters(), lr=1e-1)
 criterion_server = nn.CrossEntropyLoss()
 
-model_fpath = "./client_checkpoint"
+model_fpath = "./ckpts{}".format(args.suffix)
 if not os.path.isdir(model_fpath):
     os.mkdir(model_fpath)
 

@@ -57,7 +57,7 @@ elif dataset_name == "cifar100":
 elif dataset_name == "tinyimagenet":
     model_base = ModelFedCon("resnet50-cifar100", out_dim=256, n_classes=200)
 
-model_fpath = "./client_checkpoint"
+model_fpath = "./ckpts{}".format(args.suffix)
 if not os.path.isdir(model_fpath):
     os.mkdir(model_fpath)
 shared_key_layers = [

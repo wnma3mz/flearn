@@ -84,7 +84,7 @@ elif "cifar" in dataset_name:
     optim_glob = optim.SGD(glob_model.parameters(), lr=1e-1)
 
 
-model_fpath = "./client_checkpoint"
+model_fpath = "./ckpts{}".format(args.suffix)
 if not os.path.isdir(model_fpath):
     os.mkdir(model_fpath)
 

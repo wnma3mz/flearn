@@ -58,8 +58,20 @@ iid = args.iid
 strategy_name = args.strategy_name.lower()
 dataset_name = args.dataset_name
 dataset_fpath = args.dataset_fpath
+# 客户端数量，及每轮上传客户端数量
+client_numbers = 10
+k = int(client_numbers * args.frac)
+print("客户端总数: {}; 每轮上传客户端数量: {}".format(client_numbers, k))
 
-model_fpath = "./client_checkpoint"
+# 设置数据集
+batch_size = 64
+beta = 0.5  # 当且仅当 "noniid" 时，有效
+partition = "homo" if iid == True else "noniid"
+print("切分{}数据集, 切割方式: {}".format(dataset_name, partition))
+
+suffix = args.suffix + "_beat{}_iid{}".format(beta, iid == True)
+
+model_fpath = "./ckpts{}".format(suffix)
 if not os.path.isdir(model_fpath):
     os.mkdir(model_fpath)
 
@@ -154,18 +166,6 @@ def inin_single_client(model_base, client_id):
 
 
 if __name__ == "__main__":
-
-    # 客户端数量，及每轮上传客户端数量
-    client_numbers = 10
-    k = int(client_numbers * args.frac)
-    print("客户端总数: {}; 每轮上传客户端数量: {}".format(client_numbers, k))
-
-    # 设置数据集
-    batch_size = 64
-    beta = 0.5  # 当且仅当 "noniid" 时，有效
-    partition = "homo" if iid == True else "noniid"
-    print("切分{}数据集, 切割方式: {}".format(dataset_name, partition))
-
     (
         X_train,
         y_train,
@@ -202,7 +202,7 @@ if __name__ == "__main__":
         "server": Server(s_conf),
         "Round": 100,
         "client_numbers": client_numbers,
-        "log_suffix": args.suffix,
+        "log_suffix": suffix,
         "dataset_name": dataset_name,
         "client_lst": client_lst,
     }

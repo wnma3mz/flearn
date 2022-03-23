@@ -76,7 +76,7 @@ for x in shared_key_layers_lst:
 print("共享层：", shared_key_layers)
 
 
-model_fpath = "./client_checkpoint"
+model_fpath = "./ckpts{}".format(args.suffix)
 if not os.path.isdir(model_fpath):
     os.mkdir(model_fpath)
 

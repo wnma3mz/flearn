@@ -75,7 +75,7 @@ elif "cifar" in dataset_name:
     glob_model.classifier = nn.Sequential()
     input_len = 64
 
-model_fpath = "./client_checkpoint"
+model_fpath = "./ckpts{}".format(args.suffix)
 if not os.path.isdir(model_fpath):
     os.mkdir(model_fpath)
 
