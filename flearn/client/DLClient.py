@@ -1,9 +1,7 @@
 # coding: utf-8
 from os.path import join as ospj
 
-from flearn.common import Logger
-
-from .utils import bool_key_lst, listed_keys, str_key_lst
+from flearn.client.utils import bool_key_lst, init_log, listed_keys, str_key_lst
 
 
 class DLClient(object):
@@ -66,7 +64,9 @@ class DLClient(object):
             self.trainer.restore(self.restore_path)
 
         if self.log == True:
-            self.init_log(self.log_name_fmt)
+            self.log_client, self.log_fmt = init_log(
+                self.log_name_fmt, self.client_id, self.dataset_name, self.log_suffix
+            )
         self.best_acc = 0.0
         self.update_fpath = ospj(
             self.model_fpath, "client{}_model.pth".format(self.client_id)
@@ -76,36 +76,24 @@ class DLClient(object):
             self.model_fpath, "client{}_model_best.pth".format(self.client_id)
         )
 
-    def init_log(self, log_name_fmt):
-        if log_name_fmt == None:
-            log_name_fmt = "client{}_dataset_{}{}.log"
-        if self.log_suffix == None:
-            self.log_suffix = ""
-
-        log_client_name = log_name_fmt.format(
-            self.client_id,
-            self.dataset_name,
-            self.log_suffix,
-        )
-        self.log_client = Logger(log_client_name, level="info")
-        self.log_fmt = self.client_id + "; Round: {}; Loss: {:.4f}; TrainAcc: {:.4f};{}"
-
-    def run(self, i, print_freq=1):
+    def run(self, i, test_freq=1):
         """训练客户端模型.
 
         Args:
-            i : int
-                进行到第i轮
+            i        :  int
+                        进行到第i轮
+
+            test_freq:  int
+                        间隔print_freq轮进行测试
         """
 
         train_loss, train_acc = self.trainer.train(self.trainloader)
 
         # save，最新的客户端模型
-        if i % print_freq == 0:
+        test_log = ""
+        if i % test_freq == 0:
             _, test_acc = self.trainer.test(self.testloader)
             test_log = " TestAcc: {:.4f};".format(test_acc)
-        else:
-            test_log = ""
 
         if self.scheduler:
             self.scheduler.step()

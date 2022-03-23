@@ -36,4 +36,5 @@ class LG(Strategy):
             )
         except Exception as e:
             self.server_exception(e)
+        print(w_glob.keys())
         return {"w_glob": w_glob}

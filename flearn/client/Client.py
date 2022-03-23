@@ -2,8 +2,8 @@
 import os
 from os.path import join as ospj
 
-from flearn.client.utils import bool_key_lst, listed_keys, str_key_lst
-from flearn.common import Logger, setup_strategy
+from flearn.client.utils import bool_key_lst, init_log, listed_keys, str_key_lst
+from flearn.common import setup_strategy
 
 
 class Client(object):
@@ -83,8 +83,13 @@ class Client(object):
             self.trainer.restore(self.restore_path)
 
         if self.log == True:
-            self.init_log(self.log_name_fmt)
-
+            self.log_client, self.log_fmt = init_log(
+                self.log_name_fmt,
+                self.client_id,
+                self.dataset_name,
+                self.log_suffix,
+                self.strategy_name,
+            )
         if type(self.testloader) != list:
             self.testloader = [self.testloader]
 
@@ -98,20 +103,6 @@ class Client(object):
 
         name = "client{}_model_best.pth".format(self.client_id)
         self.best_fpath = ospj(self.model_fpath, name)
-
-    def init_log(self, log_name_fmt):
-        if log_name_fmt == None:
-            log_name_fmt = "[Client-{}]{}_dataset_{}{}.log"
-        if self.log_suffix == None:
-            self.log_suffix = ""
-
-        log_client_name = log_name_fmt.format(
-            self.client_id, self.strategy_name, self.dataset_name, self.log_suffix
-        )
-        self.log_client = Logger(log_client_name, level="info")
-        self.log_fmt = (
-            self.client_id + "; Round: {}; Loss: {:.4f}; TrainAcc: {:.4f}; TestAcc: {};"
-        )
 
     def train(self, i):
         """训练客户端模型.
