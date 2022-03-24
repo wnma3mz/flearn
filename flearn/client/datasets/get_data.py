@@ -59,6 +59,43 @@ class DictDataset(Dataset):
         return self.data[index], self.labels[index]
 
 
+class SingleClassDataset(Dataset):
+    def __init__(self, dataset, label) -> None:
+        """
+        dataset = CIFAR10(
+            self.root, self.train, self.transform, self.target_transform, self.download
+        )
+        """
+        super().__init__()
+        self.data = dataset.data[dataset.targets == label]
+        self.targets = dataset.targets[dataset.targets == label]
+        self.transform = dataset.transform
+
+    def __getitem__(self, index):
+        """
+        Args:
+            index (int): Index
+
+        Returns:
+            tuple: (image, target) where target is index of the target class.
+        """
+        img, target = self.data[index], self.target[index]
+        # img = Image.fromarray(img)
+        # print("cifar10 img:", img)
+        # print("cifar10 target:", target)
+
+        if self.transform is not None:
+            img = self.transform(img)
+
+        if self.target_transform is not None:
+            target = self.target_transform(target)
+
+        return img, target
+
+    def __len__(self):
+        return len(self.data)
+
+
 class DatasetSplit(Dataset):
     def __init__(self, dataset, idxs):
         super(DatasetSplit, self).__init__()
