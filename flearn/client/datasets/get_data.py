@@ -60,16 +60,20 @@ class DictDataset(Dataset):
 
 
 class SingleClassDataset(Dataset):
-    def __init__(self, dataset, label) -> None:
+    def __init__(self, dataset, label, transform=None, target_transform=None) -> None:
         """
         dataset = CIFAR10(
             self.root, self.train, self.transform, self.target_transform, self.download
         )
         """
         super().__init__()
+        if type(dataset.targets) == list:
+            dataset.targets = np.array(dataset.targets)
         self.data = dataset.data[dataset.targets == label]
         self.targets = dataset.targets[dataset.targets == label]
-        self.transform = dataset.transform
+
+        self.transform = transform
+        self.target_transform = target_transform
 
     def __getitem__(self, index):
         """
@@ -79,7 +83,7 @@ class SingleClassDataset(Dataset):
         Returns:
             tuple: (image, target) where target is index of the target class.
         """
-        img, target = self.data[index], self.target[index]
+        img, target = self.data[index], self.targets[index]
         # img = Image.fromarray(img)
         # print("cifar10 img:", img)
         # print("cifar10 target:", target)
