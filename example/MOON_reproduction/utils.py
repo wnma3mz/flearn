@@ -58,8 +58,10 @@ def load_cifar100_data(datadir):
 
 def load_tinyimagenet_data(datadir):
     transform = transforms.Compose([transforms.ToTensor()])
-    xray_train_ds = ImageFolder_custom(datadir + "./train/", transform=transform)
-    xray_test_ds = ImageFolder_custom(datadir + "./val/", transform=transform)
+    xray_train_ds = ImageFolder_custom(
+        os.path.join(datadir, "train"), transform=transform
+    )
+    xray_test_ds = ImageFolder_custom(os.path.join(datadir, "val"), transform=transform)
 
     X_train, y_train = np.array([s[0] for s in xray_train_ds.samples]), np.array(
         [int(s[1]) for s in xray_train_ds.samples]

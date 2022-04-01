@@ -709,7 +709,7 @@ class BackboneModel(ModelFedCon):
 
 
 class HeadModel(ModelFedCon):
-    def forward(self, y):
+    def forward(self, h):
         h = h.squeeze()
         # print("h after:", h)
         x = self.l1(h)

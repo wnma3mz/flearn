@@ -182,9 +182,13 @@ class LSDTrainer(Trainer):
 class LogitTracker:
     def __init__(self, unique_labels):
         self.unique_labels = unique_labels
-        self.labels = [i for i in range(unique_labels)]
-        self.label_counts = torch.ones(unique_labels)  # avoid division by zero error
-        self.logit_sums = torch.zeros((unique_labels, unique_labels))
+        self.clear()
+
+    def clear(self):
+        self.labels = [i for i in range(self.unique_labels)]
+        # avoid division by zero error
+        self.label_counts = torch.ones(self.unique_labels)
+        self.logit_sums = torch.zeros((self.unique_labels, self.unique_labels))
 
     def update(self, logits, Y):
         """

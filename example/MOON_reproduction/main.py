@@ -69,7 +69,7 @@ beta = 0.5  # 当且仅当 "noniid" 时，有效
 partition = "homo" if iid == True else "noniid"
 print("切分{}数据集, 切割方式: {}".format(dataset_name, partition))
 
-suffix = args.suffix + "_beat{}_iid{}".format(beta, iid == True)
+suffix = args.suffix + "_beta{}_iid{}".format(beta, iid == True)
 
 model_fpath = "./ckpts{}".format(suffix)
 if not os.path.isdir(model_fpath):
@@ -97,12 +97,16 @@ shared_key_layers = [
     "l3.weight",
     "l3.bias",
 ]
+
 # 默认情况为FedAVG策略，即除了输入dyn和distill外，都是FedAVG策略
 custom_strategy_d = defaultdict(lambda: AVG())
 custom_strategy_d.update(
     {
         "dyn": MyStrategys.Dyn(h=model_base.state_dict()),
         "distill": MyStrategys.Distill(),
+        "md": MyStrategys.MD(
+            shared_key_layers, copy.deepcopy(backbone_model_base), device
+        ),
     }
 )
 
@@ -123,6 +127,7 @@ conf_d = {
     "lsd": {"trainer": MyTrainers.LSDTrainer, "client": MyClients.LSDClient},
     "dyn": {"trainer": MyTrainers.DynTrainer, "client": MyClients.DynClient},
     "lg": {"trainer": MyTrainers.AVGTrainer, "client": Client},
+    "md": {"trainer": MyTrainers.AVGTrainer, "client": Client},
     "lg_r": {"trainer": MyTrainers.AVGTrainer, "client": Client},
     "distill": {
         "trainer": MyTrainers.DistillTrainer,
@@ -229,8 +234,15 @@ if __name__ == "__main__":
             "device": device,
         }
 
+    if strategy_name == "md":
+        trainset, testset = datasets.get_datasets("cifar100", dataset_fpath)
+        _, glob_testloader = datasets.get_dataloader(
+            trainset, testset, 100, num_workers=4
+        )
+        kwargs["data_loader"] = glob_testloader
+
     for ri in range(sc_conf["Round"]):
-        if args.ccvr or args.df:
+        if args.ccvr or args.df or strategy_name == "md":
             loss, train_acc, test_acc = server_o.run(ri, k=k, **kwargs)
         else:
             loss, train_acc, test_acc = server_o.run(ri, k=k)
