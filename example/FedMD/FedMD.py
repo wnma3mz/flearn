@@ -48,10 +48,10 @@ class MD(LG_R):
                 self.optimizer.step()
 
         w_glob_model = self.glob_model.state_dict()
-        for k in w_glob_model:
-            w_local_bak[k] = w_glob_model
+        for k in w_glob_model.keys():
+            w_local_bak[k] = w_glob_model[k]
 
-        return w_local
+        return w_local_bak
 
     def client_pub_predict(self, w_local_lst, **kwargs):
         data_loader = kwargs["data_loader"]
@@ -82,4 +82,4 @@ class MD(LG_R):
     def server(self, ensemble_params_lst, round_, **kwargs):
         w_local_lst = self.extract_lst(ensemble_params_lst, "params")
         x_lst, logits_lst = self.client_pub_predict(w_local_lst, **kwargs)
-        return {"x_lst": x_lst, "logits_lst": logits_lst}
+        return {"x_lst": x_lst, "logits_lst": logits_lst, "w_glob": ""}
