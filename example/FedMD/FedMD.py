@@ -4,6 +4,7 @@ import copy
 import torch
 
 from flearn.common.strategy import LG_R
+import torch.optim as optim
 
 
 class MD(LG_R):
@@ -13,10 +14,9 @@ class MD(LG_R):
     [1] Li D, Wang J. Fedmd: Heterogenous federated learning via model distillation[J]. arXiv preprint arXiv:1910.03581, 2019.
     """
 
-    def __init__(self, shared_key_layers, glob_model, optimizer, device):
+    def __init__(self, shared_key_layers, glob_model, device):
         super(MD, self).__init__(shared_key_layers)
         self.glob_model = glob_model
-        self.optimizer = optimizer
         self.device = device
         self.glob_model.to(device)
         self.glob_model.train()
@@ -32,6 +32,8 @@ class MD(LG_R):
         self.glob_model.load_state_dict(
             self.load_model(self.glob_model.state_dict(), w_local)
         )
+
+        optimizer = optim.SGD(self.glob_model.parameters(), lr=1e-2)
         criterion = trainer.criterion
         x_lst, logits_lst = data_glob_d["x_lst"], data_glob_d["logits_lst"]
 
@@ -43,9 +45,9 @@ class MD(LG_R):
                 y = self.glob_model(x)
                 loss = criterion(y, logits)
 
-                self.optimizer.zero_grad()
+                optimizer.zero_grad()
                 loss.backward()
-                self.optimizer.step()
+                optimizer.step()
 
         w_glob_model = self.glob_model.state_dict()
         for k in w_glob_model.keys():

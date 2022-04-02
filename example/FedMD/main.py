@@ -81,7 +81,6 @@ elif "cifar" in dataset_name:
     key_lst = ["classifier.weight", "classifier.bias"]
     glob_model = copy.deepcopy(model_base)
     glob_model.classifier = nn.Sequential()
-    optim_glob = optim.SGD(glob_model.parameters(), lr=1e-1)
 
 
 model_fpath = "./ckpts{}".format(args.suffix)
@@ -90,7 +89,7 @@ if not os.path.isdir(model_fpath):
 
 
 strategy_name = "md"
-strategy = MD(key_lst, glob_model, optim_glob, device)
+strategy = MD(key_lst, glob_model, device)
 
 
 def inin_single_client(client_id, trainloader_idx_lst, testloader_idx_lst):
