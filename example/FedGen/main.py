@@ -94,7 +94,6 @@ def inin_single_client(client_id, trainloader_idx_lst, testloader_idx_lst):
     )
 
     return {
-        # criterion=nn.NLLLoss(),
         "trainer": GenTrainer(model_, optim_, nn.CrossEntropyLoss(), device, False),
         "trainloader": trainloader,
         "testloader": [testloader, glob_testloader],

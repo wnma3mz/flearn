@@ -16,7 +16,6 @@ class MD(LG_R):
     def __init__(self, shared_key_layers, glob_model, device):
         super(MD, self).__init__(shared_key_layers)
         self.glob_model = glob_model
-        self.optimizer = optim.SGD(glob_model.parameters(), lr=1e-2)
         self.device = device
         self.glob_model.to(device)
         self.glob_model.train()
@@ -32,7 +31,11 @@ class MD(LG_R):
         self.glob_model.load_state_dict(
             self.load_model(self.glob_model.state_dict(), w_local)
         )
+        # temperature = 2
+        # criterion = KDLoss(temperature)
         criterion = trainer.criterion
+        optimizer = optim.SGD(self.glob_model.parameters(), lr=1e-2)
+
         x_lst, logits_lst = data_glob_d["x_lst"], data_glob_d["logits_lst"]
 
         # 为降低通信成本，该训练应该放到服务器端学习，再发回给各个客户端训练后不同的模型。但为了方便实现，该步骤先放到客户端进行
@@ -43,9 +46,9 @@ class MD(LG_R):
                 y = self.glob_model(x)
                 loss = criterion(y, logits)
 
-                self.optimizer.zero_grad()
+                optimizer.zero_grad()
                 loss.backward()
-                self.optimizer.step()
+                optimizer.step()
 
         w_glob_model = self.glob_model.state_dict()
         for k in w_glob_model.keys():

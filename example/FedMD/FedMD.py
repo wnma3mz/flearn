@@ -2,9 +2,9 @@
 import copy
 
 import torch
+import torch.optim as optim
 
 from flearn.common.strategy import LG_R
-import torch.optim as optim
 
 
 class MD(LG_R):

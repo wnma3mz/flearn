@@ -62,7 +62,8 @@ split-learning可见[README.md](https://github.com/wnma3mz/flearn/tree/master/ex
 
 - [ ] 策略改成组件形式，可任意搭配
 - [ ] IDA聚合方式。[Inverse Distance Aggregation for Federated Learning with Non-IID Data](https://arxiv.org/pdf/2008.07665)
-
+- [ ] FedKD有待更新
+- [ ] 合并MOON等策略到框架
 
 ### 框架图
 
