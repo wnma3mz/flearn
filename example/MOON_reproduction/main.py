@@ -14,7 +14,7 @@ from model import BackboneModel, HeadModel, ModelFedCon
 from utils import get_dataloader, partition_data
 
 from flearn.client import Client, datasets
-from flearn.common.strategy import AVG
+from flearn.common.strategy import AVG, DF
 from flearn.common.utils import get_free_gpu_id, setup_seed, setup_strategy
 from flearn.server import Communicator as sc
 from flearn.server import Server
@@ -100,24 +100,24 @@ shared_key_layers = [
 
 # 默认情况为FedAVG策略，即除了输入dyn和distill外，都是FedAVG策略
 custom_strategy_d = defaultdict(lambda: AVG())
-custom_strategy_d.update(
-    {
-        "dyn": MyStrategys.Dyn(h=model_base.state_dict()),
-        "distill": MyStrategys.Distill(),
-        "md": MyStrategys.MD(
-            shared_key_layers, copy.deepcopy(backbone_model_base), device
-        ),
-    }
-)
 
-strategy_p = {"shared_key_layers": shared_key_layers}
+if strategy_name == "dyn":
+    strategy_p = {"h": model_base.state_dict()}
+elif strategy_name == "md":
+    strategy_p = {
+        "shared_key_layers": shared_key_layers,
+        "model_base": copy.deepcopy(backbone_model_base),
+        "device": device,
+    }
+else:
+    strategy_p = {"shared_key_layers": shared_key_layers}
 strategy = setup_strategy(strategy_name, custom_strategy_d[strategy_name], **strategy_p)
 if args.ccvr and args.df:
     strategy = MyStrategys.DFCCVR(model_base, head_model_base, strategy)
 elif args.ccvr:
     strategy = MyStrategys.CCVR(head_model_base, strategy)
 elif args.df:
-    strategy = MyStrategys.DF(model_base, strategy)
+    strategy = DF(model_base, strategy)
 
 # 设置 训练器-客户端
 conf_d = {
