@@ -6,11 +6,8 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import torch.optim as optim
 
-from flearn.client import Client
 from flearn.common import Trainer
-from flearn.common.distiller import KDLoss
 from flearn.common.strategy import AVG
 
 
@@ -31,10 +28,11 @@ class AVGTrainer(Trainer):
         (th_lst, sh_lst), (ty, sy) = self.model(data)
 
         loss_ce = self.criterion(ty, target) + self.criterion(sy, target)
-        loss_mse = 0.0
-        # loss_mse = (
-        #     self.mse_criterion(th, sh) / loss_ce + self.mse_criterion(tx, sx) / loss_ce
-        # )
+        # loss_mse = 0.0
+        loss_mse = (
+            self.mse_criterion(th_lst[-1], sh_lst[-1]) / loss_ce
+            + self.mse_criterion(th_lst[-2], sh_lst[-2]) / loss_ce
+        )
 
         def ts_kl_f(a, b):
             a_log_soft = F.log_softmax(a / self.temp, dim=1)
@@ -64,16 +62,16 @@ class FedKD(AVG):
     学生模型和教师模型分别在model中实现
     """
 
-    def client(self, trainer, agg_weight=1):
-        w_shared = {"agg_weight": agg_weight}
-        w_local = trainer.weight
-        w_shared["params"] = {
-            k: v.cpu() for k, v in w_local.items() if "teacher" not in k
-        }
-        return w_shared
+    # def client(self, trainer, agg_weight=1):
+    #     w_shared = {"agg_weight": agg_weight}
+    #     w_local = trainer.weight
+    #     w_shared["params"] = {
+    #         k: v.cpu() for k, v in w_local.items() if "teacher" not in k
+    #     }
+    #     return w_shared
 
     # https://github.com/wuch15/FedKD/blob/main/run.py
-    def client_kd(self, trainer, agg_weight=1):
+    def client(self, trainer, agg_weight=1):
         # 随着轮数的变化而变化， svd的k, energy
         # energy = 0.95+((1+comm_round)/10)*(0.98-0.95)
         self.energy = 1  # init_value
@@ -117,7 +115,7 @@ class FedKD(AVG):
                         )
         return w_shared
 
-    def server_ensemble_kd(self, agg_weight_lst, w_local_lst, key_lst=None):
+    def server_ensemble(self, agg_weight_lst, w_local_lst, key_lst=None):
         if key_lst == None:
             all_local_key_lst = [set(w_local.keys()) for w_local in w_local_lst]
             key_lst = reduce(lambda x, y: x & y, all_local_key_lst)
@@ -131,9 +129,10 @@ class FedKD(AVG):
             w_glob[k] = np.divide(w_glob[k], molecular)
         return w_glob
 
-    def client_revice_kd(self, trainer, data_glob_d):
-        w_local = trainer.weight
+    def client_revice(self, trainer, data_glob_d):
+        w_local = trainer.weight_o
         w_glob = data_glob_d["w_glob"]
+
         for key, value in w_glob.items():
             real_params_value = value
             conv_flag = False
@@ -167,17 +166,12 @@ class FedKD(AVG):
                     if conv_flag:
                         real_params_value = real_params_value.reshape(c, k, h, w)
 
-            # 源代码把梯度直接赋值？
-            w_local[key] = w_local[key].cpu() + torch.FloatTensor(real_params_value)
+            w_local[key] = w_local[key] + torch.FloatTensor(real_params_value)
         return w_local
 
 
-def KDTrainer(Trainer):
-    pass
-
-
 if __name__ == "__main__":
-    from model import BackboneModel, HeadModel, ModelFedCon
+    from model import ModelFedCon
 
     model_base = ModelFedCon("simple-cnn", out_dim=256, n_classes=10)
     d = model_base.state_dict()
