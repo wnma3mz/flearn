@@ -165,7 +165,7 @@ class Trainer:
                     最后一轮epoch的accuracy
         """
         # 保存训练前的模型，以计算梯度与配合FedSGD。多占用了一份显存
-        self.weight_o = copy.deepcopy(self.model.cpu().state_dict())
+        self.weight_o = copy.deepcopy(self.model).cpu().state_dict()
         self.eval_model()
         self.model.train()
         for ep in range(1, epochs + 1):

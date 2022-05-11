@@ -4,7 +4,20 @@ import random
 import numpy as np
 import torch
 
-from flearn.common.strategy import AVG, AVGM, BN, LG, LG_R, OPT, PAV, SGD
+from flearn.common.strategy import (
+    AVG,
+    AVGM,
+    BN,
+    DF,
+    LG,
+    LG_R,
+    MD,
+    OPT,
+    PAV,
+    SGD,
+    Distill,
+    Dyn,
+)
 
 __all__ = ["setup_strategy", "setup_seed", "get_free_gpu_id"]
 
@@ -25,20 +38,28 @@ def setup_strategy(strategy_name, custom_strategy, **strategy_p):
         flearn.common.Strategy
         策略
     """
-    if "shared_key_layers" in strategy_p.keys():
-        shared_key_layers = strategy_p["shared_key_layers"]
-    else:
-        shared_key_layers = None
+    shared_key_layers = strategy_p.get("shared_key_layers", None)
+    model_base = strategy_p.get("model_base", None)
+    strategy_base = strategy_p.get("strategy_base", AVG())
+    h = strategy_p.get("h", None)
+    glob_model = strategy_p.get("glob_model", None)
+    device = strategy_p.get("device", "cpu")
+
     strategy_name = strategy_name.lower()
+
     strategy_d = {
         "avg": AVG(),
-        "sgd": SGD(),
-        "opt": OPT(),
         "avgm": AVGM(),
         "bn": BN(),
+        "df": DF(model_base, strategy_base),
+        "distill": Distill(),
+        "dyn": Dyn(h),
         "lg": LG(shared_key_layers),
-        "pav": PAV(shared_key_layers),
         "lg_r": LG_R(shared_key_layers),
+        "md": MD(shared_key_layers, glob_model, device),
+        "opt": OPT(),
+        "pav": PAV(shared_key_layers),
+        "sgd": SGD(),
     }
     if strategy_name not in strategy_d.keys():
         if custom_strategy != None:

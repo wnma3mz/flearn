@@ -39,5 +39,6 @@ class LG_R(Strategy):
             w_glob = self.server_ensemble(agg_weight_lst, w_local_lst)
         except Exception as e:
             self.server_exception(e)
-        print(w_glob.keys())
+        if len(w_glob.keys()) < 10:
+            print(w_glob.keys())
         return {"w_glob": w_glob}
