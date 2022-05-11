@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import copy
+
 import numpy as np
 import torch
 from tqdm import tqdm
@@ -162,6 +164,8 @@ class Trainer:
             float :
                     最后一轮epoch的accuracy
         """
+        # 保存训练前的模型，以计算梯度与配合FedSGD。多占用了一份显存
+        self.weight_o = copy.deepcopy(self.model.cpu().state_dict())
         self.eval_model()
         self.model.train()
         for ep in range(1, epochs + 1):
@@ -229,10 +233,10 @@ class Trainer:
 
     @property
     def grads(self):
-        """当前模型的梯度"""
+        """当前模型的梯度, device:cpu"""
         d = self.weight
         for k, v in d.items():
-            d[k] = v - self.model_o[k]
+            d[k] = v.cpu() - self.weight_o[k]
         return d
 
     def add_grad(self, grads):

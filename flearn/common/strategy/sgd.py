@@ -21,7 +21,8 @@ class SGD(AVG):
     def client_revice(self, trainer, data_glob_d):
         g_glob = data_glob_d["w_glob"]
 
-        w_local = trainer.weight
+        # w_local = trainer.weight
+        w_local = trainer.weight_o
         for k, v in w_local.items():
             w_local[k] = v.cpu() + g_glob[k]
         return w_local
