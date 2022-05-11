@@ -11,7 +11,7 @@ class MD(LG_R):
     def __init__(self, shared_key_layers, glob_model, device):
         super(MD, self).__init__(shared_key_layers)
         self.glob_model = glob_model
-        if self.glob_model != None:
+        if self.glob_model:
             self.device = device
             self.glob_model.to(device)
             self.glob_model.train()

@@ -8,7 +8,6 @@ from flearn.common.strategy import (
     AVG,
     AVGM,
     BN,
-    DF,
     LG,
     LG_R,
     MD,
@@ -39,8 +38,6 @@ def setup_strategy(strategy_name, custom_strategy, **strategy_p):
         策略
     """
     shared_key_layers = strategy_p.get("shared_key_layers", None)
-    model_base = strategy_p.get("model_base", None)
-    strategy_base = strategy_p.get("strategy_base", AVG())
     h = strategy_p.get("h", None)
     glob_model = strategy_p.get("glob_model", None)
     device = strategy_p.get("device", "cpu")
@@ -51,7 +48,6 @@ def setup_strategy(strategy_name, custom_strategy, **strategy_p):
         "avg": AVG(),
         "avgm": AVGM(),
         "bn": BN(),
-        "df": DF(model_base, strategy_base),
         "distill": Distill(),
         "dyn": Dyn(h),
         "lg": LG(shared_key_layers),
