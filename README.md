@@ -72,4 +72,14 @@ split-learning可见[README.md](https://github.com/wnma3mz/flearn/tree/master/ex
 
 ### 工作流
 
-![CFL工作流](./imgs/CFL工作流.png)
+1. 服务器(Server)发送**训练指令**至各个客户端(Client)进行训练 (Server->Comm(S)->Comm(C)->Client)；模拟实验时，(Server->Client)
+2. Client根据配置好的训练器(Trainer)进行训练，训练完成后返回指令至Server
+3. Server发送**上传指令**至Client，Client根据配置好的策略(Strategy)，准备好上传的参数并进行上传，即Server发送指令后收到Client上传的参数
+4. Server根据预先配好的Strategy对参数进行聚合
+5. Server发送**接收指令**至Client，此时把参数发回至Client，Client根据配置好的Strategy进行接收
+6. 若Server继续发送**测试指令**至Client，Client还要对更新后的模型进行验证，并返回验证后的结果至Server。否则，Server直接进行验证
+
+P.S.
+- Trainer中一般是需要配置联邦的损失函数`fed_loss`，主要作用是为了防止灾难性遗忘
+- Distiller可以看作`fed_loss`，也可以看作聚合策略的一种，所以可能会在`Strategy`进行调用优化模型参数
+- Strategy其实可以分为Server和Client两个部分，其中Client有两个函数（上传和接收）。此处是将策略看作一个整体，即Client和Server都调用同一个Strategy
