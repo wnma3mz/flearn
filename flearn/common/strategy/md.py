@@ -4,6 +4,7 @@ import copy
 import torch
 import torch.optim as optim
 
+from flearn.common.distiller import KDLoss
 from flearn.common.strategy import LG_R
 
 
@@ -15,8 +16,8 @@ class MD(LG_R):
             self.device = device
             self.glob_model.to(device)
             self.glob_model.train()
-        else:
-            print("Warning: glob model is None")
+        # else:
+        #     print("Warning: glob model is None")
 
     @staticmethod
     def load_model(model_base_dict, w_dict):
@@ -27,11 +28,11 @@ class MD(LG_R):
         w_local = trainer.weight
         w_local_bak = copy.deepcopy(w_local)
         self.glob_model.load_state_dict(
-            self.load_model(self.glob_model.state_dict(), w_local)
+            self.load_model(self.glob_model.state_dict(), w_local), strict=False
         )
-        # temperature = 2
-        # criterion = KDLoss(temperature)
-        criterion = trainer.criterion
+        temperature = 2
+        criterion = KDLoss(temperature)
+        # criterion = trainer.criterion
         optimizer = optim.SGD(self.glob_model.parameters(), lr=1e-2)
 
         x_lst, logits_lst = data_glob_d["x_lst"], data_glob_d["logits_lst"]

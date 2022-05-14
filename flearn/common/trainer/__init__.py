@@ -1,3 +1,8 @@
+from .DistillTrainer import DistillTrainer
+from .DynTrainer import DynTrainer
+from .L2Trainer import L2Trainer
+from .MaxTrainer import MaxTrainer
+from .MOONTrainer import MOONTrainer
 from .ProxTrainer import ProxTrainer
 from .Trainer import Trainer
 
@@ -6,4 +11,13 @@ try:
 except:
     pass
 
-__all__ = ["Trainer", "ProxTrainer", "TFTrainer"]
+__all__ = [
+    "Trainer",
+    "ProxTrainer",
+    "TFTrainer",
+    "DistillTrainer",
+    "DynTrainer",
+    "L2Trainer",
+    "MaxTrainer",
+    "MOONTrainer",
+]
