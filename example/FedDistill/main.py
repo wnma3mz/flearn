@@ -6,16 +6,20 @@ import os
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from FedDistill import Distill, DistillClient, DistillTrainer
 from models import LeNet5
 from resnet import ResNet_cifar
 from split_data import iid as iid_f
 from split_data import noniid
 
+from flearn.client import DistillClient
 from flearn.client.datasets import get_dataloader, get_datasets, get_split_loader
+from flearn.common.strategy import Distill
+from flearn.common.trainer import DistillTrainer
 from flearn.common.utils import get_free_gpu_id, setup_seed
 from flearn.server import Communicator as sc
 from flearn.server import Server
+
+# python3 main.py --dataset_name cifar10 --dataset_fpath ./data --suffix _distill
 
 # 设置随机数种子
 setup_seed(0)
@@ -135,13 +139,13 @@ if __name__ == "__main__":
         c_conf = inin_single_client(client_id, trainloader_idx_lst, testloader_idx_lst)
         client_lst.append(DistillClient(c_conf))
 
-    sc_conf = {
+    s_conf = {
         "model_fpath": model_fpath,
         "strategy": Distill(),
         "strategy_name": strategy_name,
     }
-    s_conf = {
-        "server": Server(sc_conf),
+    sc_conf = {
+        "server": Server(s_conf),
         "Round": 1000,
         "client_numbers": client_numbers,
         "iid": iid,
@@ -149,7 +153,7 @@ if __name__ == "__main__":
         "log_suffix": args.suffix,
         "client_lst": client_lst,
     }
-    server_o = sc(conf=s_conf)
+    server_o = sc(conf=sc_conf)
     server_o.max_workers = 1
     for ri in range(sc_conf["Round"]):
         loss, train_acc, test_acc = server_o.run(ri, k=k)

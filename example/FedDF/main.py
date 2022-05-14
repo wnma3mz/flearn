@@ -13,7 +13,7 @@ from split_data import noniid
 
 from flearn.client import Client
 from flearn.client.datasets import get_dataloader, get_datasets, get_split_loader
-from flearn.common.strategy import DF, AVG
+from flearn.common.strategy import AVG, DF
 from flearn.common.trainer import Trainer
 from flearn.common.utils import get_free_gpu_id, setup_seed
 from flearn.server import Communicator as sc
@@ -158,13 +158,13 @@ if __name__ == "__main__":
         c_conf = inin_single_client(client_id, trainloader_idx_lst, testloader_idx_lst)
         client_lst.append(Client(c_conf))
 
-    sc_conf = {
+    s_conf = {
         "model_fpath": model_fpath,
         "strategy": copy.deepcopy(strategy),
         "strategy_name": strategy_name,
     }
-    s_conf = {
-        "server": Server(sc_conf),
+    sc_conf = {
+        "server": Server(s_conf),
         "Round": 1000,
         "client_numbers": client_numbers,
         "iid": iid,
@@ -172,7 +172,7 @@ if __name__ == "__main__":
         "log_suffix": args.suffix,
         "client_lst": client_lst,
     }
-    server_o = sc(conf=s_conf)
+    server_o = sc(conf=sc_conf)
     server_o.max_workers = 1
 
     # 随意选取，可替换为更合适的数据集；或者生成随机数，见_create_data_randomly
@@ -186,5 +186,5 @@ if __name__ == "__main__":
         "kd_loader": glob_testloader,
         "device": device,
     }
-    for ri in range(s_conf["Round"]):
+    for ri in range(sc_conf["Round"]):
         loss, train_acc, test_acc = server_o.run(ri, k=k, **kwargs)
