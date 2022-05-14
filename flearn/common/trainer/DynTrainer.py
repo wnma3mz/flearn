@@ -46,9 +46,8 @@ class DynTrainer(Trainer):
             # Quadratic Penalty, 全局模型与客户端模型尽可能小
             quad_penalty = 0.0
             for name, param in self.model.named_parameters():
-                quad_penalty += F.mse_loss(
-                    param, self.server_state_dict[name].to(self.device), reduction="sum"
-                )
+                server_param = self.server_state_dict[name].to(self.device)
+                quad_penalty += F.mse_loss(param, server_param, reduction="sum")
 
             return -lin_penalty + self.alpha / 2.0 * quad_penalty
         else:

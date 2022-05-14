@@ -14,7 +14,8 @@ from model import BackboneModel, HeadModel, ModelFedCon
 from utils import get_dataloader, partition_data
 
 from flearn.client import Client, DistillClient, MOONClient, ProxClient, datasets
-from flearn.common.strategy import AVG, DF
+from flearn.common.strategy import AVG
+from flearn.common.trainer import MOONTrainer
 from flearn.common.utils import get_free_gpu_id, setup_seed, setup_strategy
 from flearn.server import Communicator as sc
 from flearn.server import Server
@@ -117,20 +118,20 @@ if args.ccvr and args.df:
 elif args.ccvr:
     strategy = MyStrategys.CCVR(head_model_base, strategy)
 elif args.df:
-    strategy = DF(model_base, strategy)
+    strategy = MyStrategys.MyDF(model_base, strategy)
 
 # 设置 训练器-客户端
 conf_d = {
     "avg": {"trainer": MyTrainers.AVGTrainer, "client": Client},
-    "moon": {"trainer": MyTrainers.MOONTrainer, "client": MOONClient},
-    "prox": {"trainer": MyTrainers.ProxTrainer, "client": ProxClient},
+    "moon": {"trainer": MOONTrainer, "client": MOONClient},
+    "prox": {"trainer": MyTrainers.MyProxTrainer, "client": ProxClient},
     "lsd": {"trainer": MyTrainers.LSDTrainer, "client": MyClients.LSDClient},
-    "dyn": {"trainer": MyTrainers.DynTrainer, "client": ProxClient},
+    "dyn": {"trainer": MyTrainers.MyDynTrainer, "client": ProxClient},
     "lg": {"trainer": MyTrainers.AVGTrainer, "client": Client},
     "md": {"trainer": MyTrainers.AVGTrainer, "client": Client},
     "lg_r": {"trainer": MyTrainers.AVGTrainer, "client": Client},
     "distill": {
-        "trainer": MyTrainers.DistillTrainer,
+        "trainer": MyTrainers.MyDistillTrainer,
         "client": DistillClient,
     },
 }

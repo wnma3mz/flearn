@@ -43,7 +43,7 @@ class MyDFDistiller(DFDistiller):
         return student.state_dict()
 
 
-def MyDF(DF):
+class MyDF(DF):
     def server_post_processing(self, ensemble_params_lst, ensemble_params, **kwargs):
         w_glob = ensemble_params["w_glob"]
         agg_weight_lst, w_local_lst = self.server_pre_processing(ensemble_params_lst)
@@ -199,7 +199,7 @@ class DFCCVR(CCVR):
     def __init__(self, model_base, head_model_base, strategy):
         super().__init__(head_model_base, strategy)
         self.model_base = model_base
-        self.df = DF(model_base, strategy)
+        self.df = MyDF(model_base, strategy)
 
     def server(self, ensemble_params_lst, round_, **kwargs):
         # 先DF后CCVR
