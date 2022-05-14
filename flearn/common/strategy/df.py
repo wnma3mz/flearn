@@ -51,12 +51,12 @@ class DFDistiller(Distiller):
         for _ in range(self.epoch):
             for _, (x, _) in enumerate(self.kd_loader):
                 x = x.to(self.device)
-                _, _, output = self.student(x)
+                output = self.student(x)
 
                 soft_target_lst = []
                 for teacher in self.teacher_lst:
                     with torch.no_grad():
-                        _, _, soft_target = teacher(x)
+                        soft_target = teacher(x)
                         soft_target_lst.append(soft_target)
 
                 loss = self.multi_loss(method, soft_target_lst, output)

@@ -6,7 +6,6 @@ import os
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from FedDF import DF
 from models import LeNet5
 from resnet import ResNet_cifar
 from split_data import iid as iid_f
@@ -14,10 +13,13 @@ from split_data import noniid
 
 from flearn.client import Client
 from flearn.client.datasets import get_dataloader, get_datasets, get_split_loader
-from flearn.common import Trainer
+from flearn.common.strategy import DF, AVG
+from flearn.common.trainer import Trainer
 from flearn.common.utils import get_free_gpu_id, setup_seed
 from flearn.server import Communicator as sc
 from flearn.server import Server
+
+# python3 main.py --dataset_name cifar10 --dataset_fpath ./data --suffix _df
 
 # 设置随机数种子
 setup_seed(0)
@@ -74,7 +76,7 @@ elif "cifar" in dataset_name:
     )
 
 strategy_name = "df"
-strategy = DF(model_base, device)
+strategy = DF(model_base, AVG())
 
 model_fpath = "./ckpts{}".format(args.suffix)
 if not os.path.isdir(model_fpath):
@@ -158,8 +160,8 @@ if __name__ == "__main__":
 
     sc_conf = {
         "model_fpath": model_fpath,
-        "strategy": DF(model_base, device),
-        "strategy_name": copy.deepcopy(strategy),
+        "strategy": copy.deepcopy(strategy),
+        "strategy_name": strategy_name,
     }
     s_conf = {
         "server": Server(sc_conf),
@@ -182,6 +184,7 @@ if __name__ == "__main__":
         "epoch": 1,
         "method": "avg_logits",
         "kd_loader": glob_testloader,
+        "device": device,
     }
-    for ri in range(sc_conf["Round"]):
+    for ri in range(s_conf["Round"]):
         loss, train_acc, test_acc = server_o.run(ri, k=k, **kwargs)
