@@ -6,7 +6,6 @@ import os
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from FedMD import MD
 from models import LeNet5
 from resnet import ResNet_cifar
 from split_data import iid as iid_f
@@ -14,10 +13,13 @@ from split_data import noniid
 
 from flearn.client import Client
 from flearn.client.datasets import get_dataloader, get_datasets, get_split_loader
-from flearn.common import Trainer
+from flearn.common.strategy import MD
+from flearn.common.trainer import Trainer
 from flearn.common.utils import get_free_gpu_id, setup_seed
 from flearn.server import Communicator as sc
 from flearn.server import Server
+
+# python3 main.py --dataset_name cifar10 --dataset_fpath ./data --suffix _md
 
 # 设置随机数种子
 setup_seed(0)
@@ -57,6 +59,7 @@ dataset_name = args.dataset_name
 dataset_fpath = args.dataset_fpath
 num_classes = 10
 batch_size = 128
+strategy_name = "md"
 trainset, testset = get_datasets(dataset_name, dataset_fpath)
 # 全局测试集，所有客户端模型在此数据集上进行测试取平均。
 _, glob_testloader = get_dataloader(trainset, testset, 100, pin_memory=True)
@@ -114,7 +117,7 @@ def inin_single_client(client_id, trainloader_idx_lst, testloader_idx_lst):
         "model_fpath": model_fpath,
         "epoch": args.local_epoch,
         "dataset_name": dataset_name,
-        "strategy_name": args.strategy_name,
+        "strategy_name": strategy_name,
         "strategy": copy.deepcopy(strategy),
         "save": False,
         "log": False,

@@ -13,7 +13,7 @@ from split_data import noniid
 
 from flearn.client import Client
 from flearn.client.datasets import get_datasets, get_split_loader
-from flearn.common import Trainer
+from flearn.common.trainer import Trainer
 from flearn.common.utils import setup_seed
 from flearn.server import Communicator as sc
 from flearn.server import Server

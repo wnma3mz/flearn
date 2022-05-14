@@ -15,7 +15,7 @@ from split_data import noniid
 
 from flearn.client import Client
 from flearn.client.datasets import get_dataloader, get_datasets, get_split_loader
-from flearn.common import Trainer
+from flearn.common.trainer import Trainer
 from flearn.common.utils import get_free_gpu_id, setup_seed
 from flearn.server import Communicator as sc
 from flearn.server import Server

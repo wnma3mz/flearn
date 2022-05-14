@@ -13,7 +13,7 @@ import torch.optim as optim
 from model import BackboneModel, HeadModel, ModelFedCon
 from utils import get_dataloader, partition_data
 
-from flearn.client import Client, datasets
+from flearn.client import Client, DistillClient, MOONClient, ProxClient, datasets
 from flearn.common.strategy import AVG, DF
 from flearn.common.utils import get_free_gpu_id, setup_seed, setup_strategy
 from flearn.server import Communicator as sc
@@ -122,16 +122,16 @@ elif args.df:
 # 设置 训练器-客户端
 conf_d = {
     "avg": {"trainer": MyTrainers.AVGTrainer, "client": Client},
-    "moon": {"trainer": MyTrainers.MOONTrainer, "client": MyClients.MOONClient},
-    "prox": {"trainer": MyTrainers.ProxTrainer, "client": MyClients.ProxClient},
+    "moon": {"trainer": MyTrainers.MOONTrainer, "client": MOONClient},
+    "prox": {"trainer": MyTrainers.ProxTrainer, "client": ProxClient},
     "lsd": {"trainer": MyTrainers.LSDTrainer, "client": MyClients.LSDClient},
-    "dyn": {"trainer": MyTrainers.DynTrainer, "client": MyClients.DynClient},
+    "dyn": {"trainer": MyTrainers.DynTrainer, "client": ProxClient},
     "lg": {"trainer": MyTrainers.AVGTrainer, "client": Client},
     "md": {"trainer": MyTrainers.AVGTrainer, "client": Client},
     "lg_r": {"trainer": MyTrainers.AVGTrainer, "client": Client},
     "distill": {
         "trainer": MyTrainers.DistillTrainer,
-        "client": MyClients.DistillClient,
+        "client": DistillClient,
     },
 }
 

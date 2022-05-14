@@ -6,67 +6,14 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from flearn.common import Trainer
 from flearn.common.distiller import KDLoss
+from flearn.common.trainer import Trainer
 
 
 class AVGTrainer(Trainer):
     def forward(self, data, target):
         data, target = data.to(self.device), target.to(self.device)
         _, _, output = self.model(data)
-
-        loss = self.criterion(output, target)
-        iter_acc = self.metrics(output, target)
-        return output, loss, iter_acc
-
-
-class MOONTrainer(Trainer):
-    def __init__(self, model, optimizer, criterion, device, display=True):
-        super(MOONTrainer, self).__init__(model, optimizer, criterion, device, display)
-        self.global_model = copy.deepcopy(self.model)
-        self.previous_model_lst = []
-        self.cos = nn.CosineSimilarity(dim=-1)
-        # CIFAR-10, CIFAR-100, and Tiny-Imagenet are 0.5, 1, and 0.5
-        self.temperature = 0.5
-        #  CIFAR-10, CIFAR-100, and Tiny-Imagenet are 5, 1, and 1
-        self.mu = 5
-
-    def fed_loss(self):
-        if self.global_model != None:
-            data, pro1 = self.data, self.pro1
-            # 全局与本地的对比损失，越小越好
-            with torch.no_grad():
-                _, pro2, _ = self.global_model(data)
-            posi = self.cos(pro1, pro2)
-            logits = posi.reshape(-1, 1)
-
-            # 当前轮与上一轮的对比损失，越大越好
-            for previous_net in self.previous_model_lst:
-                with torch.no_grad():
-                    _, pro3, _ = previous_net(data)
-                nega = self.cos(pro1, pro3)
-                logits = torch.cat((logits, nega.reshape(-1, 1)), dim=1)
-
-            logits /= self.temperature
-            labels = torch.zeros(data.size(0)).to(self.device).long()
-
-            return self.mu * self.criterion(logits, labels)
-        else:
-            return 0
-
-    def eval_model(self):
-        for previous_net in self.previous_model_lst:
-            previous_net.eval()
-            previous_net.to(self.device)
-
-        if self.global_model != None:
-            self.global_model.eval()
-            self.global_model.to(self.device)
-
-    def forward(self, data, target):
-        data, target = data.to(self.device), target.to(self.device)
-        _, pro1, output = self.model(data)
-        self.data, self.pro1 = data, pro1
 
         loss = self.criterion(output, target)
         iter_acc = self.metrics(output, target)

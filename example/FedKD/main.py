@@ -12,8 +12,8 @@ from model import BackboneModel, HeadModel, ModelFedCon
 from utils import get_dataloader, partition_data
 
 from flearn.client import Client, datasets
-from flearn.common import Trainer
 from flearn.common.strategy import AVG
+from flearn.common.trainer import Trainer
 from flearn.common.utils import get_free_gpu_id, setup_seed, setup_strategy
 from flearn.server import Communicator as sc
 from flearn.server import Server

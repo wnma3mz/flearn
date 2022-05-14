@@ -4,8 +4,8 @@ import copy
 import torch.optim as optim
 
 from flearn.client import Client
-from flearn.common import Trainer
 from flearn.common.distiller import KDLoss
+from flearn.common.trainer import Trainer
 
 
 class FMLTrainer(Trainer):

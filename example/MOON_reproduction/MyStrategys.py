@@ -1,12 +1,76 @@
 # coding: utf-8
+import copy
+
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
 
 from flearn.client.datasets.get_data import DictDataset, get_dataloader
-from flearn.common import Trainer
-from flearn.common.strategy import DF, ParentStrategy
+from flearn.common.distiller import KDLoss
+from flearn.common.strategy import ParentStrategy
+from flearn.common.strategy.df import DF, DFDistiller
+from flearn.common.trainer import Trainer
+
+
+class MyDFDistiller(DFDistiller):
+    def multi(
+        self, teacher_lst, student, method="avg_logits", weight_lst=None, **kwargs
+    ):
+        self._init_kd(teacher_lst, student, **kwargs)
+        if weight_lst == None:
+            self.weight_lst = [1 / len(teacher_lst)] * len(teacher_lst)
+        else:
+            self.weight_lst = weight_lst
+
+        for _ in range(self.epoch):
+            for _, (x, _) in enumerate(self.kd_loader):
+                x = x.to(self.device)
+                _, _, output = self.student(x)
+
+                soft_target_lst = []
+                for teacher in self.teacher_lst:
+                    with torch.no_grad():
+                        _, _, soft_target = teacher(x)
+                        soft_target_lst.append(soft_target)
+
+                loss = self.multi_loss(method, soft_target_lst, output)
+
+                self.optimizer.zero_grad()
+                loss.backward()
+                self.optimizer.step()
+                # print("train_loss_fine_tuning", loss.data)
+        return student.state_dict()
+
+
+def MyDF(DF):
+    def server_post_processing(self, ensemble_params_lst, ensemble_params, **kwargs):
+        w_glob = ensemble_params["w_glob"]
+        agg_weight_lst, w_local_lst = self.server_pre_processing(ensemble_params_lst)
+
+        teacher_lst = []
+        for w_local in w_local_lst:
+            self.model_base.load_state_dict(w_local)
+            teacher_lst.append(copy.deepcopy(self.model_base))
+
+        self.model_base.load_state_dict(w_glob)
+        student = copy.deepcopy(self.model_base)
+
+        kd_loader, device = kwargs.pop("kd_loader"), kwargs.pop("device")
+        temperature = kwargs.pop("T")
+        distiller = MyDFDistiller(
+            kd_loader,
+            device,
+            kd_loss=KDLoss(temperature),
+        )
+
+        molecular = np.sum(agg_weight_lst)
+        weight_lst = [w / molecular for w in agg_weight_lst]
+        # agg_weight_lst：应该依照每个模型在验证集上的性能来进行分配
+        ensemble_params["w_glob"] = distiller.multi(
+            teacher_lst, student, kwargs.pop("method"), weight_lst=weight_lst, **kwargs
+        )
+        return ensemble_params
 
 
 class CCVR(ParentStrategy):

@@ -7,8 +7,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from flearn.common import Trainer
 from flearn.common.strategy import AVG
+from flearn.common.trainer import Trainer
 
 
 class AVGTrainer(Trainer):

@@ -7,13 +7,11 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from models import LeNet5, LeNet5Cifar10
-from ProxClient import ProxClient
-from ProxTrainer import L2Trainer, MaxTrainer, ProxTrainer
 from resnet import ResNet_cifar
 from utils import get_dataloader, partition_data
 
-from flearn.client import Client
-from flearn.common import Trainer
+from flearn.client import Client, ProxClient
+from flearn.common.trainer import L2Trainer, MaxTrainer, ProxTrainer, Trainer
 from flearn.common.utils import get_free_gpu_id, setup_seed
 from flearn.server import Communicator as sc
 from flearn.server import Server
@@ -74,12 +72,7 @@ print("切分{}数据集, 切割方式: {}".format(dataset_name, partition))
 
 suffix = args.suffix + "_beta{}_iid{}".format(beta, iid == True)
 
-trainer_d = {
-    "prox": ProxTrainer,
-    "max": MaxTrainer,
-    "l2": L2Trainer,
-    "avg": Trainer,
-}
+trainer_d = {"prox": ProxTrainer, "max": MaxTrainer, "l2": L2Trainer, "avg": Trainer}
 
 
 # 设置模型

@@ -6,16 +6,17 @@ import os
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from FedPAV import PAVClient, PAVServer
 from models import LeNet5
 from resnet import ResNet_cifar
 from split_data import iid as iid_f
 from split_data import noniid
 
+from flearn.client import PAVClient
 from flearn.client.datasets import get_dataloader, get_datasets, get_split_loader
-from flearn.common import Trainer
+from flearn.common.trainer import Trainer
 from flearn.common.utils import get_free_gpu_id, setup_seed
 from flearn.server import Communicator as sc
+from flearn.server import Server
 
 # 设置随机数种子
 setup_seed(0)
@@ -141,7 +142,7 @@ if __name__ == "__main__":
     strategy_p = {"shared_key_layers": shared_key_layers}
     s_conf = {"model_fpath": model_fpath, "strategy_name": strategy_name, **strategy_p}
     sc_conf = {
-        "server": PAVServer(s_conf),
+        "server": Server(s_conf),
         "Round": 1000,
         "client_numbers": client_numbers,
         "iid": iid,

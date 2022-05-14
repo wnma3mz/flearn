@@ -7,13 +7,13 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from models import LeNet5
-from ProxClient import ProxClient
-from ProxTrainer import ProxTrainer
 from resnet import ResNet_cifar
 from split_data import iid as iid_f
 from split_data import noniid
 
+from flearn.client import ProxClient
 from flearn.client.datasets import get_dataloader, get_datasets, get_split_loader
+from flearn.common.trainer import ProxTrainer
 from flearn.common.utils import get_free_gpu_id, setup_seed
 from flearn.server import Communicator as sc
 from flearn.server import Server
