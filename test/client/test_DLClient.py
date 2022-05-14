@@ -6,7 +6,7 @@ import torch.nn as nn
 import torch.optim as optim
 
 from flearn.client import DLClient
-from flearn.common import Trainer
+from flearn.common.trainer import Trainer
 from flearn.common.utils import setup_seed
 
 setup_seed(0)

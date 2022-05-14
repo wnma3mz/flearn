@@ -1,8 +1,8 @@
 # coding: utf-8
 import torch.nn as nn
 
-from flearn.common import Trainer, setup_strategy
-from flearn.common.utils import setup_seed
+from flearn.common.trainer import Trainer
+from flearn.common.utils import setup_seed, setup_strategy
 
 setup_seed(0)
 
