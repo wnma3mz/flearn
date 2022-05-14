@@ -9,8 +9,8 @@ import torch.nn.functional as F
 from torchvision.utils import save_image
 
 from flearn.client import Client
-from flearn.common import Trainer
 from flearn.common.strategy import AVG
+from flearn.common.trainer import Trainer
 
 
 class Gen(AVG):

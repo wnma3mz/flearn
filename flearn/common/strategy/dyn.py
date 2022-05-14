@@ -5,11 +5,11 @@ from flearn.common.strategy import AVG
 
 
 class Dyn(AVG):
-    def __init__(self, h):
+    def __init__(self, h, alpha=0.01):
         super().__init__()
         self.h = h
         self.theta = copy.deepcopy(h)
-        self.alpha = 0.01
+        self.alpha = alpha
 
     def dyn_f(self, w_glob, w_local_lst):
         delta_theta = {}
@@ -18,7 +18,9 @@ class Dyn(AVG):
             delta_theta[k] = w_glob[k] * len(w_local_lst) - self.theta[k]
 
         for k in self.h.keys():
-            self.h[k] -= self.alpha / len(w_local_lst) * delta_theta[k]
+            # bn.num_batches_tracked 无法计算，Long与Float类型冲突
+            if "weight" in k or "bias" in k:
+                self.h[k] -= self.alpha / len(w_local_lst) * delta_theta[k]
 
         for k in self.h.keys():
             w_glob[k] = w_glob[k] - self.alpha * self.h[k]
