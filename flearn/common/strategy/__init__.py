@@ -10,7 +10,7 @@ from .md import MD
 from .opt import OPT
 from .pav import PAV
 from .sgd import SGD
-from .strategy import ParentStrategy, Strategy
+from .strategy import EmptyEncrypt, ParentStrategy, Strategy
 
 __all__ = [
     "AVG",
@@ -28,4 +28,5 @@ __all__ = [
     "SGD",
     "ParentStrategy",
     "Strategy",
+    "EmptyEncrypt",
 ]
