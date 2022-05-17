@@ -35,15 +35,17 @@
 - 2018
   - [X] [FedProx](https://github.com/litian96/FedProx), CMU, [Federated Optimization in Heterogeneous Networks](https://arxiv.org/abs/1812.06127), MLSys
 - 2019
-  - [X] [FedAVGM](), MIT/谷歌, [Measuring the Effects of Non-Identical Data Distribution for Federated Visual Classification](https://arxiv.org/pdf/1909.06335)
-  - [X] [FedMD](https://github.com/diogenes0319/FedMD_clean), Harvard, [FedMD: Heterogenous Federated Learning via Model Distillation](https://arxiv.org/pdf/1910.03581), NIPS WorkShop
+  - [X] [FedAVGM](), MIT/Google, [Measuring the Effects of Non-Identical Data Distribution for Federated Visual Classification](https://arxiv.org/pdf/1909.06335)
+  - [X] [FedMD](https://github.com/diogenes0319/FedMD_clean), Harvard, [FedMD: Heterogenous Federated Learning via Model Distillation](https://arxiv.org/pdf/1910.03581), NIPS 
 - 2020
+  - [x] [SCAFFOLD](), Google, [SCAFFOLD: Stochastic Controlled Averaging for Federated Learning](https://arxiv.org/pdf/1910.06378), ICML
   - [X] [LG-FedAVG](https://github.com/pliang279/LG-FedAvg), CMU, [Think Locally, Act Globally: Federated Learning with Local and Global Representations](https://arxiv.org/pdf/2001.01523), NIPS WorkShop
   - [X] [FedOPT](https://github.com/adap/flower/blob/main/src/py/flwr/server/strategy/fedadagrad.py)(非官方), Google, [Adaptive Federated Optimization](https://arxiv.org/pdf/2003.00295), ICLR
   - [X] [FedPAV](https://github.com/cap-ntu/FedReID), NTU, [Performance Optimization for Federated Person Re-identification via Benchmark Analysis](https://arxiv.org/pdf/2008.11560), ACM MM
   - [X] [FedDistill](https://github.com/zhuangdizhu/FedGen)(非官方), Oulu, [Federated Knowledge Distillation](https://arxiv.org/pdf/2011.02367)
   - [X] [FedMutual](), ZJU, [Federated Mutual Learning](https://arxiv.org/pdf/2006.16765)
   - [X] [FedDF(Ensemble Distillation)](https://github.com/epfml/federated-learning-public-code/), EPFL, [Ensemble Distillation for Robust Model Fusion in Federated Learning](https://arxiv.org/pdf/2006.07242), NIPS
+  - [x] [FedPer](), Adobe Research, [Federated learning with personalization layers](https://arxiv.org/pdf/1912.00818)
   - [ ] [FedBE](https://github.com/hongyouc/FedBE), Ohio State, [FedBE: Making Bayesian Model Ensemble Applicable to Federated Learning](https://arxiv.org/abs/2009.01974), ICLR
   - [ ] [FedNova](), CMU, [Tackling the Objective Inconsistency Problem in Heterogeneous Federated Optimization](https://arxiv.org/pdf/2007.07481), NIPS
 - 2021
@@ -54,7 +56,7 @@
   - [X] [FedGen](https://github.com/zhuangdizhu/FedGen), Michigan State, [Data-Free Knowledge Distillation for Heterogeneous Federated Learning](https://arxiv.org/pdf/2105.10056), ICML
   - [ ] [FedProto](https://github.com/yuetan031/fedproto), Australian Artificial Intelligence Institute, [FedProto: Federated Prototype Learning across Heterogeneous Clients](https://www.aaai.org/AAAI22Papers/AAAI-6846.YueT.pdf), AAAI
   - [ ] [FedDist](), Grenoble Alpes, [A Federated Learning Aggregation Algorithm for Pervasive Computing: Evaluation and Comparison](https://arxiv.org/pdf/2110.10223), PerCom
-  - [ ] [FedRep](https://github.com/lgcollins/FedRep/), University of Texas at Austin, [Exploiting Shared Representations for Personalized Federated Learning](https://arxiv.org/pdf/2102.07078), ICML
+  - [x] [FedRep](https://github.com/lgcollins/FedRep/), University of Texas at Austin, [Exploiting Shared Representations for Personalized Federated Learning](https://arxiv.org/pdf/2102.07078), ICML
 - 2022
   - [ ] [FedKD](https://github.com/wuch15/FedKD), Tsinghua University/Microsoft Research Asia, [Communication-efficient federated learning via knowledge distillation](https://www.nature.com/articles/s41467-022-29763-x), Nature Communications
 
