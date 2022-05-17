@@ -1,9 +1,12 @@
 # coding: utf-8
 import copy
-from flearn.common.strategy import Strategy, EmptyEncrypt
+
 import torch
-from flearn.common.trainer import Trainer
+
 from flearn.client import Client
+from flearn.common.strategy import EmptyEncrypt, Strategy
+from flearn.common.trainer import Trainer
+
 
 # https://github.com/lgcollins/FedRep/blob/main/main_scaffold.py
 class Scaffold(Strategy):

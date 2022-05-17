@@ -17,7 +17,6 @@ from flearn.common.utils import get_free_gpu_id, setup_seed
 from flearn.server import Communicator as sc
 from flearn.server import Server
 
-
 # python3 main.py --dataset_name cifar10 --dataset_fpath ./data --suffix _df
 
 # 设置随机数种子
