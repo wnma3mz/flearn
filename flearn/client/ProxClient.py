@@ -5,7 +5,7 @@ from flearn.client import Client
 
 
 class ProxClient(Client):
-    """"FedProx, 结合ProxTrainer使用"""
+    """ "FedProx, 结合ProxTrainer使用"""
 
     def revice(self, i, glob_params):
         w_local = self.trainer.weight

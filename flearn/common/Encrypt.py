@@ -3,12 +3,17 @@ import base64
 import pickle
 
 
-class Encrypt(object):
+class BaseEncrypt(object):
     """通信加密"""
 
-    def __init__(self):
-        pass
+    def encode(self, params):
+        return params
 
+    def decode(self, glob_params):
+        return glob_params
+
+
+class Encrypt(BaseEncrypt):
     def encode(self, params):
         """模型编码
 
@@ -37,11 +42,3 @@ class Encrypt(object):
         w_glob_encode = glob_params.encode()
         w_glob_b = base64.b64decode(w_glob_encode)
         return pickle.loads(w_glob_b)
-
-
-class EmptyEncrypt(object):
-    def encode(self, params):
-        return params
-
-    def decode(self, glob_params):
-        return glob_params

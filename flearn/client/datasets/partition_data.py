@@ -9,7 +9,7 @@ import torch.distributed as dist
 
 
 class Partition(object):
-    """ Dataset-like object, but only access a subset of it. """
+    """Dataset-like object, but only access a subset of it."""
 
     def __init__(self, data, indices):
         self.data = data
@@ -93,7 +93,7 @@ class DataSampler(object):
 
 
 class DataPartitioner(object):
-    """ Partitions a dataset into different chuncks. """
+    """Partitions a dataset into different chuncks."""
 
     def __init__(
         self, conf, data, partition_sizes, partition_type, consistent_indices=True

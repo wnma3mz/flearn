@@ -54,11 +54,11 @@
   - [X] [MOON](https://github.com/QinbinLi/MOON), NUS/Berkeley, [Model-Contrastive Federated Learning](https://arxiv.org/pdf/2103.16257.pdf), CVPR
   - [X] [CCVR](), NUS/Huawei, [No Fear of Heterogeneity: Classifier Calibration for Federated Learning with Non-IID Data](https://arxiv.org/pdf/2106.05001), NIPS
   - [X] [FedGen](https://github.com/zhuangdizhu/FedGen), Michigan State, [Data-Free Knowledge Distillation for Heterogeneous Federated Learning](https://arxiv.org/pdf/2105.10056), ICML
-  - [ ] [FedProto](https://github.com/yuetan031/fedproto), Australian Artificial Intelligence Institute, [FedProto: Federated Prototype Learning across Heterogeneous Clients](https://www.aaai.org/AAAI22Papers/AAAI-6846.YueT.pdf), AAAI
   - [ ] [FedDist](), Grenoble Alpes, [A Federated Learning Aggregation Algorithm for Pervasive Computing: Evaluation and Comparison](https://arxiv.org/pdf/2110.10223), PerCom
   - [x] [FedRep](https://github.com/lgcollins/FedRep/), University of Texas at Austin, [Exploiting Shared Representations for Personalized Federated Learning](https://arxiv.org/pdf/2102.07078), ICML
 - 2022
   - [ ] [FedKD](https://github.com/wuch15/FedKD), Tsinghua University/Microsoft Research Asia, [Communication-efficient federated learning via knowledge distillation](https://www.nature.com/articles/s41467-022-29763-x), Nature Communications
+  - [ ] [FedProto](https://github.com/yuetan031/fedproto), Australian Artificial Intelligence Institute, [FedProto: Federated Prototype Learning across Heterogeneous Clients](https://www.aaai.org/AAAI22Papers/AAAI-6846.YueT.pdf), AAAI
 
 split-learning可见[README.md](https://github.com/wnma3mz/flearn/tree/master/example/split_learning)，尚存在loss爆炸问题。
 

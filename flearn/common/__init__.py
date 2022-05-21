@@ -1,5 +1,5 @@
 from .distiller import Distiller
-from .Encrypt import EmptyEncrypt, Encrypt
+from .Encrypt import BaseEncrypt, Encrypt
 from .Logger import Logger
 
-__all__ = ["Encrypt", "EmptyEncrypt", "Logger", "Distiller"]
+__all__ = ["Encrypt", "BaseEncrypt", "Logger", "Distiller"]
