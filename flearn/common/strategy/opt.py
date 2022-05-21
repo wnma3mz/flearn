@@ -2,9 +2,9 @@
 import copy
 
 import numpy as np
-import torch
 
 from .avg import AVG
+from .utils import convert_to_np, convert_to_tensor
 
 
 class OPT(AVG):
@@ -29,12 +29,12 @@ class OPT(AVG):
         delta_w = copy.deepcopy(w_glob)
         # 计算差值delta_w
         for k in w_glob.keys():
-            delta_w[k] = w_glob[k] - w_local[k].cpu()
+            delta_w[k] = w_glob[k] - w_local[k]
 
         # 原始delta_t
         # 初始化delta_t
         # if "delta_t" not in self.__dict__.keys():
-        #     self.delta_t = {k: torch.zeros_like(delta_w[k]) for k in delta_w.keys()}
+        #     self.delta_t = {k: np.zeros_like(delta_w[k]) for k in delta_w.keys()}
         # for k in w_glob.keys():
         #     self.delta_t[k] = (
         #         self.beta1 * delta_w[k] + (1 - self.beta1) * self.delta_t[k]
@@ -43,9 +43,7 @@ class OPT(AVG):
         self.delta_t = delta_w
         # 初始化v_t
         if "v_t" not in self.__dict__.keys():
-            self.v_t = {
-                k: torch.zeros_like(self.delta_t[k]) for k in self.delta_t.keys()
-            }
+            self.v_t = {k: np.zeros_like(self.delta_t[k]) for k in self.delta_t.keys()}
 
         # a) Adagrad (Best)
         # b) Yogi
@@ -71,7 +69,7 @@ class OPT(AVG):
             }
 
         for k in w_glob.keys():
-            w_local[k] = w_local[k].cpu() + self.eta * self.delta_t[k] / (
+            w_local[k] = w_local[k] + self.eta * self.delta_t[k] / (
                 np.sqrt(self.v_t[k]) + self.tau
             )
 
@@ -80,5 +78,7 @@ class OPT(AVG):
     def client_revice(self, trainer, data_glob_d, method="Adagrad"):
         method = method.lower()
         assert method in ["adagrad", "yogi", "adam"]
-        w_local = self.adaptive_opt(trainer.weight, data_glob_d["w_glob"], method)
+        w_local = convert_to_np(trainer.weight)
+        w_local = self.adaptive_opt(w_local, data_glob_d["w_glob"], method)
+        w_local = convert_to_tensor(w_local)
         return w_local

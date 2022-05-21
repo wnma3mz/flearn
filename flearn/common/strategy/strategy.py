@@ -3,15 +3,14 @@ from abc import ABC, abstractmethod
 from functools import reduce
 
 import numpy as np
-import torch
 
-from flearn.common import EmptyEncrypt, Encrypt
+from flearn.common import BaseEncrypt, Encrypt
 
 
 class Strategy(ABC):
     """联邦学习策略的基类，包含对客户端模型处理、服务端聚合等"""
 
-    def __init__(self, encrypt=EmptyEncrypt()):
+    def __init__(self, encrypt=BaseEncrypt()):
         self.encrypt = encrypt
 
     @staticmethod
@@ -90,27 +89,6 @@ class Strategy(ABC):
             w2[k] = w2[k] * alpha + w1[k] * (1 - alpha)
         return w2
 
-    @staticmethod
-    def cdw_feature_distance(old_model, new_model, device, train_loader):
-        """cosine distance weight (cdw): calculate feature distance of
-        the features of a batch of data by cosine distance.
-        old_classifier,
-        """
-        old_model = old_model.to(device)
-        # old_classifier = old_classifier.to(device)
-
-        for data in train_loader:
-            inputs, _ = data
-            inputs = inputs.to(device)
-
-            with torch.no_grad():
-                # old_out = old_classifier(old_model(inputs))
-                old_out = old_model(inputs)
-                new_out = new_model(inputs)
-
-            distance = 1 - torch.cosine_similarity(old_out, new_out)
-            return torch.mean(distance).cpu().numpy()
-
     def server_exception(self, e):
         """服务端异常处理函数
 
@@ -148,7 +126,7 @@ class Strategy(ABC):
                 w_glob[k] += agg_weight * w_local[k]
         molecular = np.sum(agg_weight_lst)
         for k in w_glob.keys():
-            w_glob[k] = torch.div(w_glob[k], molecular)
+            w_glob[k] = np.divide(w_glob[k], molecular)
         return w_glob
 
     @abstractmethod

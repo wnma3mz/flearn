@@ -1,5 +1,6 @@
 # coding: utf-8
 from .strategy import Strategy
+from .utils import convert_to_np, convert_to_tensor
 
 
 class AVG(Strategy):
@@ -14,8 +15,7 @@ class AVG(Strategy):
     def client(self, trainer, agg_weight=1.0):
         # step 1
         w_shared = {"agg_weight": agg_weight}
-        w_local = trainer.weight
-        w_shared["params"] = {k: v.cpu() for k, v in w_local.items()}
+        w_shared["params"] = convert_to_np(trainer.weight)
         return w_shared
 
     def server(self, ensemble_params_lst, round_):
@@ -31,7 +31,7 @@ class AVG(Strategy):
     def client_revice(self, trainer, data_glob_d):
         # step 3
         w_local = trainer.weight
-        w_glob = data_glob_d["w_glob"]
+        w_glob = convert_to_tensor(data_glob_d["w_glob"])
         for k in w_glob.keys():
             w_local[k] = w_glob[k]
         return w_local

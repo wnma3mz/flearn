@@ -2,73 +2,11 @@
 import copy
 
 import numpy as np
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import torch.optim as optim
+
+from flearn.common.distiller import PAVDistiller
 
 from .lg_reverse import LG_R
-
-
-class Distiller:
-    def __init__(self, input_len, kd_loader, device, regularization=True):
-        # input_len: 512
-        self.input_len = input_len
-        self.kd_loader = kd_loader
-        self.device = device
-        self.regularization = regularization
-
-    def kd_generate_soft_label(self, model, data):
-        """knowledge distillation (kd): generate soft labels."""
-        with torch.no_grad():
-            result = model(data)
-        if self.regularization:
-            # 对输出进行标准化
-            result = F.normalize(result, dim=1, p=2)
-        return result
-
-    def run(self, teacher_lst, student):
-        """
-        teacher_lst: 客户端上传的模型参数
-        student： 聚合后的模型
-        kd_loader: 公开的大数据集
-        注：这里的模型没有全连接层
-        以每个客户端模型生成的label（平均）来教聚合后的模型
-        """
-        for teacher in teacher_lst:
-            teacher.eval()
-            teacher.to(self.device)
-        student.train()
-        student.to(self.device)
-        MSEloss = nn.MSELoss().to(self.device)
-        # lr=self.lr*0.01
-        optimizer = optim.SGD(
-            student.parameters(),
-            lr=1e-3,
-            weight_decay=5e-4,
-            momentum=0.9,
-            nesterov=True,
-        )
-
-        # kd_loader 公开的大数据集
-        for _, (x, target) in enumerate(self.kd_loader):
-            x, target = x.to(self.device), target.to(self.device)
-            optimizer.zero_grad()
-            # 对应于模型全连接层的前一部分，512x10 or 512x100
-            soft_target = torch.Tensor([[0] * self.input_len] * len(x)).to(self.device)
-
-            for teacher in teacher_lst:
-                soft_label = self.kd_generate_soft_label(teacher, x)
-                soft_target += soft_label
-            soft_target /= len(teacher_lst)
-
-            output = student(x)
-
-            loss = MSEloss(output, soft_target)
-            loss.backward()
-            optimizer.step()
-            # print("train_loss_fine_tuning", loss.data)
-        return student
+from .utils import cdw_feature_distance, convert_to_np, convert_to_tensor
 
 
 class PAV(LG_R):
@@ -109,14 +47,12 @@ class PAV(LG_R):
                                 模型参数所占权重（该客户端聚合所占权重）
             }
         """
-        distance = self.cdw_feature_distance(
-            old_model, trainer.model, device, trainloader
-        )
+        distance = cdw_feature_distance(old_model, trainer.model, device, trainloader)
         # 权重值太小，x100处理
         w_shared = {"agg_weight": np.float(distance) * 100}
-        w_local = trainer.weight
+        w_local = convert_to_np(trainer.weight)
         w_shared["params"] = {
-            k: v.cpu() for k, v in w_local.items() if k not in self.shared_key_layers
+            k: v for k, v in w_local.items() if k not in self.shared_key_layers
         }
         return w_shared
 
@@ -130,7 +66,7 @@ class PAV(LG_R):
     def pav_kd(self, w_local_lst, w_glob, **kwargs):
         # 进行蒸馏
         if "kd" in kwargs.keys() and kwargs["kd"] == True:
-            self.distiller = Distiller(
+            self.distiller = PAVDistiller(
                 kwargs["input_len"],
                 kwargs["kd_loader"],
                 kwargs["device"],
@@ -143,12 +79,10 @@ class PAV(LG_R):
             client_lst = []
             # 客户端参数转模型
             for w_local in w_local_lst:
-                glob_local = self.load_model(glob_model.state_dict(), w_local)
-                glob_model.load_state_dict(glob_local)
+                glob_model = self.load_model(glob_model, convert_to_tensor(w_local))
                 client_lst.append(copy.deepcopy(glob_model))
 
-            glob_local = self.load_model(glob_model.state_dict(), w_glob)
-            glob_model.load_state_dict(glob_local)
+            glob_model = self.load_model(glob_model, convert_to_tensor(w_glob))
             # 知识蒸馏+正则化
             glob_model = self.distiller.run(client_lst, glob_model)
             # 模型转回参数

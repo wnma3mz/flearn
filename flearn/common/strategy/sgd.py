@@ -1,5 +1,6 @@
 # coding: utf-8
 from .avg import AVG
+from .utils import convert_to_np, convert_to_tensor
 
 
 class SGD(AVG):
@@ -14,12 +15,12 @@ class SGD(AVG):
 
     def client(self, trainer, agg_weight=1.0):
         g_shared = {"agg_weight": agg_weight}
-        g_local = trainer.grads
-        g_shared["params"] = {k: v.cpu() for k, v in g_local.items()}
+        g_shared["params"] = convert_to_np(trainer.grads)
         return g_shared
 
     def client_revice(self, trainer, data_glob_d):
         g_glob = data_glob_d["w_glob"]
+        g_glob = convert_to_tensor(g_glob)
 
         w_local = trainer.weight_o
         for k, v in w_local.items():

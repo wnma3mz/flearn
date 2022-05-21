@@ -1,8 +1,8 @@
 # coding: utf-8
-from .strategy import Strategy
+from .avg import AVG
 
 
-class LG(Strategy):
+class LG(AVG):
     """
     Fed Think locally, act globally, https://github.com/pliang279/LG-FedAvg
 
@@ -11,20 +11,26 @@ class LG(Strategy):
     .. [1] Liang P P, Liu T, Ziyin L, et al. Think locally, act globally: Federated learning with local and global representations[J]. arXiv preprint arXiv:2001.01523, 2020.
     """
 
-    def __init__(self, shared_key_layers):
+    def __init__(self, shared_key_layers=None):
         super().__init__()
         self.shared_key_layers = shared_key_layers
 
     def client(self, trainer, agg_weight=1.0):
-        w_shared = {"agg_weight": agg_weight}
-        w_local = trainer.weight
-        w_shared["params"] = {k: w_local[k].cpu() for k in self.shared_key_layers}
+        w_shared = super().client(trainer, agg_weight)
+        if self.shared_key_layers:
+            all_key_lst = list(w_shared["params"].keys())
+            delete_key_lst = [k for k in all_key_lst if k not in self.shared_key_layers]
+            [w_shared["params"].pop(k) for k in delete_key_lst]
         return w_shared
 
     def client_revice(self, trainer, data_glob_d):
         w_local = trainer.weight
         w_glob = data_glob_d["w_glob"]
-        for k in self.shared_key_layers:
+        if self.shared_key_layers:
+            key_lst = self.shared_key_layers
+        else:
+            key_lst = w_glob.keys()
+        for k in key_lst:
             w_local[k] = w_glob[k]
         return w_local
 
