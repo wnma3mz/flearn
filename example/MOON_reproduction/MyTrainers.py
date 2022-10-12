@@ -49,7 +49,7 @@ class LSDTrainer(Trainer):
             self.teacher_model.to(self.device)
 
     def train(self, data_loader, epochs=1):
-        self.lsd_eval_model()
+        self.eval_model()
         return super(LSDTrainer, self).train(data_loader, epochs)
 
     def fed_loss(self):

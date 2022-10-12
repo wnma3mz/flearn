@@ -21,12 +21,8 @@ def mkdirs(dirpath):
 def load_cifar10_data(datadir):
     transform = transforms.Compose([transforms.ToTensor()])
 
-    cifar10_train_ds = CIFAR10_truncated(
-        datadir, train=True, download=False, transform=transform
-    )
-    cifar10_test_ds = CIFAR10_truncated(
-        datadir, train=False, download=False, transform=transform
-    )
+    cifar10_train_ds = CIFAR10_truncated(datadir, train=True, download=False, transform=transform)
+    cifar10_test_ds = CIFAR10_truncated(datadir, train=False, download=False, transform=transform)
 
     X_train, y_train = cifar10_train_ds.data, cifar10_train_ds.target
     X_test, y_test = cifar10_test_ds.data, cifar10_test_ds.target
@@ -40,12 +36,8 @@ def load_cifar10_data(datadir):
 def load_cifar100_data(datadir):
     transform = transforms.Compose([transforms.ToTensor()])
 
-    cifar100_train_ds = CIFAR100_truncated(
-        datadir, train=True, download=False, transform=transform
-    )
-    cifar100_test_ds = CIFAR100_truncated(
-        datadir, train=False, download=False, transform=transform
-    )
+    cifar100_train_ds = CIFAR100_truncated(datadir, train=True, download=False, transform=transform)
+    cifar100_test_ds = CIFAR100_truncated(datadir, train=False, download=False, transform=transform)
 
     X_train, y_train = cifar100_train_ds.data, cifar100_train_ds.target
     X_test, y_test = cifar100_test_ds.data, cifar100_test_ds.target
@@ -58,9 +50,7 @@ def load_cifar100_data(datadir):
 
 def load_tinyimagenet_data(datadir):
     transform = transforms.Compose([transforms.ToTensor()])
-    xray_train_ds = ImageFolder_custom(
-        os.path.join(datadir, "train"), transform=transform
-    )
+    xray_train_ds = ImageFolder_custom(os.path.join(datadir, "train"), transform=transform)
     xray_test_ds = ImageFolder_custom(os.path.join(datadir, "val"), transform=transform)
 
     X_train, y_train = np.array([s[0] for s in xray_train_ds.samples]), np.array(
@@ -129,18 +119,10 @@ def partition_data(dataset, datadir, logdir, partition, n_parties, beta=0.4):
                 idx_k = np.where(y_train == k)[0]
                 np.random.shuffle(idx_k)
                 proportions = np.random.dirichlet(np.repeat(beta, n_parties))
-                proportions = np.array(
-                    [
-                        p * (len(idx_j) < N / n_parties)
-                        for p, idx_j in zip(proportions, idx_batch)
-                    ]
-                )
+                proportions = np.array([p * (len(idx_j) < N / n_parties) for p, idx_j in zip(proportions, idx_batch)])
                 proportions = proportions / proportions.sum()
                 proportions = (np.cumsum(proportions) * len(idx_k)).astype(int)[:-1]
-                idx_batch = [
-                    idx_j + idx.tolist()
-                    for idx_j, idx in zip(idx_batch, np.split(idx_k, proportions))
-                ]
+                idx_batch = [idx_j + idx.tolist() for idx_j, idx in zip(idx_batch, np.split(idx_k, proportions))]
                 min_size = min([len(idx_j) for idx_j in idx_batch])
                 # if K == 2 and n_parties <= 10:
                 #     if np.min(proportions) < 200:
@@ -171,9 +153,7 @@ def get_trainable_parameters(net, device="cpu"):
     for params in paramlist:
         numel = params.numel()
         with torch.no_grad():
-            X[offset : offset + numel].copy_(
-                params.data.view_as(X[offset : offset + numel].data)
-            )
+            X[offset : offset + numel].copy_(params.data.view_as(X[offset : offset + numel].data))
         offset += numel
     # print("get trainable x:", X)
     return X
@@ -191,9 +171,7 @@ def put_trainable_parameters(net, X):
         offset += numel
 
 
-def compute_accuracy(
-    model, dataloader, get_confusion_matrix=False, device="cpu", multiloader=False
-):
+def compute_accuracy(model, dataloader, get_confusion_matrix=False, device="cpu", multiloader=False):
     was_training = False
     if model.training:
         model.eval()
@@ -226,19 +204,11 @@ def compute_accuracy(
                     correct += (pred_label == target.data).sum().item()
 
                     if device == "cpu":
-                        pred_labels_list = np.append(
-                            pred_labels_list, pred_label.numpy()
-                        )
-                        true_labels_list = np.append(
-                            true_labels_list, target.data.numpy()
-                        )
+                        pred_labels_list = np.append(pred_labels_list, pred_label.numpy())
+                        true_labels_list = np.append(true_labels_list, target.data.numpy())
                     else:
-                        pred_labels_list = np.append(
-                            pred_labels_list, pred_label.cpu().numpy()
-                        )
-                        true_labels_list = np.append(
-                            true_labels_list, target.data.cpu().numpy()
-                        )
+                        pred_labels_list = np.append(pred_labels_list, pred_label.cpu().numpy())
+                        true_labels_list = np.append(true_labels_list, target.data.cpu().numpy())
         avg_loss = sum(loss_collector) / len(loss_collector)
     else:
         with torch.no_grad():
@@ -257,12 +227,8 @@ def compute_accuracy(
                     pred_labels_list = np.append(pred_labels_list, pred_label.numpy())
                     true_labels_list = np.append(true_labels_list, target.data.numpy())
                 else:
-                    pred_labels_list = np.append(
-                        pred_labels_list, pred_label.cpu().numpy()
-                    )
-                    true_labels_list = np.append(
-                        true_labels_list, target.data.cpu().numpy()
-                    )
+                    pred_labels_list = np.append(pred_labels_list, pred_label.cpu().numpy())
+                    true_labels_list = np.append(true_labels_list, target.data.cpu().numpy())
             avg_loss = sum(loss_collector) / len(loss_collector)
 
     if get_confusion_matrix:
@@ -322,9 +288,7 @@ def load_model(model, model_index, device="cpu"):
     return model
 
 
-def get_dataloader(
-    dataset, datadir, train_bs, test_bs, dataidxs=None, noise_level=0, num_workers=0
-):
+def get_dataloader(dataset, datadir, train_bs, test_bs, dataidxs=None, noise_level=0, num_workers=0):
     if dataset in ("cifar10", "cifar100"):
         if dataset == "cifar10":
             dl_obj = CIFAR10_truncated
@@ -420,9 +384,7 @@ def get_dataloader(
             ]
         )
 
-        train_ds = dl_obj(
-            os.path.join(datadir, "train"), dataidxs=dataidxs, transform=transform_train
-        )
+        train_ds = dl_obj(os.path.join(datadir, "train"), dataidxs=dataidxs, transform=transform_train)
         test_ds = dl_obj(os.path.join(datadir, "val"), transform=transform_test)
 
         train_dl = data.DataLoader(

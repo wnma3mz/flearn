@@ -14,11 +14,9 @@ from flearn.common.trainer import Trainer
 
 
 class MyDFDistiller(DFDistiller):
-    def multi(
-        self, teacher_lst, student, method="avg_logits", weight_lst=None, **kwargs
-    ):
+    def multi(self, teacher_lst, student, method="avg_logits", weight_lst=None, **kwargs):
         self._init_kd(teacher_lst, student, **kwargs)
-        if weight_lst == None:
+        if weight_lst is None:
             self.weight_lst = [1 / len(teacher_lst)] * len(teacher_lst)
         else:
             self.weight_lst = weight_lst
@@ -142,14 +140,9 @@ class CCVR(ParentStrategy):
             mu_lst = [fd[l]["mu"] * fd[l]["N"] / sum_n for fd in labeled_fd_lst]
             mu = torch.stack(mu_lst).sum(dim=0)
 
-            sigma1 = torch.stack(
-                [fd[l]["mu"] * (fd[l]["N"] - 1) / (sum_n - 1) for fd in labeled_fd_lst]
-            ).sum(dim=0)
+            sigma1 = torch.stack([fd[l]["mu"] * (fd[l]["N"] - 1) / (sum_n - 1) for fd in labeled_fd_lst]).sum(dim=0)
             sigma2 = torch.stack(
-                [
-                    fd[l]["mu"] * fd[l]["mu"].T * fd[l]["N"] / (sum_n - 1)
-                    for fd in labeled_fd_lst
-                ]
+                [fd[l]["mu"] * fd[l]["mu"].T * fd[l]["N"] / (sum_n - 1) for fd in labeled_fd_lst]
             ).sum(dim=0)
 
             sigma = sigma1 + sigma2 - sum_n / (sum_n - 1) * mu * mu.T
@@ -168,18 +161,12 @@ class CCVR(ParentStrategy):
         # 准备好数据集，模型、优化器等等
         trainset = DictDataset(fd_d)
         trainloader, _ = get_dataloader(trainset, trainset, batch_size=64)
-        optimizer = optim.SGD(
-            self.head_model_base.parameters(), lr=1e-2, momentum=0.9, weight_decay=0.05
-        )
+        optimizer = optim.SGD(self.head_model_base.parameters(), lr=1e-2, momentum=0.9, weight_decay=0.05)
         criterion = nn.CrossEntropyLoss()
-        self.glob_model_base = self.load_model(
-            self.head_model_base, ensemble_params["w_glob"]
-        )
+        self.glob_model_base = self.load_model(self.head_model_base, ensemble_params["w_glob"])
 
         # 重新训练分类器
-        trainer = Trainer(
-            self.head_model_base, optimizer, criterion, kwargs["device"], False
-        )
+        trainer = Trainer(self.head_model_base, optimizer, criterion, kwargs["device"], False)
         trainer.train(trainloader, epochs=1)
         w_train = trainer.weight
 
@@ -190,9 +177,7 @@ class CCVR(ParentStrategy):
 
     def server(self, ensemble_params_lst, round_, **kwargs):
         ensemble_params = super().server(ensemble_params_lst, round_)
-        return self.server_post_processing(
-            ensemble_params_lst, ensemble_params, **kwargs
-        )
+        return self.server_post_processing(ensemble_params_lst, ensemble_params, **kwargs)
 
 
 class DFCCVR(CCVR):
@@ -204,6 +189,4 @@ class DFCCVR(CCVR):
     def server(self, ensemble_params_lst, round_, **kwargs):
         # 先DF后CCVR
         ensemble_params = self.df.server(ensemble_params_lst, round_, **kwargs)
-        return self.server_post_processing(
-            ensemble_params_lst, ensemble_params, **kwargs
-        )
+        return self.server_post_processing(ensemble_params_lst, ensemble_params, **kwargs)

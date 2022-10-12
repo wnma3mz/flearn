@@ -65,14 +65,7 @@ client_numbers = 10
 k = int(client_numbers * args.frac)
 print("客户端总数: {}; 每轮上传客户端数量: {}".format(client_numbers, k))
 
-(
-    X_train,
-    y_train,
-    X_test,
-    y_test,
-    net_dataidx_map,
-    traindata_cls_counts,
-) = partition_data(
+(X_train, y_train, X_test, y_test, net_dataidx_map, traindata_cls_counts,) = partition_data(
     dataset_name,
     dataset_fpath,
     logdir="./logs",
@@ -112,7 +105,6 @@ def inin_single_client(client_id):
         "trainloader": trainloader,
         # "testloader": testloader,
         "testloader": test_dl,
-        "model_fname": "client{}_round_{}.pth".format(client_id, "{}"),
         "client_id": client_id,
         "model_fpath": model_fpath,
         "epoch": args.local_epoch,

@@ -65,19 +65,13 @@ class CIFAR10_truncated(data.Dataset):
 
     def __build_truncated_dataset__(self):
 
-        cifar_dataobj = CIFAR10(
-            self.root, self.train, self.transform, self.target_transform, self.download
-        )
+        cifar_dataobj = CIFAR10(self.root, self.train, self.transform, self.target_transform, self.download)
 
         if torchvision.__version__ == "0.2.1":
             if self.train:
-                data, target = cifar_dataobj.train_data, np.array(
-                    cifar_dataobj.train_labels
-                )
+                data, target = cifar_dataobj.train_data, np.array(cifar_dataobj.train_labels)
             else:
-                data, target = cifar_dataobj.test_data, np.array(
-                    cifar_dataobj.test_labels
-                )
+                data, target = cifar_dataobj.test_data, np.array(cifar_dataobj.test_labels)
         else:
             data = cifar_dataobj.data
             target = np.array(cifar_dataobj.targets)
@@ -141,19 +135,13 @@ class CIFAR100_truncated(data.Dataset):
 
     def __build_truncated_dataset__(self):
 
-        cifar_dataobj = CIFAR100(
-            self.root, self.train, self.transform, self.target_transform, self.download
-        )
+        cifar_dataobj = CIFAR100(self.root, self.train, self.transform, self.target_transform, self.download)
 
         if torchvision.__version__ == "0.2.1":
             if self.train:
-                data, target = cifar_dataobj.train_data, np.array(
-                    cifar_dataobj.train_labels
-                )
+                data, target = cifar_dataobj.train_data, np.array(cifar_dataobj.train_labels)
             else:
-                data, target = cifar_dataobj.test_data, np.array(
-                    cifar_dataobj.test_labels
-                )
+                data, target = cifar_dataobj.test_data, np.array(cifar_dataobj.test_labels)
         else:
             data = cifar_dataobj.data
             target = np.array(cifar_dataobj.targets)
@@ -190,9 +178,7 @@ class CIFAR100_truncated(data.Dataset):
 
 
 class ImageFolder_custom(DatasetFolder):
-    def __init__(
-        self, root, dataidxs=None, train=True, transform=None, target_transform=None
-    ):
+    def __init__(self, root, dataidxs=None, train=True, transform=None, target_transform=None):
         self.root = root
         self.dataidxs = dataidxs
         self.train = train

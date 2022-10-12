@@ -18,9 +18,7 @@ class FMLTrainer(Trainer):
     def __init__(self, model, optimizer, criterion, device, display=True):
         super(FMLTrainer, self).__init__(model, optimizer, criterion, device, display)
         self.local_model = copy.deepcopy(self.model)
-        self.local_optimizer = optim.SGD(
-            self.local_model.parameters(), lr=1e-2, momentum=0.9, weight_decay=1e-5
-        )
+        self.local_optimizer = optim.SGD(self.local_model.parameters(), lr=1e-2, momentum=0.9, weight_decay=1e-5)
         self.local_model.to(self.device)
         self.kd_loss = KDLoss(2)
         self.mu = 2
@@ -62,11 +60,7 @@ class FMLClient(Client):
     def train(self, i):
         # 每轮训练+1
         self.ci += 1
-        self.train_loss, self.train_acc = self.trainer.train(
-            self.trainloader, self.epoch
-        )
+        self.train_loss, self.train_acc = self.trainer.train(self.trainloader, self.epoch)
         # 权重为本地数据大小
-        self.update_model = self.strategy.client(
-            self.trainer, agg_weight=len(self.trainloader)
-        )
+        self.update_model = self.strategy.client(self.trainer, agg_weight=len(self.trainloader))
         return self._pickle_model()

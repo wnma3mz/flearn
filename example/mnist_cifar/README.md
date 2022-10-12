@@ -37,7 +37,6 @@ python3 main.py --strategy_name avg --dataset_name mnist --dataset_fpath /mnt/da
 - line 79-108: 客户端参数初始化。其中line 83-90为获取切割后的训练集和测试集。每个客户端可根据各自的情况分别设置模型、数据集、优化器等。以下为部分配置参数的解释
 
   ```bash
-  model_fname: 客户端模型存储的名称
   client_id:   客户端id名，默认为序号
   device:      使用哪块GPU
   model_fpath: 客户端模型存储路径

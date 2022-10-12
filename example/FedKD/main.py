@@ -117,7 +117,6 @@ def inin_single_client(model_base, client_id):
         "trainer": c_trainer,
         "trainloader": trainloader,
         "testloader": testloader,  # 对应数据集的所有测试数据，未切割
-        "model_fname": "client{}_round_{}.pth".format(client_id, "{}"),
         "client_id": client_id,
         "model_fpath": model_fpath,
         "epoch": args.local_epoch,
@@ -130,14 +129,7 @@ def inin_single_client(model_base, client_id):
 
 
 if __name__ == "__main__":
-    (
-        X_train,
-        y_train,
-        X_test,
-        y_test,
-        net_dataidx_map,
-        traindata_cls_counts,
-    ) = partition_data(
+    (X_train, y_train, X_test, y_test, net_dataidx_map, traindata_cls_counts,) = partition_data(
         dataset_name,
         dataset_fpath,
         logdir="./logs",

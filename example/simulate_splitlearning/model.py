@@ -593,14 +593,10 @@ class ModelFedCon(nn.Module):
             self.features = MLP_header()
             num_ftrs = 512
         elif base_model == "simple-cnn":
-            self.features = SimpleCNN_header(
-                input_dim=(16 * 5 * 5), hidden_dims=[120, 84], output_dim=n_classes
-            )
+            self.features = SimpleCNN_header(input_dim=(16 * 5 * 5), hidden_dims=[120, 84], output_dim=n_classes)
             num_ftrs = 84
         elif base_model == "simple-cnn-mnist":
-            self.features = SimpleCNNMNIST_header(
-                input_dim=(16 * 4 * 4), hidden_dims=[120, 84], output_dim=n_classes
-            )
+            self.features = SimpleCNNMNIST_header(input_dim=(16 * 4 * 4), hidden_dims=[120, 84], output_dim=n_classes)
             num_ftrs = 84
 
         # summary(self.features.to('cuda:0'), (3,32,32))
@@ -618,9 +614,7 @@ class ModelFedCon(nn.Module):
             # print("Feature extractor:", model_name)
             return model
         except:
-            raise (
-                "Invalid model name. Check the config file and pass one of: resnet18 or resnet50"
-            )
+            raise ("Invalid model name. Check the config file and pass one of: resnet18 or resnet50")
 
     def forward(self, x):
         h = self.features(x)
@@ -664,14 +658,10 @@ class ModelFedCon_noheader(nn.Module):
             self.features = MLP_header()
             num_ftrs = 512
         elif base_model == "simple-cnn":
-            self.features = SimpleCNN_header(
-                input_dim=(16 * 5 * 5), hidden_dims=[120, 84], output_dim=n_classes
-            )
+            self.features = SimpleCNN_header(input_dim=(16 * 5 * 5), hidden_dims=[120, 84], output_dim=n_classes)
             num_ftrs = 84
         elif base_model == "simple-cnn-mnist":
-            self.features = SimpleCNNMNIST_header(
-                input_dim=(16 * 4 * 4), hidden_dims=[120, 84], output_dim=n_classes
-            )
+            self.features = SimpleCNNMNIST_header(input_dim=(16 * 4 * 4), hidden_dims=[120, 84], output_dim=n_classes)
             num_ftrs = 84
 
         # summary(self.features.to('cuda:0'), (3,32,32))
@@ -689,9 +679,7 @@ class ModelFedCon_noheader(nn.Module):
             # print("Feature extractor:", model_name)
             return model
         except:
-            raise (
-                "Invalid model name. Check the config file and pass one of: resnet18 or resnet50"
-            )
+            raise ("Invalid model name. Check the config file and pass one of: resnet18 or resnet50")
 
     def forward(self, x):
         h = self.features(x)
@@ -728,14 +716,10 @@ class ModelServer(nn.Module):
             self.features = MLP_header()
             num_ftrs = 512
         elif base_model == "simple-cnn":
-            self.features = SimpleCNN_header(
-                input_dim=(16 * 5 * 5), hidden_dims=[120, 84], output_dim=n_classes
-            )
+            self.features = SimpleCNN_header(input_dim=(16 * 5 * 5), hidden_dims=[120, 84], output_dim=n_classes)
             num_ftrs = 84
         elif base_model == "simple-cnn-mnist":
-            self.features = SimpleCNNMNIST_header(
-                input_dim=(16 * 4 * 4), hidden_dims=[120, 84], output_dim=n_classes
-            )
+            self.features = SimpleCNNMNIST_header(input_dim=(16 * 4 * 4), hidden_dims=[120, 84], output_dim=n_classes)
             num_ftrs = 84
 
         # summary(self.features.to('cuda:0'), (3,32,32))
@@ -753,9 +737,7 @@ class ModelServer(nn.Module):
             # print("Feature extractor:", model_name)
             return model
         except:
-            raise (
-                "Invalid model name. Check the config file and pass one of: resnet18 or resnet50"
-            )
+            raise ("Invalid model name. Check the config file and pass one of: resnet18 or resnet50")
 
     def forward(self, h):
         x = self.l1(h)

@@ -31,16 +31,12 @@ class Net(nn.Module):
             self.latent_dim,
         ) = CONFIGS_[dataset]
         print("Network configs:", configs)
-        self.named_layers, self.layers, self.layer_names = self.build_network(
-            configs, input_channel, self.output_dim
-        )
+        self.named_layers, self.layers, self.layer_names = self.build_network(configs, input_channel, self.output_dim)
         self.n_parameters = len(list(self.parameters()))
         self.n_share_parameters = len(self.get_encoder())
 
     def get_number_of_parameters(self):
-        pytorch_total_params = sum(
-            p.numel() for p in self.parameters() if p.requires_grad
-        )
+        pytorch_total_params = sum(p.numel() for p in self.parameters() if p.requires_grad)
         return pytorch_total_params
 
     def build_network(self, configs, input_channel, output_dim):

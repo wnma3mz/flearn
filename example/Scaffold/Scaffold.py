@@ -4,13 +4,13 @@ import copy
 import torch
 
 from flearn.client import Client
-from flearn.common.strategy import EmptyEncrypt, Strategy
+from flearn.common.strategy import BaseEncrypt, Strategy
 from flearn.common.trainer import Trainer
 
 
 # https://github.com/lgcollins/FedRep/blob/main/main_scaffold.py
 class Scaffold(Strategy):
-    def __init__(self, w_glob, device, lr_g=0.1, alg="scaf", encrypt=EmptyEncrypt()):
+    def __init__(self, w_glob, device, lr_g=0.1, alg="scaf", encrypt=BaseEncrypt()):
         self.encrypt = encrypt
         self.w_glob = w_glob
         self.device = device
@@ -154,9 +154,7 @@ class ScaffoldTrainer(Trainer):
             if not isinstance(dif, torch.Tensor):
                 dif = (-self.curr_c[k] + self.last_c[k]).reshape(-1)
             else:
-                dif = torch.cat(
-                    (dif, (-self.curr_c[k] + self.last_c[k]).reshape(-1)), 0
-                )
+                dif = torch.cat((dif, (-self.curr_c[k] + self.last_c[k]).reshape(-1)), 0)
         loss_algo = torch.sum(local_par_list * dif)
         return loss_algo
 
@@ -168,9 +166,7 @@ class ScaffoldTrainer(Trainer):
             self.optimizer.zero_grad()
             loss.backward()
 
-            torch.nn.utils.clip_grad_norm_(
-                parameters=self.model.parameters(), max_norm=10
-            )
+            torch.nn.utils.clip_grad_norm_(parameters=self.model.parameters(), max_norm=10)
 
             self.optimizer.step()
 

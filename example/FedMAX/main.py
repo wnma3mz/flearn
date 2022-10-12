@@ -10,7 +10,7 @@ from models import LeNet5, LeNet5Cifar10
 from resnet import ResNet_cifar
 from utils import get_dataloader, partition_data
 
-from flearn.client import Client, ProxClient
+from flearn.client import Client
 from flearn.common.trainer import L2Trainer, MaxTrainer, ProxTrainer, Trainer
 from flearn.common.utils import get_free_gpu_id, setup_seed
 from flearn.server import Communicator as sc
@@ -114,7 +114,6 @@ def inin_single_client(model_base, client_id):
         "trainer": c_trainer,
         "trainloader": trainloader,
         "testloader": testloader,
-        "model_fname": "client{}_round_{}.pth".format(client_id, "{}"),
         "client_id": client_id,
         "model_fpath": model_fpath,
         "epoch": args.local_epoch,
@@ -126,14 +125,7 @@ def inin_single_client(model_base, client_id):
 
 
 if __name__ == "__main__":
-    (
-        X_train,
-        y_train,
-        X_test,
-        y_test,
-        net_dataidx_map,
-        traindata_cls_counts,
-    ) = partition_data(
+    (X_train, y_train, X_test, y_test, net_dataidx_map, traindata_cls_counts,) = partition_data(
         dataset_name,
         dataset_fpath,
         logdir="./logs",
@@ -147,10 +139,7 @@ if __name__ == "__main__":
     client_lst = []
     for client_id in range(client_numbers):
         c_conf = inin_single_client(model_base, client_id)
-        if args.strategy_name == "prox":
-            client_lst.append(ProxClient(c_conf))
-        else:
-            client_lst.append(Client(c_conf))
+        client_lst.append(Client(c_conf))
 
     s_conf = {"model_fpath": model_fpath, "strategy_name": "avg"}
     sc_conf = {

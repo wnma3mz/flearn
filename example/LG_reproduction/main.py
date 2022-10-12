@@ -103,7 +103,6 @@ def inin_single_client(client_id, trainloader_idx_lst, testloader_idx_lst):
         "trainer": Trainer(model_, optim_, nn.CrossEntropyLoss(), device, False),
         "trainloader": trainloader,
         "testloader": [testloader, glob_testloader],
-        "model_fname": "client{}_round_{}.pth".format(client_id, "{}"),
         "client_id": client_id,
         "model_fpath": model_fpath,
         "epoch": args.local_epoch,
@@ -130,12 +129,8 @@ if __name__ == "__main__":
         shard_per_user = 2
         if dataset_name == "cifar100":
             shard_per_user = 20
-        trainloader_idx_lst, rand_set_all = noniid(
-            trainset, client_numbers, shard_per_user
-        )
-        testloader_idx_lst, rand_set_all = noniid(
-            testset, client_numbers, shard_per_user, rand_set_all=rand_set_all
-        )
+        trainloader_idx_lst, rand_set_all = noniid(trainset, client_numbers, shard_per_user)
+        testloader_idx_lst, rand_set_all = noniid(testset, client_numbers, shard_per_user, rand_set_all=rand_set_all)
         print("每个客户端标签数量: {}".format(shard_per_user))
 
     print("初始化客户端")

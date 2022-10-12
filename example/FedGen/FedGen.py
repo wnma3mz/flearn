@@ -56,9 +56,7 @@ class Gen(AVG):
         # print("Image saved to {}".format(path))
 
     @staticmethod
-    def train_gan(
-        generative_model, optimizer, student_model, discriminator_model_lst, **kwargs
-    ):
+    def train_gan(generative_model, optimizer, student_model, discriminator_model_lst, **kwargs):
         """训练GAN
         generative_model: 生成模型
         optimizer: 生成模型的优化器
@@ -91,13 +89,10 @@ class Gen(AVG):
                     dis_output = discriminator_model(gen_output, start_layer_idx)
                 user_output_logp_ = F.log_softmax(dis_output, dim=1)
                 teacher_loss_ = torch.mean(
-                    NLL_loss(user_output_logp_, y_input)
-                    * torch.tensor(weight, dtype=torch.float32)
+                    NLL_loss(user_output_logp_, y_input) * torch.tensor(weight, dtype=torch.float32)
                 )
                 teacher_loss += teacher_loss_
-                teacher_logit += dis_output * torch.tensor(
-                    expand_weight, dtype=torch.float32
-                )
+                teacher_logit += dis_output * torch.tensor(expand_weight, dtype=torch.float32)
             return teacher_loss, teacher_logit
 
         for _ in range(epochs):
@@ -129,11 +124,7 @@ class Gen(AVG):
                         F.softmax(teacher_logit, dim=1),
                     )
 
-                    loss = (
-                        alpha * teacher_loss
-                        - beta * student_loss
-                        + eta * diversity_loss
-                    )
+                    loss = alpha * teacher_loss - beta * student_loss + eta * diversity_loss
                 else:
                     loss = alpha * teacher_loss + eta * diversity_loss
 
@@ -175,9 +166,7 @@ class Gen(AVG):
         for x in label_counts_lst:
             unique_labels += list(x.keys())
         unique_labels = list(set(unique_labels))
-        label_weights, qualified_labels = self.get_label_weights(
-            label_counts_lst, unique_labels
-        )
+        label_weights, qualified_labels = self.get_label_weights(label_counts_lst, unique_labels)
         kwargs["qualified_labels"] = qualified_labels
         kwargs["label_weights"] = label_weights
         kwargs["unique_labels"] = unique_labels
@@ -228,12 +217,8 @@ class GenClient(Client):
         generative_alpha = self.trainer.generative_alpha
         generative_beta = self.trainer.generative_beta
 
-        self.trainer.generative_alpha = self.exp_lr_scheduler(
-            i, decay=0.98, init_lr=generative_alpha
-        )
-        self.trainer.generative_beta = self.exp_lr_scheduler(
-            i, decay=0.98, init_lr=generative_beta
-        )
+        self.trainer.generative_alpha = self.exp_lr_scheduler(i, decay=0.98, init_lr=generative_alpha)
+        self.trainer.generative_beta = self.exp_lr_scheduler(i, decay=0.98, init_lr=generative_beta)
 
         if self.save:
             self.trainer.save(self.agg_fpath)
@@ -253,9 +238,7 @@ class GenClient(Client):
 
 class GenTrainer(Trainer):
     def __init__(self, model, optimizer, criterion, device, display=True):
-        super(GenTrainer, self).__init__(
-            model, optimizer, criterion, device, display=display
-        )
+        super(GenTrainer, self).__init__(model, optimizer, criterion, device, display=display)
         self._init_label_counts()
         self._init_label_counts_flag = True
         self.early_stop = 100  # GAN提前结束计算loss
@@ -289,9 +272,7 @@ class GenTrainer(Trainer):
                     gen_output = self.generative_model(target)["output"]
                 dis_output = self.model(gen_output, self.start_layer_idx)
                 target_p = F.softmax(dis_output, dim=1).clone().detach()
-                user_latent_loss = self.generative_beta * self.kl_loss(
-                    F.log_softmax(output, dim=1), target_p
-                )
+                user_latent_loss = self.generative_beta * self.kl_loss(F.log_softmax(output, dim=1), target_p)
 
                 # self.gen_batch_size = len(target)
                 sampled_y = np.random.choice(self.available_labels, len(target))

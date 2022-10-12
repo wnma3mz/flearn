@@ -100,7 +100,6 @@ def inin_single_client(client_id, trainloader_idx_lst, testloader_idx_lst):
         "optimizer": optim_,
         "trainloader": trainloader,
         "testloader": testloader,
-        "model_fname": "client{}_round_{}.pth".format(client_id, "{}"),
         "client_id": client_id,
         "device": device,
         "model_fpath": model_fpath,
@@ -137,19 +136,13 @@ if __name__ == "__main__":
         shard_per_user = 2
         if dataset_name == "cifar100":
             shard_per_user = 20
-        trainloader_idx_lst, rand_set_all = noniid(
-            trainset, client_numbers, shard_per_user
-        )
-        testloader_idx_lst, rand_set_all = noniid(
-            testset, client_numbers, shard_per_user, rand_set_all=rand_set_all
-        )
+        trainloader_idx_lst, rand_set_all = noniid(trainset, client_numbers, shard_per_user)
+        testloader_idx_lst, rand_set_all = noniid(testset, client_numbers, shard_per_user, rand_set_all=rand_set_all)
     _, glob_testloader = get_dataloader(trainset, testset, batch_size, pin_memory=True)
     print("初始化客户端")
     client_lst = []
     for client_id in range(client_numbers):
-        conf_params = inin_single_client(
-            client_id, trainloader_idx_lst, testloader_idx_lst
-        )
+        conf_params = inin_single_client(client_id, trainloader_idx_lst, testloader_idx_lst)
         client_lst.append(conf_params)
 
     Round = 1000
@@ -235,12 +228,8 @@ if __name__ == "__main__":
                     test_loop_loss.append(loss / len(trainloader))
 
                 round_loss_lst.append(np.sum(loop_loss)),
-                round_trainacc_lst.append(
-                    np.sum(accuracy) / len(trainloader.dataset) * 100
-                )
-                round_testacc_lst.append(
-                    np.sum(test_accuracy) / len(testloader.dataset) * 100
-                )
+                round_trainacc_lst.append(np.sum(accuracy) / len(trainloader.dataset) * 100)
+                round_testacc_lst.append(np.sum(test_accuracy) / len(testloader.dataset) * 100)
                 # print(
                 #     "client {} Loss: {:.4f} TrainAcc: {:.4f} TestAcc: {:.4f}".format(
                 #         id_,

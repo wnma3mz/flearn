@@ -30,8 +30,7 @@ class AVGTrainer(Trainer):
         loss_ce = self.criterion(ty, target) + self.criterion(sy, target)
         # loss_mse = 0.0
         loss_mse = (
-            self.mse_criterion(th_lst[-1], sh_lst[-1]) / loss_ce
-            + self.mse_criterion(th_lst[-2], sh_lst[-2]) / loss_ce
+            self.mse_criterion(th_lst[-1], sh_lst[-1]) / loss_ce + self.mse_criterion(th_lst[-2], sh_lst[-2]) / loss_ce
         )
 
         def ts_kl_f(a, b):
@@ -96,10 +95,7 @@ class FedKD(AVG):
                 sigma_square_sum = np.sum(np.square(Sigma))
                 if sigma_square_sum != 0:
                     for singular_value_num in range(len(Sigma)):
-                        if (
-                            np.sum(np.square(Sigma[:singular_value_num]))
-                            > self.energy * sigma_square_sum
-                        ):
+                        if np.sum(np.square(Sigma[:singular_value_num])) > self.energy * sigma_square_sum:
                             threshold = singular_value_num
                             break
                     U = U[:, :threshold]
@@ -110,13 +106,11 @@ class FedKD(AVG):
                     # con_restruct1 = np.dot(np.dot(U, np.diag(Sigma)), VT)
                     w_shared["params"][key] = np.dot(np.dot(U, np.diag(Sigma)), VT)
                     if conv_flag:
-                        w_shared["params"][key] = w_shared["params"][key].reshape(
-                            c, k, h, w
-                        )
+                        w_shared["params"][key] = w_shared["params"][key].reshape(c, k, h, w)
         return w_shared
 
     def server_ensemble(self, agg_weight_lst, w_local_lst, key_lst=None):
-        if key_lst == None:
+        if key_lst is None:
             all_local_key_lst = [set(w_local.keys()) for w_local in w_local_lst]
             key_lst = reduce(lambda x, y: x & y, all_local_key_lst)
         # sum up weights
@@ -153,9 +147,7 @@ class FedKD(AVG):
                 if sigma_square_sum != 0:
                     threshold = 0
                     for singular_value_num in range(len(Sigma)):
-                        if np.sum(
-                            np.square(Sigma[:singular_value_num])
-                        ) >= self.energy * np.sum(np.square(Sigma)):
+                        if np.sum(np.square(Sigma[:singular_value_num])) >= self.energy * np.sum(np.square(Sigma)):
                             threshold = singular_value_num
                             break
                     U = U[:, :threshold]

@@ -96,7 +96,6 @@ def inin_single_client(model_base, client_id):
         "trainloader": trainloader,
         # "testloader": testloader,
         "testloader": test_dl,
-        "model_fname": "client{}_round_{}.pth".format(client_id, "{}"),
         "client_id": client_id,
         "model_fpath": model_fpath,
         "epoch": args.local_epoch,
@@ -130,14 +129,7 @@ if __name__ == "__main__":
     partition = "homo" if iid == True else "noniid"
     print("切分{}数据集, 切割方式: {}".format(dataset_name, partition))
 
-    (
-        X_train,
-        y_train,
-        X_test,
-        y_test,
-        net_dataidx_map,
-        traindata_cls_counts,
-    ) = partition_data(
+    (X_train, y_train, X_test, y_test, net_dataidx_map, traindata_cls_counts,) = partition_data(
         dataset_name,
         dataset_fpath,
         logdir="./logs",
@@ -167,9 +159,7 @@ if __name__ == "__main__":
     for ri in range(Round):
         round_loss_lst, round_trainacc_lst, round_testacc_lst = [], [], []
         # 为贴近真实情况，每次训练的顺序不同。使用np.random.shuffle来实现
-        trainloader_iter_lst = [
-            (id_, iter(client["trainloader"])) for id_, client in enumerate(client_lst)
-        ]
+        trainloader_iter_lst = [(id_, iter(client["trainloader"])) for id_, client in enumerate(client_lst)]
         while True:
             stop_flag = False
             # 随机选取一个客户端的trainloader的一个batch
@@ -191,9 +181,7 @@ if __name__ == "__main__":
 
             # 载入上一个客户端的权重
             if shared_weight != {}:
-                client_lst[id_]["trainer"].model = load_shared_weight(
-                    client_lst[id_]["trainer"], shared_weight
-                )
+                client_lst[id_]["trainer"].model = load_shared_weight(client_lst[id_]["trainer"], shared_weight)
 
             # 训练
             trainloss, trainacc = client_lst[id_]["trainer"].batch(x, y, is_train=True)

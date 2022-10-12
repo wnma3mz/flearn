@@ -13,7 +13,7 @@ import torch.optim as optim
 from model import BackboneModel, HeadModel, ModelFedCon
 from utils import get_dataloader, partition_data
 
-from flearn.client import Client, DistillClient, MOONClient, ProxClient, datasets
+from flearn.client import Client, MOONClient, datasets
 from flearn.common.strategy import AVG
 from flearn.common.trainer import MOONTrainer
 from flearn.common.utils import get_free_gpu_id, setup_seed, setup_strategy
@@ -124,16 +124,13 @@ elif args.df:
 conf_d = {
     "avg": {"trainer": MyTrainers.AVGTrainer, "client": Client},
     "moon": {"trainer": MOONTrainer, "client": MOONClient},
-    "prox": {"trainer": MyTrainers.MyProxTrainer, "client": ProxClient},
+    "prox": {"trainer": MyTrainers.MyProxTrainer, "client": Client},
     "lsd": {"trainer": MyTrainers.LSDTrainer, "client": MyClients.LSDClient},
-    "dyn": {"trainer": MyTrainers.MyDynTrainer, "client": ProxClient},
+    "dyn": {"trainer": MyTrainers.MyDynTrainer, "client": Client},
     "lg": {"trainer": MyTrainers.AVGTrainer, "client": Client},
     "md": {"trainer": MyTrainers.AVGTrainer, "client": Client},
     "lg_r": {"trainer": MyTrainers.AVGTrainer, "client": Client},
-    "distill": {
-        "trainer": MyTrainers.MyDistillTrainer,
-        "client": DistillClient,
-    },
+    "distill": {"trainer": MyTrainers.MyDistillTrainer, "client": Client},
 }
 
 
@@ -161,7 +158,6 @@ def inin_single_client(model_base, client_id):
         "trainer": c_trainer,
         "trainloader": trainloader,
         "testloader": testloader,  # 对应数据集的所有测试数据，未切割
-        "model_fname": "client{}_round_{}.pth".format(client_id, "{}"),
         "client_id": client_id,
         "model_fpath": model_fpath,
         "epoch": args.local_epoch,
@@ -174,14 +170,7 @@ def inin_single_client(model_base, client_id):
 
 
 if __name__ == "__main__":
-    (
-        X_train,
-        y_train,
-        X_test,
-        y_test,
-        net_dataidx_map,
-        traindata_cls_counts,
-    ) = partition_data(
+    (X_train, y_train, X_test, y_test, net_dataidx_map, traindata_cls_counts,) = partition_data(
         dataset_name,
         dataset_fpath,
         logdir="./logs",
@@ -223,9 +212,7 @@ if __name__ == "__main__":
     # 随意选取，可替换为更合适的数据集；或者生成随机数，见_create_data_randomly
     if args.df:
         trainset, testset = datasets.get_datasets("cifar100", dataset_fpath)
-        _, glob_testloader = datasets.get_dataloader(
-            trainset, testset, 100, num_workers=4
-        )
+        _, glob_testloader = datasets.get_dataloader(trainset, testset, 100, num_workers=4)
         kwargs = {
             "lr": 1e-2,
             "T": 2,
@@ -237,9 +224,7 @@ if __name__ == "__main__":
 
     if strategy_name == "md":
         trainset, testset = datasets.get_datasets("cifar100", dataset_fpath)
-        _, glob_testloader = datasets.get_dataloader(
-            trainset, testset, 100, num_workers=4
-        )
+        _, glob_testloader = datasets.get_dataloader(trainset, testset, 100, num_workers=4)
         kwargs["data_loader"] = glob_testloader
 
     for ri in range(sc_conf["Round"]):

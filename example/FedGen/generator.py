@@ -28,9 +28,7 @@ GENERATORCONFIGS = {
 
 
 class Generator(nn.Module):
-    def __init__(
-        self, dataset="mnist", model="cnn", embedding=False, latent_layer_idx=-1
-    ):
+    def __init__(self, dataset="mnist", model="cnn", embedding=False, latent_layer_idx=-1):
         super(Generator, self).__init__()
         # print("Dataset {}".format(dataset))
         self.embedding = embedding
@@ -44,17 +42,13 @@ class Generator(nn.Module):
             self.n_class,
             self.noise_dim,
         ) = GENERATORCONFIGS[dataset]
-        input_dim = (
-            self.noise_dim * 2 if self.embedding else self.noise_dim + self.n_class
-        )
+        input_dim = self.noise_dim * 2 if self.embedding else self.noise_dim + self.n_class
         self.fc_configs = [input_dim, self.hidden_dim]
         self.init_loss_fn()
         self.build_network()
 
     def get_number_of_parameters(self):
-        pytorch_total_params = sum(
-            p.numel() for p in self.parameters() if p.requires_grad
-        )
+        pytorch_total_params = sum(p.numel() for p in self.parameters() if p.requires_grad)
         return pytorch_total_params
 
     def init_loss_fn(self):
@@ -119,11 +113,7 @@ class Generator(nn.Module):
         Normalize images into zero-mean and unit-variance.
         """
         mean = layer.mean(dim=(2, 3), keepdim=True)
-        std = (
-            layer.view((layer.size(0), layer.size(1), -1))
-            .std(dim=2, keepdim=True)
-            .unsqueeze(3)
-        )
+        std = layer.view((layer.size(0), layer.size(1), -1)).std(dim=2, keepdim=True).unsqueeze(3)
         return (layer - mean) / std
 
 

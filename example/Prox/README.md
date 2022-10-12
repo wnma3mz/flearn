@@ -13,11 +13,7 @@ python3 main.py --strategy_name avg --suffix prox --dataset_name mnist --dataset
 
 - line 23-30: 自动选择最空闲的GPU
 - line114: 客户端使用自定义的FedProxTrainer训练器
-- line 149: 使用ProxClient客户端
-
-### ProxClient.py
-
-在更新时，需要额外保存服务器端发回的模型，故line 20，额外复制模型至训练器中的 `server_model`
+- 
 
 ### FedProxTrainer.py
 

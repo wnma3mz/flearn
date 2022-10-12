@@ -22,7 +22,7 @@ class RepTrainer(Trainer):
         @params rep_ep            : 训练head的轮数
         """
         super().__init__(model, optimizer, criterion, device, display)
-        if shared_key_layers:
+        if shared_key_layers is None:
             print("[WARNING]: Trainer don't have shared_key_layers_lst")
 
         self.shared_key_layers = shared_key_layers
@@ -33,10 +33,9 @@ class RepTrainer(Trainer):
         self.weight_o = copy.deepcopy(self.model).cpu().state_dict()
         self.eval_model()
         self.model.train()
-        for ep in range(1, epochs + 1):
+        for ep in range(epochs):
             if ep < self.rep_ep:
                 # 前rep_ep轮，先训练Head
-                train_backbone, train_head = False, True
                 for name, param in self.model.named_parameters():
                     if name in self.shared_key_layers:
                         param.requires_grad = False
@@ -44,7 +43,6 @@ class RepTrainer(Trainer):
                         param.requires_grad = True
             else:
                 # 后epochs-rep_ep再训练Backbone
-                train_backbone, train_head = True, False
                 for name, param in self.model.named_parameters():
                     if name in self.shared_key_layers:
                         param.requires_grad = True

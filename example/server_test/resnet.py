@@ -92,9 +92,7 @@ class Bottleneck(nn.Module):
         group_norm_num_groups=None,
     ):
         super(Bottleneck, self).__init__()
-        self.conv1 = nn.Conv2d(
-            in_channels=in_planes, out_channels=out_planes, kernel_size=1, bias=False
-        )
+        self.conv1 = nn.Conv2d(in_channels=in_planes, out_channels=out_planes, kernel_size=1, bias=False)
         self.bn1 = norm2d(group_norm_num_groups, planes=out_planes)
 
         self.conv2 = nn.Conv2d(
@@ -165,9 +163,7 @@ class ResNetBase(nn.Module):
             #     m.weight.data.normal_(mean=0, std=0.01)
             #     m.bias.data.zero_()
 
-    def _make_block(
-        self, block_fn, planes, block_num, stride=1, group_norm_num_groups=None
-    ):
+    def _make_block(self, block_fn, planes, block_num, stride=1, group_norm_num_groups=None):
         downsample = None
         if stride != 1 or self.inplanes != planes * block_fn.expansion:
             downsample = nn.Sequential(
@@ -287,9 +283,7 @@ class ResNet_imagenet(ResNetBase):
         )
 
         self.avgpool = nn.AvgPool2d(kernel_size=7, stride=1)
-        self.classifier = nn.Linear(
-            in_features=512 * block_fn.expansion, out_features=self.num_classes
-        )
+        self.classifier = nn.Linear(in_features=512 * block_fn.expansion, out_features=self.num_classes)
 
         # weight initialization based on layer type.
         self._weight_initialization()
@@ -418,9 +412,7 @@ def resnet(conf, arch=None):
             group_norm_num_groups=conf.group_norm_num_groups,
         )
     elif "imagenet" in dataset:
-        if (
-            "imagenet" in conf.data and len(conf.data) > 8
-        ):  # i.e., downsampled imagenet with different resolution.
+        if "imagenet" in conf.data and len(conf.data) > 8:  # i.e., downsampled imagenet with different resolution.
             model = ResNet_cifar(
                 dataset=dataset,
                 resnet_size=resnet_size,
