@@ -1,6 +1,10 @@
 # coding: utf-8
+from typing import *
+
 from .strategy import Strategy
 from .utils import convert_to_np, convert_to_tensor
+
+T = TypeVar("T")
 
 
 class AVG(Strategy):
@@ -12,13 +16,13 @@ class AVG(Strategy):
     .. [1] McMahan B, Moore E, Ramage D, et al. Communication-efficient learning of deep networks from decentralized data[C]//Artificial Intelligence and Statistics. PMLR, 2017: 1273-1282.
     """
 
-    def client(self, trainer, agg_weight=1.0):
+    def client(self, trainer, agg_weight=1.0) -> Dict[str, T]:
         # step 1
-        w_shared = {"agg_weight": agg_weight}
-        w_shared["params"] = convert_to_np(trainer.weight)
-        return w_shared
+        upload_p = {"agg_weight": agg_weight}
+        upload_p["params"] = convert_to_np(trainer.weight)
+        return upload_p
 
-    def server(self, ensemble_params_lst, round_):
+    def server(self, ensemble_params_lst, round_) -> Dict[str, T]:
         # step 2
         agg_weight_lst, w_local_lst = self.server_pre_processing(ensemble_params_lst)
         try:
@@ -28,10 +32,14 @@ class AVG(Strategy):
 
         return {"w_glob": w_glob}
 
-    def client_revice(self, trainer, data_glob_d):
+    def client_revice(self, trainer, glob_params) -> None:
         # step 3
+        # decode
+        data_glob_d = self.revice_processing(glob_params)
+
         w_local = trainer.weight
         w_glob = convert_to_tensor(data_glob_d["w_glob"])
         for k in w_glob.keys():
             w_local[k] = w_glob[k]
-        return w_local
+
+        trainer.model.load_state_dict(w_local)

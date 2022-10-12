@@ -1,60 +1,61 @@
 # coding: utf-8
 import os
 from os.path import join as ospj
+from typing import *
 
 from flearn.client.utils import bool_key_lst, init_log, listed_keys, str_key_lst
 from flearn.common.utils import setup_strategy
 
 
 class Client(object):
-    def __init__(self, conf, **strategy_p):
+    def __init__(self, conf, **strategy_p) -> None:
         """初始化客户端对象.
 
         Args:
             conf (dict): {
-                "client_id" :       str or int,
+                "client_id"     :   str,
                                     客户端id
 
-                "epoch" :           int (default: 1)
-                                    本地训练轮数
+                "epoch"         :   int (default: `1`)
+                                    the number of local training rounds, 本地训练轮数
 
-                "trainer" :         Trainer
+                "trainer"       :   Trainer
                                     训练器
 
-                "trainloader" :     torch.utils.data
+                "trainloader"   :   torch.utils.data
                                     训练数据集
 
-                "testloader" :      torch.utils.data
+                "testloader"    :   torch.utils.data
                                     测试数据集
 
-                "model_fpath" :     str
-                                    本地保存模型的路径, /home/
+                "model_fpath"   :   str
+                                    the path to save the model, 本地保存模型的路径, e.g. "/home/"
 
-                "model_fname" :     str
-                                    本地保存模型的名称, "client{}.pth"
+                "model_name_fmt":   str (default: `"client{}_round_{}.pth".format(self.client_id, "{}")`)
+                                    the name of the model, 本地保存模型的名称
 
-                "restore_path" :    str
-                                    恢复已经训练模型的路径,
+                "restore_path"  :   str
+                                    restore the path of the trained model, 恢复已经训练模型的路径
 
-                "save" :            bool
-                                    是否存储最新模型，便于restore。(default: `False`)
+                "save_last"     :   bool (default: `False`)
+                                    whether to store the latest model, 是否存储最新模型，便于restore
 
-                "save_best" :       bool
-                                    是否存储最佳模型，便于restore。(default: `True`)
+                "save_best"     :   bool (default: `True`)
+                                    whether to store the best model, 是否存储最佳模型，便于restore
 
-                "strategy" :        Strategy
+                "strategy"      :   Strategy
                                     自定义策略
 
-                "scheduler" :       torch.optim.lr_scheduler
+                "scheduler"     :   torch.optim.lr_scheduler
                                     调整学习率, 待调整
 
-                "log" :             bool (default: `True`)
-                                    是否记录客户端log信息
+                "log"           :   bool (default: `True`)
+                                    whether to log client model information, 是否记录客户端log信息
 
-                "log_suffix" :      str
-                                    log名称的后缀, ""
+                "log_suffix"    :   str (default: ` `)
+                                    log名称的后缀
 
-                "log_name_fmt" :    str
+                "log_name_fmt"  :   str
                                     自定义客户端日志名称
             }
             客户端设置参数
@@ -77,7 +78,10 @@ class Client(object):
             if str_k not in self.__dict__.keys():
                 self.__dict__[str_k] = None
 
-        self.fname_fmt = ospj(self.model_fpath, self.model_fname)
+        if self.model_name_fmt is None:
+            self.model_name_fmt = "client{}_round_{}.pth".format(self.client_id, "{}")
+
+        self.fname_fmt = ospj(self.model_fpath, self.model_name_fmt)
 
         if self.strategy is None:
             self.strategy = setup_strategy(self.strategy_name, None, **strategy_p)
@@ -107,7 +111,7 @@ class Client(object):
         name = "client{}_model_best.pth".format(self.client_id)
         self.best_fpath = ospj(self.model_fpath, name)
 
-    def train(self, i):
+    def train(self, i) -> Dict[str, Any]:
         """训练客户端模型.
 
         Args:
@@ -133,7 +137,7 @@ class Client(object):
         self.upload_model = self.strategy.client(self.trainer, agg_weight=1.0)
         return self._pickle_model()
 
-    def _pickle_model(self):
+    def _pickle_model(self) -> Dict[str, Any]:
         if self.save:
             self.trainer.save(self.update_fpath)
 
@@ -151,7 +155,7 @@ class Client(object):
             "val_acc": self.val_acc,
         }
 
-    def upload(self, i):
+    def upload(self, i) -> Dict[str, str]:
         """上传客户端模型.
 
         Args:
@@ -185,7 +189,7 @@ class Client(object):
             "round": str(i),
         }
 
-    def revice(self, i, glob_params):
+    def revice(self, i, glob_params) -> Dict[str, str]:
         """接收客户端模型.
 
         Args:
@@ -194,14 +198,17 @@ class Client(object):
 
         Returns:
             dict: Dict {
-                "code" :     int
-                             状态码,
+                "code"      :   int
+                                状态码
 
-                "msg" :      str
-                             状态消息,
+                "msg"       :   str
+                                状态消息
 
-                "test_acc" : float
-                             模型在测试集上的精度
+                "client_id" :   str
+                                客户端id
+
+                "round"     :   str
+                                轮数
             }
 
         Notes:
@@ -209,14 +216,10 @@ class Client(object):
 
             self.scheduler.step(epoch=(i + 1) * self.epoch)
         """
-        # decode
-        data_glob_d = self.strategy.revice_processing(glob_params)
-
         # update
-        w_update = self.strategy.client_revice(self.trainer, data_glob_d)
+        self.strategy.client_revice(self.trainer, glob_params)
         if self.scheduler != None:
             self.scheduler.step()
-        self.trainer.model.load_state_dict(w_update)
 
         if self.save:
             self.trainer.save(self.agg_fpath)
@@ -228,7 +231,7 @@ class Client(object):
             "round": str(i),
         }
 
-    def evaluate(self, i):
+    def evaluate(self, i) -> Dict[str, str]:
         # Consider the case where there are multiple testloader
         test_acc_lst = [self.trainer.test(loader)[1] for loader in self.testloader]
 

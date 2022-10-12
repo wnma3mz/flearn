@@ -1,4 +1,6 @@
 # coding: utf-8
+from typing import *
+
 from flearn.common import Logger
 
 listed_keys = [
@@ -8,7 +10,7 @@ listed_keys = [
     "client_id",
     "epoch",
     "model_fpath",
-    "model_fname",
+    "model_name_fmt",
     "save",
     "restore_path",
     "trainer",
@@ -26,16 +28,17 @@ str_key_lst = [
     "restore_path",
     "trainer",
     "scheduler",
-    "log_suffix",
     "strategy",
     "avg_round",
     "valloader",
     "shared_key_layers",
+    "log_suffix",
     "log_name_fmt",
+    "model_name_fmt",
 ]
 
 
-def init_log(log_name_fmt, client_id, dataset_name, log_suffix, strategy_name=None):
+def init_log(log_name_fmt, client_id, dataset_name, log_suffix, strategy_name=None) -> Tuple[str, str]:
     """
     log_name_fmt    : 文件名
     client_id       : client唯一名称

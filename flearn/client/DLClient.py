@@ -24,8 +24,8 @@ class DLClient(object):
                 "model_fpath" :     str
                                     本地保存模型的路径, /home/
 
-                "model_fname" :     str
-                                    本地保存模型的名称, "client{}.pth"
+                "model_name_fmt":   str (default: `"client{}_round_{}.pth".format(self.client_id, "{}")`)
+                                    the name of the model, 本地保存模型的名称
 
                 "save" :            bool
                                     是否存储最新模型，便于restore。(default: `True`)
@@ -58,7 +58,10 @@ class DLClient(object):
             if str_k not in self.__dict__.keys():
                 self.__dict__[str_k] = None
 
-        self.fname_fmt = ospj(self.model_fpath, self.model_fname)
+        if self.model_name_fmt is None:
+            self.model_name_fmt = "client{}_round_{}.pth".format(self.client_id, "{}")
+
+        self.fname_fmt = ospj(self.model_fpath, self.model_name_fmt)
 
         if self.restore_path:
             self.trainer.restore(self.restore_path)
