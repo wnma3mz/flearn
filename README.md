@@ -36,16 +36,16 @@
   - [X] [FedProx](https://github.com/litian96/FedProx), CMU, [Federated Optimization in Heterogeneous Networks](https://arxiv.org/abs/1812.06127), MLSys
 - 2019
   - [X] [FedAVGM](), MIT/Google, [Measuring the Effects of Non-Identical Data Distribution for Federated Visual Classification](https://arxiv.org/pdf/1909.06335)
-  - [X] [FedMD](https://github.com/diogenes0319/FedMD_clean), Harvard, [FedMD: Heterogenous Federated Learning via Model Distillation](https://arxiv.org/pdf/1910.03581), NIPS 
+  - [X] [FedMD](https://github.com/diogenes0319/FedMD_clean), Harvard, [FedMD: Heterogenous Federated Learning via Model Distillation](https://arxiv.org/pdf/1910.03581), NIPS
 - 2020
-  - [x] [SCAFFOLD](), Google, [SCAFFOLD: Stochastic Controlled Averaging for Federated Learning](https://arxiv.org/pdf/1910.06378), ICML
+  - [X] [SCAFFOLD](), Google, [SCAFFOLD: Stochastic Controlled Averaging for Federated Learning](https://arxiv.org/pdf/1910.06378), ICML
   - [X] [LG-FedAVG](https://github.com/pliang279/LG-FedAvg), CMU, [Think Locally, Act Globally: Federated Learning with Local and Global Representations](https://arxiv.org/pdf/2001.01523), NIPS WorkShop
   - [X] [FedOPT](https://github.com/adap/flower/blob/main/src/py/flwr/server/strategy/fedadagrad.py)(非官方), Google, [Adaptive Federated Optimization](https://arxiv.org/pdf/2003.00295), ICLR
   - [X] [FedPAV](https://github.com/cap-ntu/FedReID), NTU, [Performance Optimization for Federated Person Re-identification via Benchmark Analysis](https://arxiv.org/pdf/2008.11560), ACM MM
   - [X] [FedDistill](https://github.com/zhuangdizhu/FedGen)(非官方), Oulu, [Federated Knowledge Distillation](https://arxiv.org/pdf/2011.02367)
   - [X] [FedMutual](), ZJU, [Federated Mutual Learning](https://arxiv.org/pdf/2006.16765)
   - [X] [FedDF(Ensemble Distillation)](https://github.com/epfml/federated-learning-public-code/), EPFL, [Ensemble Distillation for Robust Model Fusion in Federated Learning](https://arxiv.org/pdf/2006.07242), NIPS
-  - [x] [FedPer](), Adobe Research, [Federated learning with personalization layers](https://arxiv.org/pdf/1912.00818)
+  - [X] [FedPer](), Adobe Research, [Federated learning with personalization layers](https://arxiv.org/pdf/1912.00818)
   - [ ] [FedBE](https://github.com/hongyouc/FedBE), Ohio State, [FedBE: Making Bayesian Model Ensemble Applicable to Federated Learning](https://arxiv.org/abs/2009.01974), ICLR
   - [ ] [FedNova](), CMU, [Tackling the Objective Inconsistency Problem in Heterogeneous Federated Optimization](https://arxiv.org/pdf/2007.07481), NIPS
 - 2021
@@ -55,7 +55,7 @@
   - [X] [CCVR](), NUS/Huawei, [No Fear of Heterogeneity: Classifier Calibration for Federated Learning with Non-IID Data](https://arxiv.org/pdf/2106.05001), NIPS
   - [X] [FedGen](https://github.com/zhuangdizhu/FedGen), Michigan State, [Data-Free Knowledge Distillation for Heterogeneous Federated Learning](https://arxiv.org/pdf/2105.10056), ICML
   - [ ] [FedDist](), Grenoble Alpes, [A Federated Learning Aggregation Algorithm for Pervasive Computing: Evaluation and Comparison](https://arxiv.org/pdf/2110.10223), PerCom
-  - [x] [FedRep](https://github.com/lgcollins/FedRep/), University of Texas at Austin, [Exploiting Shared Representations for Personalized Federated Learning](https://arxiv.org/pdf/2102.07078), ICML
+  - [X] [FedRep](https://github.com/lgcollins/FedRep/), University of Texas at Austin, [Exploiting Shared Representations for Personalized Federated Learning](https://arxiv.org/pdf/2102.07078), ICML
 - 2022
   - [ ] [FedKD](https://github.com/wuch15/FedKD), Tsinghua University/Microsoft Research Asia, [Communication-efficient federated learning via knowledge distillation](https://www.nature.com/articles/s41467-022-29763-x), Nature Communications
   - [ ] [FedProto](https://github.com/yuetan031/fedproto), Australian Artificial Intelligence Institute, [FedProto: Federated Prototype Learning across Heterogeneous Clients](https://www.aaai.org/AAAI22Papers/AAAI-6846.YueT.pdf), AAAI
@@ -72,6 +72,21 @@ split-learning可见[README.md](https://github.com/wnma3mz/flearn/tree/master/ex
 
 ![CFL](./imgs/CFL.png)
 
+- 对于active_client当前是随机选择客户端，可以使用更加先进的客户端选择算法
+- 对于Server端的evaluate，每种算法的目标大致可以分为两种，1) 获得一个模型，这个模型在某个数据集上能够取得很好的性能；2) 每个客户端获得不同的模型，每个客户端的模型在对应的数据集上能够取得很好的性能。因此这里分两部分处理
+  - 仅在服务器端对单个模型在测试集上进行测试，直接获得测试结果（为区分，在log中会对这部分测试结果加上[Server]）
+  - 分别在所有/指定客户端中对客户端上的测试集上进行测试，在服务器端对结果取平均
+  - 两种测试均进行
+- 对于辅助类
+  - Distiller是为了进行知识蒸馏的操作，注：这里主要是对蒸馏方式进行整理，损失函数采用默认的KL散度
+  - Encrypt是为了对通信参数进行加密，注：这里仅作base编解码操作
+  - Logger是为了输出日志文件的数据
+- 对于Trainer，部分算法是修改loss函数，因此这里通过增加函数fed_loss，方便快速修改
+- 对于Strategy，部分算法需要修改上传以及下载参数（不仅上传模型参数，还有可能有其他信息），所以将Strategy处理为三个函数
+  - client（仅对客户端有效）：处理上传参数
+  - server（仅对服务器端有效）：服务器端处理所有客户端上传的参数
+  - client_revice（仅对客户端有效）：接收服务器端的参数并进行处理
+
 ### 工作流
 
 1. 服务器(Server)发送**训练指令**至各个客户端(Client)进行训练 (Server->Comm(S)->Comm(C)->Client)；模拟实验时，(Server->Client)
@@ -82,6 +97,7 @@ split-learning可见[README.md](https://github.com/wnma3mz/flearn/tree/master/ex
 6. 若Server继续发送**测试指令**至Client，Client还要对更新后的模型进行验证，并返回验证后的结果至Server。否则，Server直接进行验证
 
 P.S.
-- Trainer中一般是需要配置联邦的损失函数`fed_loss`，主要作用是为了防止灾难性遗忘
-- Distiller可以看作`fed_loss`，也可以看作聚合策略的一种，所以可能会在`Strategy`进行调用优化模型参数
+
+- Trainer中一般是需要配置联邦的损失函数 `fed_loss`，主要作用是为了防止灾难性遗忘
+- Distiller可以看作 `fed_loss`，也可以看作聚合策略的一种，所以可能会在 `Strategy`进行调用优化模型参数
 - Strategy其实可以分为Server和Client两个部分，其中Client有两个函数（上传和接收）。此处是将策略看作一个整体，即Client和Server都调用同一个Strategy
