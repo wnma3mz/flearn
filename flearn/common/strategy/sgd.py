@@ -1,4 +1,6 @@
 # coding: utf-8
+import copy
+
 from .avg import AVG
 from .utils import convert_to_np, convert_to_tensor
 
@@ -18,11 +20,14 @@ class SGD(AVG):
         g_shared["params"] = convert_to_np(trainer.grads)
         return g_shared
 
-    def client_revice(self, trainer, data_glob_d):
-        g_glob = data_glob_d["w_glob"]
-        g_glob = convert_to_tensor(g_glob)
+    def client_revice(self, trainer, server_p_bytes):
+        server_p = self.revice_processing(server_p_bytes)
 
-        w_local = trainer.weight_o
+        g_glob = convert_to_tensor(server_p["w_glob"])
+
+        w_local = copy.deepcopy(trainer.weight_o)
         for k, v in w_local.items():
             w_local[k] = v.cpu() + g_glob[k]
-        return w_local
+
+        trainer.model.load_state_dict(convert_to_tensor(w_local))
+        return server_p

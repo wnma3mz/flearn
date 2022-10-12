@@ -9,6 +9,7 @@ from .lg_reverse import LG_R
 from .md import MD
 from .opt import OPT
 from .pav import PAV
+from .prox import Prox
 from .sgd import SGD
 from .strategy import BaseEncrypt, ParentStrategy, Strategy
 
@@ -26,6 +27,7 @@ __all__ = [
     "PAV",
     "MD",
     "SGD",
+    "Prox",
     "ParentStrategy",
     "Strategy",
     "BaseEncrypt",

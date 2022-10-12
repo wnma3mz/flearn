@@ -64,10 +64,13 @@ class OPT(AVG):
 
         return w_local
 
-    def client_revice(self, trainer, data_glob_d, method="Adagrad"):
+    def client_revice(self, trainer, server_p_bytes, method="Adagrad"):
+        server_p = self.revice_processing(server_p_bytes)
+
         method = method.lower()
         assert method in ["adagrad", "yogi", "adam"]
         w_local = convert_to_np(trainer.weight)
-        w_local = self.adaptive_opt(w_local, data_glob_d["w_glob"], method)
-        w_local = convert_to_tensor(w_local)
-        return w_local
+        w_local = self.adaptive_opt(w_local, server_p["w_glob"], method)
+
+        trainer.model.load_state_dict(convert_to_tensor(w_local))
+        return server_p

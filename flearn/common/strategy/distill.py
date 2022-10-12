@@ -29,7 +29,7 @@ class Distill(AVG):
 
     def client_revice(self, trainer, server_p_bytes) -> None:
         server_p = super(Distill, self).client_revice(trainer, server_p_bytes)
-        self.trainer.glob_logit = copy.deepcopy(server_p["logits_glob"]).to(self.trainer.device)
+        trainer.glob_logit = copy.deepcopy(server_p["logits_glob"]).to(trainer.device)
 
     @staticmethod
     def aggregate_logits(logits_lst):

@@ -15,5 +15,5 @@ class Prox(AVG):
     def client_revice(self, trainer, server_p_bytes) -> None:
         super().client_revice(trainer, server_p_bytes)
         # 需要把服务器的模型复制给本地模型，方便计算loss
-        self.trainer.server_model = copy.deepcopy(self.trainer.model)
-        self.trainer.server_model.eval()
+        trainer.server_model = copy.deepcopy(trainer.model)
+        trainer.server_model.eval()

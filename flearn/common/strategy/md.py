@@ -18,18 +18,6 @@ class MD(LG_R):
         # else:
         #     print("Warning: glob model is None")
 
-    def client_revice(self, trainer, data_glob_d):
-        w_local = trainer.weight
-        w_local_bak = copy.deepcopy(w_local)
-
-        distiller = MDDistiller(self.glob_model, w_local, self.device)
-        w_glob_model = distiller.run(data_glob_d, epoch=1)
-
-        for k in w_glob_model.keys():
-            w_local_bak[k] = w_glob_model[k]
-
-        return w_local_bak
-
     def client_pub_predict(self, w_local_lst, **kwargs):
         w_local_lst = [convert_to_tensor(w_local) for w_local in w_local_lst]
         distiller = MDDistiller(self.glob_model, None, self.device)
@@ -39,3 +27,18 @@ class MD(LG_R):
         w_local_lst = self.extract_lst(ensemble_params_lst, "params")
         x_lst, logits_lst = self.client_pub_predict(w_local_lst, **kwargs)
         return {"x_lst": x_lst, "logits_lst": logits_lst, "w_glob": ""}
+
+    def client_revice(self, trainer, server_p_bytes):
+        server_p = self.revice_processing(server_p_bytes)
+
+        w_local = trainer.weight
+        w_local_bak = copy.deepcopy(w_local)
+
+        distiller = MDDistiller(self.glob_model, w_local, self.device)
+        w_glob_model = distiller.run(server_p, epoch=1)
+
+        for k in w_glob_model.keys():
+            w_local_bak[k] = w_glob_model[k]
+
+        trainer.model.load_state_dict(w_local_bak)
+        return server_p

@@ -4,21 +4,13 @@ import random
 import numpy as np
 import torch
 
-from flearn.common.strategy import (
-    AVG,
-    AVGM,
-    BN,
-    LG,
-    LG_R,
-    MD,
-    OPT,
-    PAV,
-    SGD,
-    Distill,
-    Dyn,
-)
+from flearn.common.strategy import *
+from flearn.common.trainer import *
 
 __all__ = ["setup_strategy", "setup_seed", "get_free_gpu_id"]
+# 使用默认的Trainer
+base_strategy_lst = ["avg", "avgm", "bn", "lg", "lg_r", "md", "opt", "pav", "sgd"]
+strategy_trainer_d = {"distill": DistillTrainer, "dyn": DynTrainer, "prox": ProxTrainer, "moon": MOONTrainer}
 
 
 def setup_strategy(strategy_name, custom_strategy, **strategy_p):
@@ -56,6 +48,7 @@ def setup_strategy(strategy_name, custom_strategy, **strategy_p):
         "opt": OPT(),
         "pav": PAV(shared_key_layers),
         "sgd": SGD(),
+        "prox": Prox(),
     }
     if strategy_name not in strategy_d.keys():
         if custom_strategy != None:

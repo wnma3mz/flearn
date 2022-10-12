@@ -26,18 +26,6 @@ class LG_R(AVG):
             [w_shared["params"].pop(k) for k in delete_key_lst]
         return w_shared
 
-    def client_revice(self, trainer, data_glob_d):
-        w_local = trainer.weight
-        w_glob = convert_to_tensor(data_glob_d["w_glob"])
-        if self.shared_key_layers:
-            key_lst = self.shared_key_layers
-        else:
-            key_lst = []
-        for k in w_glob.keys():
-            if k not in key_lst:
-                w_local[k] = w_glob[k]
-        return w_local
-
     def server(self, ensemble_params_lst, round_):
         agg_weight_lst, w_local_lst = self.server_pre_processing(ensemble_params_lst)
         try:
@@ -47,3 +35,16 @@ class LG_R(AVG):
         if len(w_glob.keys()) < 10:
             print(w_glob.keys())
         return {"w_glob": w_glob}
+
+    def client_revice(self, trainer, server_p_bytes):
+        server_p = self.revice_processing(server_p_bytes)
+
+        w_local = trainer.weight
+        w_glob = convert_to_tensor(server_p["w_glob"])
+
+        key_lst = self.shared_key_layers if self.shared_key_layers else []
+        for k in w_glob.keys():
+            if k not in key_lst:
+                w_local[k] = w_glob[k]
+        trainer.model.load_state_dict(w_local)
+        return server_p
