@@ -21,9 +21,9 @@ setuptools.setup(
         "requests",
         "psutil",
     ],
-    classifiers=(
+    classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: Apache Software License",
         "Operating System :: OS Independent",
-    ),
+    ],
 )

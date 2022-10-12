@@ -46,7 +46,6 @@ if __name__ == "__main__":
         "trainer": Trainer(model, optim_, nn.CrossEntropyLoss(), device, True),
         "trainloader": trainloader,
         "testloader": testloader,
-        "model_fname": "client{}_round_{}.pth".format(client_id, "{}"),
         "client_id": client_id,
         "model_fpath": model_fpath,
         "epoch": epoch,

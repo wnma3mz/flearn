@@ -1,26 +1,32 @@
 # coding: utf-8
-import torch.nn as nn
+import numpy as np
 
+from flearn.common.strategy.utils import convert_to_np, convert_to_tensor
 from flearn.common.trainer import Trainer
 from flearn.common.utils import setup_seed, setup_strategy
 
 setup_seed(0)
 
 
-class MLP(nn.Module):
-    def __init__(self):
-        super(MLP, self).__init__()
-        self.fc = nn.Linear(10 * 10, 2)
+class Model:
+    def __init__(self) -> None:
+        self.d = {"fc.weight": np.ones((10, 10)), "fc.bias": np.zeros((10, 1))}
 
-    def forward(self, x):
-        x = x.view(-1, 10 * 10)
-        x = self.fc(x)
-        return x
+    def state_dict(self):
+        return self.d
+
+    def load_state_dict(self, w):
+        for k, v in w.items():
+            self.d[k] = v
 
 
 class MyTrainer(Trainer):
-    def __init__(self, model):
-        self.model = model
+    def __init__(self):
+        self.model = Model()
+
+    @property
+    def weight_o(self):
+        return self.model.state_dict()
 
     @property
     def weight(self):
@@ -29,24 +35,20 @@ class MyTrainer(Trainer):
     @property
     def grads(self):
         # not true, just test
-        return self.model.state_dict()
+        return {"fc.weight": np.ones((10, 10)), "fc.bias": np.zeros((10, 1))}
 
 
 if __name__ == "__main__":
     model_fpath = ""
-    mytrainer = MyTrainer(MLP())
+    mytrainer = MyTrainer()
     s = setup_strategy("avg", None)
     upload_res = s.client(mytrainer)
     global_res = s.server([upload_res], 0)
-    revice_res = s.client_revice(mytrainer, {"w_glob": s.client(mytrainer)["params"]})
+    s.client_revice(mytrainer, {"w_glob": s.client(mytrainer)["params"]})
 
-    assert (
-        upload_res["params"]["fc.weight"] == global_res["w_glob"]["fc.weight"]
-    ).all()
-    assert (upload_res["params"]["fc.bias"] == global_res["w_glob"]["fc.bias"]).all()
-
-    assert (revice_res["fc.weight"] == global_res["w_glob"]["fc.weight"]).all()
-    assert (revice_res["fc.bias"] == global_res["w_glob"]["fc.bias"]).all()
+    w_glob = convert_to_tensor(global_res["w_glob"])
+    assert (mytrainer.weight["fc.weight"] == w_glob["fc.weight"]).all()
+    assert (mytrainer.weight["fc.bias"] == w_glob["fc.bias"]).all()
 
     s = setup_strategy("opt", None)
     revice_res = s.client_revice(mytrainer, {"w_glob": s.client(mytrainer)["params"]})
@@ -59,9 +61,10 @@ if __name__ == "__main__":
     upload_res = s.client(mytrainer)
     global_res = s.server([upload_res], 0)
 
-    s = setup_strategy("sgd", None)
-    upload_res = s.client(mytrainer)
-    revice_res = s.client_revice([upload_res], 0)
+    # s = setup_strategy("sgd", None)
+    # upload_res = s.client(mytrainer)
+    # global_res = s.server([upload_res], 0)
+    # revice_res = s.client_revice(mytrainer, {"w_glob": s.client(mytrainer)["params"]})
 
     s = setup_strategy("lg", None)
     upload_res = s.client(mytrainer)
@@ -73,6 +76,6 @@ if __name__ == "__main__":
     global_res = s.server([upload_res], 0)
     revice_res = s.client_revice(mytrainer, {"w_glob": s.client(mytrainer)["params"]})
 
-    s = setup_strategy("pav", None)
-    upload_res = s.client(mytrainer)
-    global_res = s.server([upload_res], 0)
+    # s = setup_strategy("pav", None)
+    # upload_res = s.client(mytrainer)
+    # global_res = s.server([upload_res], 0)

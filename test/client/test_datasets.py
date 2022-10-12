@@ -13,6 +13,4 @@ if __name__ == "__main__":
     )
 
     print(len(random_dataset), len(dict_dataset))
-    trainloader, testloader = get_dataloader(
-        random_dataset, dict_dataset, batch_size=64
-    )
+    trainloader, testloader = get_dataloader(random_dataset, dict_dataset, batch_size=64)

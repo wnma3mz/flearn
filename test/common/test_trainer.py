@@ -49,9 +49,7 @@ def tf_test():
     display = True
     batch_size = 128
     # trainloader, testloader = get_datasets("cifar10", batch_size)
-    batch_loader = tf.random.uniform(shape=(32, 10, 10)), tf.random.uniform(
-        shape=(32, 1)
-    )
+    batch_loader = tf.random.uniform(shape=(32, 10, 10)), tf.random.uniform(shape=(32, 1))
     trainloader = (batch_loader, batch_loader)
     optim_ = tf.keras.optimizers.SGD(learning_rate=1e-2, momentum=0.9)
     criterion = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)

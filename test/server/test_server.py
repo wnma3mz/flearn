@@ -30,6 +30,4 @@ if __name__ == "__main__":
 
     min_acc = 12
     val_acc_lst = np.random.randint(20, size=10)
-    assert (
-        np.where(val_acc_lst > min_acc)[0] == s_model.drop_client(val_acc_lst, min_acc)
-    ).all()
+    assert (np.where(val_acc_lst > min_acc)[0] == s_model.drop_client(val_acc_lst, min_acc)).all()
