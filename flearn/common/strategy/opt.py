@@ -48,30 +48,19 @@ class OPT(AVG):
         # a) Adagrad (Best)
         # b) Yogi
         # c) Adam
-        multi_delta_t = {
-            k: np.multiply(self.delta_t[k], self.delta_t[k])
-            for k in self.delta_t.keys()
-        }
+        multi_delta_t = {k: np.multiply(self.delta_t[k], self.delta_t[k]) for k in self.delta_t.keys()}
         if method == "adagrad":
             self.v_t = {k: self.v_t[k] + multi_delta_t[k] for k in self.delta_t.keys()}
         elif method == "yogi":
             self.v_t = {
-                k: self.v_t[k]
-                - (1 - self.beta2)
-                * multi_delta_t[k]
-                * np.sign(self.v_t[k] - multi_delta_t[k])
+                k: self.v_t[k] - (1 - self.beta2) * multi_delta_t[k] * np.sign(self.v_t[k] - multi_delta_t[k])
                 for k in self.delta_t.keys()
             }
         elif method == "adam":
-            self.v_t = {
-                k: self.beta2 * self.v_t[k] + (1 - self.beta2) * multi_delta_t[k]
-                for k in self.delta_t.keys()
-            }
+            self.v_t = {k: self.beta2 * self.v_t[k] + (1 - self.beta2) * multi_delta_t[k] for k in self.delta_t.keys()}
 
         for k in w_glob.keys():
-            w_local[k] = w_local[k] + self.eta * self.delta_t[k] / (
-                np.sqrt(self.v_t[k]) + self.tau
-            )
+            w_local[k] = w_local[k] + self.eta * self.delta_t[k] / (np.sqrt(self.v_t[k]) + self.tau)
 
         return w_local
 

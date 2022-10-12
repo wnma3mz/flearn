@@ -68,13 +68,9 @@ class DLClient(object):
                 self.log_name_fmt, self.client_id, self.dataset_name, self.log_suffix
             )
         self.best_acc = 0.0
-        self.update_fpath = ospj(
-            self.model_fpath, "client{}_model.pth".format(self.client_id)
-        )
+        self.update_fpath = ospj(self.model_fpath, "client{}_model.pth".format(self.client_id))
 
-        self.best_fpath = ospj(
-            self.model_fpath, "client{}_model_best.pth".format(self.client_id)
-        )
+        self.best_fpath = ospj(self.model_fpath, "client{}_model_best.pth".format(self.client_id))
 
     def run(self, i, test_freq=1):
         """训练客户端模型.

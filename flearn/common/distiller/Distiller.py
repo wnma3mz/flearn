@@ -35,9 +35,7 @@ class DistillLoss(nn.Module):
         t_probs : None, 不提供教师输出标签（soft_target）
         soft_target与t_probs二者中必须传一个参数
         """
-        is_tensor = isinstance(soft_target, torch.Tensor) or isinstance(
-            t_probs, torch.Tensor
-        )
+        is_tensor = isinstance(soft_target, torch.Tensor) or isinstance(t_probs, torch.Tensor)
         if not is_tensor:
             raise SystemError("Please input soft_target or t_probs")
 
@@ -98,9 +96,7 @@ class Distiller:
         self.student.to(self.device)
         self.student.train()
 
-        self.optimizer = optim.SGD(
-            filter(lambda p: p.requires_grad, self.student.parameters()), lr=self.lr
-        )
+        self.optimizer = optim.SGD(filter(lambda p: p.requires_grad, self.student.parameters()), lr=self.lr)
 
         # self.optimizer = optim.Adam(student.parameters(), lr=lr)
         # self.optimizer = optim.SGD(
@@ -188,24 +184,20 @@ class Distiller:
             return sum(student_loss_lst)
         elif method == "avg_logits":
             weight_soft_lst = [
-                soft_target.detach() * weight
-                for soft_target, weight in zip(soft_target_lst, self.weight_lst)
+                soft_target.detach() * weight for soft_target, weight in zip(soft_target_lst, self.weight_lst)
             ]
             return f(sum(weight_soft_lst))
 
         elif method == "avg_probs":
             teacher_probs_lst = [
-                F.softmax(soft_target, dim=1) * weight
-                for soft_target, weight in zip(soft_target_lst, self.weight_lst)
+                F.softmax(soft_target, dim=1) * weight for soft_target, weight in zip(soft_target_lst, self.weight_lst)
             ]
             return f(t_probs=sum(teacher_probs_lst))
 
         else:
             raise NotImplementedError("please input a vaild method")
 
-    def multi(
-        self, teacher_lst, student, method="avg_logits", weight_lst=None, **kwargs
-    ):
+    def multi(self, teacher_lst, student, method="avg_logits", weight_lst=None, **kwargs):
         """多个教师对一个学生进行知识蒸馏
 
         Args:
@@ -232,7 +224,7 @@ class Distiller:
             OrderDict: 模型的权重参数
         """
         self._init_kd(teacher_lst, student, **kwargs)
-        if weight_lst == None:
+        if weight_lst is None:
             self.weight_lst = [1 / len(teacher_lst)] * len(teacher_lst)
         else:
             self.weight_lst = weight_lst

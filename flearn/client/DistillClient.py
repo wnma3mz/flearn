@@ -15,6 +15,7 @@ class DistillClient(Client):
             self.scheduler.step()
         self.trainer.model.load_state_dict(update_w)
         self.trainer.glob_logit = copy.deepcopy(logits_glob)
+        self.trainer.glob_logit = self.trainer.glob_logit.to(self.trainer.device)
 
         return {
             "code": 200,

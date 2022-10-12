@@ -51,9 +51,7 @@ class PAV(LG_R):
         # 权重值太小，x100处理
         w_shared = {"agg_weight": np.float(distance) * 100}
         w_local = convert_to_np(trainer.weight)
-        w_shared["params"] = {
-            k: v for k, v in w_local.items() if k not in self.shared_key_layers
-        }
+        w_shared["params"] = {k: v for k, v in w_local.items() if k not in self.shared_key_layers}
         return w_shared
 
     @staticmethod
@@ -94,9 +92,7 @@ class PAV(LG_R):
 
     def server_post_processing(self, ensemble_params_lst, ensemble_params, **kwargs):
         w_local_lst = self.extract_lst(ensemble_params_lst, "params")
-        ensemble_params["w_glob"] = self.pav_kd(
-            w_local_lst, ensemble_params["w_glob"], **kwargs
-        )
+        ensemble_params["w_glob"] = self.pav_kd(w_local_lst, ensemble_params["w_glob"], **kwargs)
 
         return ensemble_params
 
@@ -107,6 +103,4 @@ class PAV(LG_R):
                                 蒸馏所需参数
         """
         ensemble_params = super().server(ensemble_params_lst, round_)
-        return self.server_post_processing(
-            ensemble_params_lst, ensemble_params, **kwargs
-        )
+        return self.server_post_processing(ensemble_params_lst, ensemble_params, **kwargs)

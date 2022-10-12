@@ -187,9 +187,7 @@ class MedMNIST(Dataset):
 
     flag = ...
 
-    def __init__(
-        self, root, split="train", transform=None, target_transform=None, download=False
-    ):
+    def __init__(self, root, split="train", transform=None, target_transform=None, download=False):
         """dataset
         :param split: 'train', 'val' or 'test', select subset
         :param transform: data transformation
@@ -205,9 +203,7 @@ class MedMNIST(Dataset):
             self.download()
 
         if not os.path.exists(os.path.join(self.root, "{}.npz".format(self.flag))):
-            raise RuntimeError(
-                "Dataset not found." + " You can use download=True to download it"
-            )
+            raise RuntimeError("Dataset not found." + " You can use download=True to download it")
 
         npz_file = np.load(os.path.join(self.root, "{}.npz".format(self.flag)))
 

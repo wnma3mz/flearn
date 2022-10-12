@@ -83,9 +83,7 @@ class Communicator(object):
                 log_suffix,
             )
             self.log_server = Logger(log_server_name, level="info")
-            self.log_fmt = (
-                "Server; Round: {}; Loss: {:.4f}; TrainAcc: {:.4f}; TestAcc: {};"
-            )
+            self.log_fmt = "Server; Round: {}; Loss: {:.4f}; TrainAcc: {:.4f}; TestAcc: {};"
 
         self.active_client_id_lst = copy.deepcopy(self.client_id_lst)  # 每轮选中的客户端进行训练、上传
 
@@ -109,9 +107,7 @@ class Communicator(object):
         elif command == "evaluate":
             return client.evaluate(json_d["round"])
         else:
-            raise SystemError(
-                "command must in ['train', 'upload', 'revice', 'evaluate']"
-            )
+            raise SystemError("command must in ['train', 'upload', 'revice', 'evaluate']")
 
     def get_data_lst(self, command, json_d):
         """服务端发送指令
@@ -128,9 +124,7 @@ class Communicator(object):
                        客户端返回信息组成的list
         """
         data_lst = []
-        with concurrent.futures.ThreadPoolExecutor(
-            max_workers=self.max_workers
-        ) as executor:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=self.max_workers) as executor:
             future_to_url = {
                 executor.submit(self.thread_func, url, command, json_d): url
                 for idx, url in zip(self.client_id_lst, self.client_url_lst)
@@ -212,9 +206,7 @@ class Communicator(object):
         # 为避免测试时间过久，间隔x轮进行测试并输出
         if (ri + 1) % print_round == 0:
             # 评估客户端
-            self.active_client_id_lst = self.server.evaluate(
-                self.client_id_lst, is_select=True
-            )
+            self.active_client_id_lst = self.server.evaluate(self.client_id_lst, is_select=True)
             data_lst = self.get_data_lst("evaluate", {"round": ri})
             test_acc = self.server.evaluate(data_lst)
 
@@ -275,9 +267,7 @@ class Communicator(object):
                     model_base.load_state_dict(w_glob_lst[client_id])
 
                     # 训练, 默认优化器
-                    optim_ = optim.AdamW(
-                        model_base.parameters(), lr=lr, weight_decay=0.05
-                    )
+                    optim_ = optim.AdamW(model_base.parameters(), lr=lr, weight_decay=0.05)
                     c_trainer = trainer(model_base, optim_, criterion, device, False)
 
                     # 集成后，训练前的模型测试
@@ -294,14 +284,10 @@ class Communicator(object):
                         # 获取本地模型参数
                         agg_weight = len(trainloader)
                         w_local = copy.deepcopy(c_trainer.weight)
-                        ensemble_params_lst.append(
-                            {"agg_weight": agg_weight, "params": w_local}
-                        )
+                        ensemble_params_lst.append({"agg_weight": agg_weight, "params": w_local})
 
             # 聚合参数
-            w_glob = self.server.strategy.server(ensemble_params_lst, round_=ri)[
-                "w_glob"
-            ]
+            w_glob = self.server.strategy.server(ensemble_params_lst, round_=ri)["w_glob"]
             # 仅更新需要更新的参数
             new_w_glob_lst = []
             for w_glob_item in w_glob_lst:
@@ -310,16 +296,10 @@ class Communicator(object):
             w_glob_lst = new_w_glob_lst
 
             x = np.mean(round_testacc_lst)
-            self.log.logger.info(
-                self.log_fmt.format(
-                    ri, np.mean(round_loss_lst), np.mean(round_trainacc_lst), x
-                )
-            )
+            self.log.logger.info(self.log_fmt.format(ri, np.mean(round_loss_lst), np.mean(round_trainacc_lst), x))
             # 保存平均最佳模型
             if best_avg_acc < np.mean(round_testacc_lst):
                 best_avg_acc = np.mean(round_testacc_lst)
                 for pth in glob.glob(os.path.join(model_fpath, fname + "_round*.pth")):
                     os.system("rm -rf {}".format(pth))
-                c_trainer.save(
-                    os.path.join(model_fpath, fname + "_round{}.pth".format(ri))
-                )
+                c_trainer.save(os.path.join(model_fpath, fname + "_round{}.pth".format(ri)))

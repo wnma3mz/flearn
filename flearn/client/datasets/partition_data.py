@@ -43,9 +43,7 @@ class Partition(object):
 
 
 class DataSampler(object):
-    def __init__(
-        self, conf, data, data_scheme, data_percentage=None, selected_classes=None
-    ):
+    def __init__(self, conf, data, data_scheme, data_percentage=None, selected_classes=None):
         # init.
         self.conf = conf
         self.data = data
@@ -67,9 +65,7 @@ class DataSampler(object):
             )
         elif self.data_scheme == "class_selection":
             self.sampled_indices = [
-                index
-                for index, target in enumerate(self.data.targets)
-                if target in self.selected_classes
+                index for index, target in enumerate(self.data.targets) if target in self.selected_classes
             ]
             if self.data_percentage is not None:
                 self.sampled_indices = self.conf.random_state.choice(
@@ -78,26 +74,20 @@ class DataSampler(object):
                     replace=False,
                 )
         else:
-            raise NotImplementedError(
-                "this sampling scheme has not been supported yet."
-            )
+            raise NotImplementedError("this sampling scheme has not been supported yet.")
 
     def use_indices(self, sampled_indices=None):
         assert sampled_indices is not None or self.sampled_indices is not None
         return Partition(
             self.data,
-            indices=sampled_indices
-            if sampled_indices is not None
-            else self.sampled_indices,
+            indices=sampled_indices if sampled_indices is not None else self.sampled_indices,
         )
 
 
 class DataPartitioner(object):
     """Partitions a dataset into different chuncks."""
 
-    def __init__(
-        self, conf, data, partition_sizes, partition_type, consistent_indices=True
-    ):
+    def __init__(self, conf, data, partition_sizes, partition_type, consistent_indices=True):
         # prepare info.
         self.conf = conf
         self.partition_sizes = partition_sizes
@@ -149,11 +139,7 @@ class DataPartitioner(object):
             indices = [
                 i[0]
                 for i in sorted(
-                    [
-                        (idx, target)
-                        for idx, target in enumerate(self.data.targets)
-                        if idx in indices
-                    ],
+                    [(idx, target) for idx, target in enumerate(self.data.targets) if idx in indices],
                     key=lambda x: x[1],
                 )
             ]
@@ -165,11 +151,7 @@ class DataPartitioner(object):
             list_of_indices = build_non_iid_by_dirichlet(
                 random_state=self.conf.random_state,
                 indices2targets=np.array(
-                    [
-                        (idx, target)
-                        for idx, target in enumerate(self.data.targets)
-                        if idx in indices
-                    ]
+                    [(idx, target) for idx, target in enumerate(self.data.targets) if idx in indices]
                 ),
                 non_iid_alpha=self.conf.non_iid_alpha,
                 num_classes=num_classes,
@@ -178,9 +160,7 @@ class DataPartitioner(object):
             )
             indices = functools.reduce(lambda a, b: a + b, list_of_indices)
         else:
-            raise NotImplementedError(
-                f"The partition scheme={self.partition_type} is not implemented yet"
-            )
+            raise NotImplementedError(f"The partition scheme={self.partition_type} is not implemented yet")
         return indices
 
     def _get_consistent_indices(self, indices):
@@ -196,9 +176,7 @@ class DataPartitioner(object):
         return Partition(self.data, self.partitions[partition_ind])
 
 
-def build_non_iid_by_dirichlet(
-    random_state, indices2targets, non_iid_alpha, num_classes, num_indices, n_workers
-):
+def build_non_iid_by_dirichlet(random_state, indices2targets, non_iid_alpha, num_classes, num_indices, n_workers):
     n_auxi_workers = 10
     assert n_auxi_workers <= n_workers
 
@@ -210,19 +188,13 @@ def build_non_iid_by_dirichlet(
     splitted_targets = []
     num_splits = math.ceil(n_workers / n_auxi_workers)
     split_n_workers = [
-        n_auxi_workers
-        if idx < num_splits - 1
-        else n_workers - n_auxi_workers * (num_splits - 1)
+        n_auxi_workers if idx < num_splits - 1 else n_workers - n_auxi_workers * (num_splits - 1)
         for idx in range(num_splits)
     ]
     split_ratios = [_n_workers / n_workers for _n_workers in split_n_workers]
     for idx, ratio in enumerate(split_ratios):
         to_index = from_index + int(n_auxi_workers / n_workers * num_indices)
-        splitted_targets.append(
-            indices2targets[
-                from_index : (num_indices if idx == num_splits - 1 else to_index)
-            ]
-        )
+        splitted_targets.append(indices2targets[from_index : (num_indices if idx == num_splits - 1 else to_index)])
         from_index = to_index
 
     #
@@ -247,25 +219,15 @@ def build_non_iid_by_dirichlet(
 
                 # sampling.
                 try:
-                    proportions = random_state.dirichlet(
-                        np.repeat(non_iid_alpha, _n_workers)
-                    )
+                    proportions = random_state.dirichlet(np.repeat(non_iid_alpha, _n_workers))
                     # balance
                     proportions = np.array(
-                        [
-                            p * (len(idx_j) < _targets_size / _n_workers)
-                            for p, idx_j in zip(proportions, _idx_batch)
-                        ]
+                        [p * (len(idx_j) < _targets_size / _n_workers) for p, idx_j in zip(proportions, _idx_batch)]
                     )
                     proportions = proportions / proportions.sum()
-                    proportions = (np.cumsum(proportions) * len(idx_class)).astype(int)[
-                        :-1
-                    ]
+                    proportions = (np.cumsum(proportions) * len(idx_class)).astype(int)[:-1]
                     _idx_batch = [
-                        idx_j + idx.tolist()
-                        for idx_j, idx in zip(
-                            _idx_batch, np.split(idx_class, proportions)
-                        )
+                        idx_j + idx.tolist() for idx_j, idx in zip(_idx_batch, np.split(idx_class, proportions))
                     ]
                     sizes = [len(idx_j) for idx_j in _idx_batch]
                     min_size = min([_size for _size in sizes])
@@ -280,9 +242,7 @@ def record_class_distribution(partitions, targets, print_fn):
     targets_of_partitions = {}
     targets_np = np.array(targets)
     for idx, partition in enumerate(partitions):
-        unique_elements, counts_elements = np.unique(
-            targets_np[partition], return_counts=True
-        )
+        unique_elements, counts_elements = np.unique(targets_np[partition], return_counts=True)
         targets_of_partitions[idx] = list(zip(unique_elements, counts_elements))
     # print_fn(
     #     f"the histogram of the targets in the partitions: {targets_of_partitions.items()}"
@@ -328,9 +288,7 @@ def get_imagenet1k_classes(num_overlap_classes, random_state, num_total_classes=
         _imagenet_classes = cifar100_class_id_2_imagenet1k_class_id[_cifar100_class]
 
         if len(_imagenet_classes) > 0:
-            _imagenet_class = random_state.choice(
-                _imagenet_classes, size=1, replace=False
-            )[0]
+            _imagenet_class = random_state.choice(_imagenet_classes, size=1, replace=False)[0]
             if _imagenet_class not in _selected_imagenet_classes:
                 _selected_cifar100_classes.append(_cifar100_class)
                 _selected_imagenet_classes.append(_imagenet_class)
@@ -339,9 +297,7 @@ def get_imagenet1k_classes(num_overlap_classes, random_state, num_total_classes=
 
     # randomly sample remaining classes
     if num_overlap_classes < num_total_classes:
-        matched_classes = functools.reduce(
-            lambda a, b: a + b, list(cifar100_class_id_2_imagenet1k_class_id.values())
-        )
+        matched_classes = functools.reduce(lambda a, b: a + b, list(cifar100_class_id_2_imagenet1k_class_id.values()))
         unmatched_classes = list(set(range(1000)) - set(matched_classes))
         _selected_imagenet_classes.extend(
             random_state.choice(
@@ -545,9 +501,7 @@ cifar100_name_2_imagenet1k_name = {
     "leopard": ["leopard, Panthera pardus"],
     "lion": ["lion, king of beasts, Panthera leo"],
     "lizard": [],
-    "lobster": [
-        "spiny lobster, langouste, rock lobster, crawfish, crayfish, sea crawfish"
-    ],
+    "lobster": ["spiny lobster, langouste, rock lobster, crawfish, crayfish, sea crawfish"],
     "man": [],
     "maple_tree": [],
     "motorcycle": [],

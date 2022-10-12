@@ -74,9 +74,7 @@ def batch_data(data, batch_size):
     return batch_data
 
 
-def load_partition_data_mnist_by_device_id(
-    batch_size, device_id, train_path="MNIST_mobile", test_path="MNIST_mobile"
-):
+def load_partition_data_mnist_by_device_id(batch_size, device_id, train_path="MNIST_mobile", test_path="MNIST_mobile"):
     train_path += "/" + device_id + "/" + "train"
     test_path += "/" + device_id + "/" + "test"
     return load_partition_data_mnist(batch_size, train_path, test_path)

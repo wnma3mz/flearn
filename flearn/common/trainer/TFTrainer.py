@@ -79,9 +79,7 @@ class TFTrainer:
             loss = self.criterion(target, predictions)
         if self.is_train:
             gradients = tape.gradient(loss, self.model.trainable_variables)
-            self.optimizer.apply_gradients(
-                zip(gradients, self.model.trainable_variables)
-            )
+            self.optimizer.apply_gradients(zip(gradients, self.model.trainable_variables))
         return self.iter_loss_f(loss), self.iter_accuracy_f(target, predictions)
 
     @show_f
@@ -105,9 +103,7 @@ class TFTrainer:
             loop_accuracy.append(iter_acc)
             loop_loss.append(iter_loss)
             if self.display:
-                loader.postfix = "loss: {:.4f}; acc: {:.2f}".format(
-                    np.mean(loop_loss), np.mean(loop_accuracy)
-                )
+                loader.postfix = "loss: {:.4f}; acc: {:.2f}".format(np.mean(loop_loss), np.mean(loop_accuracy))
 
         if len(loop_accuracy) == 0:
             raise SystemExit("no training")

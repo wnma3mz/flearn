@@ -14,13 +14,9 @@ class MOONClient(Client):
     def train(self, i):
         # 每轮训练+1
         self.ci += 1
-        self.train_loss, self.train_acc = self.trainer.train(
-            self.trainloader, self.epoch
-        )
+        self.train_loss, self.train_acc = self.trainer.train(self.trainloader, self.epoch)
         # 权重为本地数据大小
-        self.upload_model = self.strategy.client(
-            self.trainer, agg_weight=len(self.trainloader)
-        )
+        self.upload_model = self.strategy.client(self.trainer, agg_weight=len(self.trainloader))
         return self._pickle_model()
 
     def revice(self, i, glob_params):

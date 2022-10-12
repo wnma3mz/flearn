@@ -1,5 +1,6 @@
 # coding: utf-8
 from .avg import AVG
+from .utils import convert_to_tensor
 
 
 class LG_R(AVG):
@@ -27,7 +28,7 @@ class LG_R(AVG):
 
     def client_revice(self, trainer, data_glob_d):
         w_local = trainer.weight
-        w_glob = data_glob_d["w_glob"]
+        w_glob = convert_to_tensor(data_glob_d["w_glob"])
         if self.shared_key_layers:
             key_lst = self.shared_key_layers
         else:

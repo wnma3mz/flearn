@@ -60,6 +60,4 @@ class DF(ParentStrategy):
                         }
         """
         ensemble_params = super().server(ensemble_params_lst, round_)
-        return self.server_post_processing(
-            ensemble_params_lst, ensemble_params, **kwargs
-        )
+        return self.server_post_processing(ensemble_params_lst, ensemble_params, **kwargs)

@@ -37,7 +37,10 @@ class Client(object):
                                     恢复已经训练模型的路径,
 
                 "save" :            bool
-                                    是否存储最新模型，便于restore。(default: `True`)
+                                    是否存储最新模型，便于restore。(default: `False`)
+
+                "save_best" :       bool
+                                    是否存储最佳模型，便于restore。(default: `True`)
 
                 "strategy" :        Strategy
                                     自定义策略
@@ -76,7 +79,7 @@ class Client(object):
 
         self.fname_fmt = ospj(self.model_fpath, self.model_fname)
 
-        if self.strategy == None:
+        if self.strategy is None:
             self.strategy = setup_strategy(self.strategy_name, None, **strategy_p)
 
         if self.restore_path != None:
@@ -126,9 +129,7 @@ class Client(object):
                               模型在训练集上的精度
             }
         """
-        self.train_loss, self.train_acc = self.trainer.train(
-            self.trainloader, self.epoch
-        )
+        self.train_loss, self.train_acc = self.trainer.train(self.trainloader, self.epoch)
         self.upload_model = self.strategy.client(self.trainer, agg_weight=1.0)
         return self._pickle_model()
 
@@ -232,7 +233,7 @@ class Client(object):
         test_acc_lst = [self.trainer.test(loader)[1] for loader in self.testloader]
 
         # Save the best model against the test results of the first testloader
-        if self.best_acc < test_acc_lst[0]:
+        if self.save_best and self.best_acc < test_acc_lst[0]:
             self.trainer.save(self.best_fpath)
             self.best_acc = test_acc_lst[0]
 

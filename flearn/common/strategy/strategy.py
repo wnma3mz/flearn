@@ -116,7 +116,7 @@ class Strategy(ABC):
             dict : w_glob
                    集成后的模型参数
         """
-        if key_lst == None:
+        if key_lst is None:
             all_local_key_lst = [set(w_local.keys()) for w_local in w_local_lst]
             key_lst = reduce(lambda x, y: x & y, all_local_key_lst)
         # sum up weights

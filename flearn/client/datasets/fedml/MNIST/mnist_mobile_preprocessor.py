@@ -80,9 +80,7 @@ def read_data(train_data_dir, test_data_dir):
 
     client_list = []
     for client_number in range(main_args.client_num_per_round):
-        client_list.append(
-            Args(client_number, main_args.client_num_per_round, main_args.comm_round)
-        )
+        client_list.append(Args(client_number, main_args.client_num_per_round, main_args.comm_round))
     return (
         clients,
         train_num_samples,
@@ -98,12 +96,8 @@ def client_sampling(round_idx, client_num_in_total, client_num_per_round):
         client_indexes = [client_index for client_index in range(client_num_in_total)]
     else:
         num_clients = min(client_num_per_round, client_num_in_total)
-        np.random.seed(
-            round_idx
-        )  # make sure for each comparison, we are selecting the same clients each round
-        client_indexes = np.random.choice(
-            range(client_num_in_total), num_clients, replace=False
-        )
+        np.random.seed(round_idx)  # make sure for each comparison, we are selecting the same clients each round
+        client_indexes = np.random.choice(range(client_num_in_total), num_clients, replace=False)
     print("client_indexes = %s" % str(client_indexes))
     return client_indexes
 
@@ -136,17 +130,13 @@ if __name__ == "__main__":
         os.makedirs(os.path.dirname(filetrain), mode=0o770, exist_ok=True)
         filetest = "MNIST_mobile/{}/test/test.json".format(worker.client_id)
         os.makedirs(os.path.dirname(filetest), mode=0o770, exist_ok=True)
-        new_train["num_samples"] = [
-            train_num_samples[i] for i in tuple(worker.client_sample_list)
-        ]
+        new_train["num_samples"] = [train_num_samples[i] for i in tuple(worker.client_sample_list)]
         new_train["users"] = [users[i] for i in tuple(worker.client_sample_list)]
         client_sample = new_train["users"]
         new_train["user_data"] = {x: train_data[x] for x in client_sample}
         with open(filetrain, "w") as fp:
             json.dump(new_train, fp)
-        new_test["num_samples"] = [
-            test_num_samples[i] for i in tuple(worker.client_sample_list)
-        ]
+        new_test["num_samples"] = [test_num_samples[i] for i in tuple(worker.client_sample_list)]
         new_test["users"] = [users[i] for i in tuple(worker.client_sample_list)]
         client_sample = new_test["users"]
         new_test["user_data"] = {x: test_data[x] for x in client_sample}

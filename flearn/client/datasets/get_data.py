@@ -13,9 +13,7 @@ def create_data_randomly(sample_number, pn_normalize=True):
     # create pseudo_data and map to [0, 1].
     # cifar10
     pseudo_data = torch.randn((sample_number, 3, 32, 32), requires_grad=False)
-    pseudo_data = (pseudo_data - torch.min(pseudo_data)) / (
-        torch.max(pseudo_data) - torch.min(pseudo_data)
-    )
+    pseudo_data = (pseudo_data - torch.min(pseudo_data)) / (torch.max(pseudo_data) - torch.min(pseudo_data))
 
     # map values to [-1, 1] if necessary.
     if pn_normalize:
@@ -115,9 +113,7 @@ class DatasetSplit(Dataset):
 
 
 def get_datasets(dataset_name, dataset_dir, split=None):
-    trans_mnist = transforms.Compose(
-        [transforms.ToTensor(), transforms.Normalize((0.5,), (0.5,))]
-    )
+    trans_mnist = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5,), (0.5,))])
     trans_emnist = transforms.Compose(
         [
             transforms.Grayscale(num_output_channels=3),
@@ -125,12 +121,8 @@ def get_datasets(dataset_name, dataset_dir, split=None):
             transforms.Normalize((0.1307,), (0.3081,)),
         ]
     )
-    trains_cifar10 = transforms.Normalize(
-        (0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)
-    )
-    trains_cifar100 = transforms.Normalize(
-        (0.5071, 0.4867, 0.4408), (0.2675, 0.2565, 0.2761)
-    )
+    trains_cifar10 = transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
+    trains_cifar100 = transforms.Normalize((0.5071, 0.4867, 0.4408), (0.2675, 0.2565, 0.2761))
     trans_cifar_train = transforms.Compose(
         [
             transforms.RandomCrop(32, padding=4),
@@ -154,23 +146,13 @@ def get_datasets(dataset_name, dataset_dir, split=None):
         trainset = MNIST(dataset_dir, train=True, download=False, transform=trans_mnist)
         testset = MNIST(dataset_dir, train=False, download=False, transform=trans_mnist)
     elif dataset_name == "cifar10":
-        trainset = CIFAR10(
-            dataset_dir, train=True, download=False, transform=trans_cifar_train
-        )
-        testset = CIFAR10(
-            dataset_dir, train=False, download=False, transform=trans_cifar_test
-        )
+        trainset = CIFAR10(dataset_dir, train=True, download=False, transform=trans_cifar_train)
+        testset = CIFAR10(dataset_dir, train=False, download=False, transform=trans_cifar_test)
     elif dataset_name == "cifar100":
-        trainset = CIFAR100(
-            dataset_dir, train=True, download=False, transform=trans_cifar_train
-        )
-        testset = CIFAR100(
-            dataset_dir, train=False, download=False, transform=trans_cifar_test
-        )
+        trainset = CIFAR100(dataset_dir, train=True, download=False, transform=trans_cifar_train)
+        testset = CIFAR100(dataset_dir, train=False, download=False, transform=trans_cifar_test)
     elif dataset_name == "emnist":
-        trainset = EMNIST(
-            dataset_dir, train=True, download=False, split=split, transform=trans_emnist
-        )
+        trainset = EMNIST(dataset_dir, train=True, download=False, split=split, transform=trans_emnist)
         testset = EMNIST(
             dataset_dir,
             train=False,
@@ -236,9 +218,7 @@ def define_dataset(conf, dataset_name):
     train_dataset, test_dataset = get_datasets(dataset_name, conf.data_dir)
 
     # create the validation from train.
-    train_dataset, val_dataset, test_dataset = define_val_dataset(
-        conf, train_dataset, test_dataset
-    )
+    train_dataset, val_dataset, test_dataset = define_val_dataset(conf, train_dataset, test_dataset)
 
     return {"train": train_dataset, "val": val_dataset, "test": test_dataset}
 
@@ -271,9 +251,7 @@ def define_val_dataset(conf, train_dataset, test_dataset):
         return train_dataset, None, test_dataset
 
 
-def define_data_loader(
-    conf, dataset, localdata_id=None, is_train=True, shuffle=True, data_partitioner=None
-):
+def define_data_loader(conf, dataset, localdata_id=None, is_train=True, shuffle=True, data_partitioner=None):
     # determine the data to load,
     # either the whole dataset, or a subset specified by partition_type.
     if is_train:
@@ -290,9 +268,7 @@ def define_data_loader(
             # in case we have a global dataset and want to manually partition them.
             if data_partitioner is None:
                 # update the data_partitioner.
-                data_partitioner = DataPartitioner(
-                    conf, dataset, partition_sizes, partition_type=conf.partition_data
-                )
+                data_partitioner = DataPartitioner(conf, dataset, partition_sizes, partition_type=conf.partition_data)
             # note that the master node will not consume the training dataset.
             data_to_load = data_partitioner.use(localdata_id)
     else:
@@ -314,9 +290,7 @@ def define_data_loader(
     )
 
     conf.num_batches_per_device_per_epoch = len(data_loader)
-    conf.num_whole_batches_per_worker = (
-        conf.num_batches_per_device_per_epoch * conf.local_n_epochs
-    )
+    conf.num_whole_batches_per_worker = conf.num_batches_per_device_per_epoch * conf.local_n_epochs
     return data_loader, data_partitioner
 
 

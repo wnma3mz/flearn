@@ -26,19 +26,16 @@ class DFDistiller(Distiller):
             return sum(student_loss_lst)
         elif method == "avg_logits":
             weight_soft_lst = [
-                soft_target.detach() * weight
-                for soft_target, weight in zip(soft_target_lst, self.weight_lst)
+                soft_target.detach() * weight for soft_target, weight in zip(soft_target_lst, self.weight_lst)
             ]
             return f(sum(weight_soft_lst))
 
         else:
             raise NotImplementedError("please input a vaild method")
 
-    def multi(
-        self, teacher_lst, student, method="avg_logits", weight_lst=None, **kwargs
-    ):
+    def multi(self, teacher_lst, student, method="avg_logits", weight_lst=None, **kwargs):
         self._init_kd(teacher_lst, student, **kwargs)
-        if weight_lst == None:
+        if weight_lst is None:
             self.weight_lst = [1 / len(teacher_lst)] * len(teacher_lst)
         else:
             self.weight_lst = weight_lst

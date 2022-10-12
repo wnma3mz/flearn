@@ -33,9 +33,7 @@ class Logger(object):
         #     filename=filename, when=when, backupCount=backCount, encoding="utf-8"
         # )
         # 按文件大小切割
-        th = handlers.RotatingFileHandler(
-            filename, maxBytes=maxBytes, backupCount=backCount, encoding="utf-8"
-        )
+        th = handlers.RotatingFileHandler(filename, maxBytes=maxBytes, backupCount=backCount, encoding="utf-8")
 
         # 实例化TimedRotatingFileHandler
         # interval是时间间隔，backupCount是备份文件的个数，如果超过这个个数，就会自动删除，when是间隔的时间单位，单位有以下几种：

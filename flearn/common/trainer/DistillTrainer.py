@@ -57,9 +57,7 @@ class DistillTrainer(Trainer):
         kd_mu:       1
         temp:        2
         """
-        super(DistillTrainer, self).__init__(
-            model, optimizer, criterion, device, display
-        )
+        super(DistillTrainer, self).__init__(model, optimizer, criterion, device, display)
         self.logit_tracker = LogitTracker(num_classes)  # cifar10
         self.glob_logit = None
         self.kd_mu = kd_mu
@@ -68,7 +66,6 @@ class DistillTrainer(Trainer):
     def fed_loss(self):
         if self.glob_logit != None:
             output, target = self.output, self.target
-            self.glob_logit = self.glob_logit.to(self.device)
             target_p = self.glob_logit[target, :]
             return self.kd_mu * self.kd_loss(output, target_p)
         return 0

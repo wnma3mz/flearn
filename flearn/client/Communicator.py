@@ -32,15 +32,9 @@ class Communicator(object):
         self.client = client
 
         self.app = Flask(__name__)
-        self.app.add_url_rule(
-            "/train", "/train", EndpointAction(self.client_train), methods=["POST"]
-        )
-        self.app.add_url_rule(
-            "/upload", "/upload", EndpointAction(self.client_upload), methods=["POST"]
-        )
-        self.app.add_url_rule(
-            "/revice", "/revice", EndpointAction(self.client_revice), methods=["POST"]
-        )
+        self.app.add_url_rule("/train", "/train", EndpointAction(self.client_train), methods=["POST"])
+        self.app.add_url_rule("/upload", "/upload", EndpointAction(self.client_upload), methods=["POST"])
+        self.app.add_url_rule("/revice", "/revice", EndpointAction(self.client_revice), methods=["POST"])
         self.app.add_url_rule(
             "/evaluate",
             "/evaluate",

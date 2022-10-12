@@ -140,9 +140,7 @@ class Trainer:
             loop_loss.append(iter_loss)
 
             if self.display:
-                loader.postfix = "loss: {:.4f}; acc: {:.2f}".format(
-                    np.mean(loop_loss), np.mean(loop_accuracy)
-                )
+                loader.postfix = "loss: {:.4f}; acc: {:.2f}".format(np.mean(loop_loss), np.mean(loop_accuracy))
 
         if len(loop_accuracy) == 0:
             raise SystemExit("no training")

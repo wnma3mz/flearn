@@ -1,5 +1,6 @@
 # coding: utf-8
 from .avg import AVG
+from .utils import convert_to_tensor
 
 
 class LG(AVG):
@@ -25,7 +26,7 @@ class LG(AVG):
 
     def client_revice(self, trainer, data_glob_d):
         w_local = trainer.weight
-        w_glob = data_glob_d["w_glob"]
+        w_glob = convert_to_tensor(data_glob_d["w_glob"])
         if self.shared_key_layers:
             key_lst = self.shared_key_layers
         else:
@@ -37,9 +38,7 @@ class LG(AVG):
     def server(self, ensemble_params_lst, round_):
         agg_weight_lst, w_local_lst = self.server_pre_processing(ensemble_params_lst)
         try:
-            w_glob = self.server_ensemble(
-                agg_weight_lst, w_local_lst, key_lst=self.shared_key_layers
-            )
+            w_glob = self.server_ensemble(agg_weight_lst, w_local_lst, key_lst=self.shared_key_layers)
         except Exception as e:
             self.server_exception(e)
         if len(w_glob.keys()) < 10:

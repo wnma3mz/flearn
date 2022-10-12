@@ -21,7 +21,7 @@ listed_keys = [
     "shared_key_layers",
     "dataset_name",
 ]
-bool_key_lst = ["save", "log"]
+bool_key_lst = ["save", "log", "save_best"]
 str_key_lst = [
     "restore_path",
     "trainer",
@@ -43,15 +43,13 @@ def init_log(log_name_fmt, client_id, dataset_name, log_suffix, strategy_name=No
     log_suffix      : 文件名后缀
     strategy_name   : 策略名称，若为None，则表示SOLO训练
     """
-    if log_name_fmt == None:
+    if log_name_fmt is None:
         log_name_fmt = "Client{}{}_dataset_{}{}.log"
-    if log_suffix == None:
+    if log_suffix is None:
         log_suffix = ""
-    strategy_name = "" if strategy_name == None else strategy_name
+    strategy_name = "" if strategy_name is None else strategy_name
 
-    log_client_name = log_name_fmt.format(
-        client_id, "_" + strategy_name, dataset_name, log_suffix
-    )
+    log_client_name = log_name_fmt.format(client_id, "_" + strategy_name, dataset_name, log_suffix)
     log_client = Logger(log_client_name, level="info")
     log_fmt = client_id + "; Round: {}; Loss: {:.4f}; TrainAcc: {:.4f};"
 

@@ -52,7 +52,7 @@ class Server(object):
         self.strategy = conf["strategy"] if "strategy" in conf.keys() else None
         self.eval_conf = conf["eval_conf"] if "eval_conf" in conf.keys() else None
 
-        if self.strategy == None:
+        if self.strategy is None:
             self.strategy = setup_strategy(self.strategy_name, None, **strategy_p)
 
     @staticmethod
@@ -167,7 +167,7 @@ class Server(object):
             test_acc_lst = np.mean(list(map(lambda x: x["test_acc"], data_lst)), axis=0)
             return "; ".join("{:.4f}".format(x) for x in test_acc_lst)
 
-        if self.eval_conf == None:
+        if self.eval_conf is None:
             test_acc = process_acc_str(data_lst)
         else:
             _, test_acc_server = self.server_eval()
