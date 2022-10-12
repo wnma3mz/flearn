@@ -189,7 +189,7 @@ class Client(object):
             "round": str(i),
         }
 
-    def revice(self, i, glob_params) -> Dict[str, str]:
+    def revice(self, i, server_p_bytes) -> Dict[str, str]:
         """接收客户端模型.
 
         Args:
@@ -217,7 +217,7 @@ class Client(object):
             self.scheduler.step(epoch=(i + 1) * self.epoch)
         """
         # update
-        self.strategy.client_revice(self.trainer, glob_params)
+        self.strategy.client_revice(self.trainer, server_p_bytes)
         if self.scheduler != None:
             self.scheduler.step()
 

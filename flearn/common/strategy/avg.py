@@ -32,14 +32,15 @@ class AVG(Strategy):
 
         return {"w_glob": w_glob}
 
-    def client_revice(self, trainer, glob_params) -> None:
+    def client_revice(self, trainer, server_p_bytes) -> Dict[str, T]:
         # step 3
         # decode
-        data_glob_d = self.revice_processing(glob_params)
+        server_p = self.revice_processing(server_p_bytes)
 
         w_local = trainer.weight
-        w_glob = convert_to_tensor(data_glob_d["w_glob"])
+        w_glob = convert_to_tensor(server_p["w_glob"])
         for k in w_glob.keys():
             w_local[k] = w_glob[k]
 
         trainer.model.load_state_dict(w_local)
+        return server_p

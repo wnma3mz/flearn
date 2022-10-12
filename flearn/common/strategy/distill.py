@@ -1,5 +1,10 @@
 # coding: utf-8
+import copy
+from typing import *
+
 from flearn.common.strategy import AVG
+
+T = TypeVar("T")
 
 
 class Distill(AVG):
@@ -22,10 +27,9 @@ class Distill(AVG):
         ensemble_params["logits_glob"] = self.aggregate_logits(logits_lst)
         return ensemble_params
 
-    def client_revice(self, trainer, data_glob_d):
-        w_local = super(Distill, self).client_revice(trainer, data_glob_d)
-        logits_glob = data_glob_d["logits_glob"]
-        return w_local, logits_glob
+    def client_revice(self, trainer, server_p_bytes) -> None:
+        server_p = super(Distill, self).client_revice(trainer, server_p_bytes)
+        self.trainer.glob_logit = copy.deepcopy(server_p["logits_glob"]).to(self.trainer.device)
 
     @staticmethod
     def aggregate_logits(logits_lst):

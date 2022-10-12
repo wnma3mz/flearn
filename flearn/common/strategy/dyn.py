@@ -1,7 +1,10 @@
 # coding: utf-8
 import copy
+from typing import *
 
 from flearn.common.strategy import AVG
+
+T = TypeVar("T")
 
 
 class Dyn(AVG):
@@ -40,3 +43,8 @@ class Dyn(AVG):
     def server(self, ensemble_params_lst, round_):
         ensemble_params = super().server(ensemble_params_lst, round_)
         return self.server_post_processing(ensemble_params_lst, ensemble_params)
+
+    def client_revice(self, trainer, server_p_bytes) -> Dict[str, T]:
+        self.w_local_bak = copy.deepcopy(self.trainer.weight)
+        super().client_revice(trainer, server_p_bytes)
+        self.trainer.server_state_dict = copy.deepcopy(self.trainer.weight)

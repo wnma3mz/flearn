@@ -5,9 +5,7 @@ from .Trainer import Trainer
 
 
 class ProxTrainer(Trainer):
-    """搭配ProxClient使用"""
-
-    def __init__(self, model, optimizer, criterion, device, display=True, mu=1e-2):
+    def __init__(self, model, optimizer, criterion, device, display=True, mu=1e-2) -> None:
         """
         kwargs: {
             mu : 损失的权重
