@@ -91,18 +91,18 @@ class Scaffold(Strategy):
         self.w_glob = w_glob
         return {"w_glob": w_glob, "last_c": last_c}
 
-    def client_revice(self, trainer, data_glob_d):
+    def client_receive(self, trainer, data_glob_d):
         w_glob = data_glob_d["w_glob"]
         last_c = self.to_gpu(data_glob_d["last_c"])
         return w_glob, last_c
 
 
 class ScaffoldClient(Client):
-    def revice(self, i, glob_params):
-        data_glob_d = self.strategy.revice_processing(glob_params)
+    def receive(self, i, glob_params):
+        data_glob_d = self.strategy.receive_processing(glob_params)
 
         # update
-        w_update, last_c = self.strategy.client_revice(self.trainer, data_glob_d)
+        w_update, last_c = self.strategy.client_receive(self.trainer, data_glob_d)
         if self.scheduler != None:
             self.scheduler.step()
         self.trainer.model.load_state_dict(w_update)

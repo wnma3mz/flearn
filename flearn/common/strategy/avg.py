@@ -32,10 +32,10 @@ class AVG(Strategy):
 
         return {"w_glob": w_glob}
 
-    def client_revice(self, trainer, server_p_bytes) -> Dict[str, T]:
+    def client_receive(self, trainer, server_p_bytes) -> Dict[str, T]:
         # step 3
         # decode
-        server_p = self.revice_processing(server_p_bytes)
+        server_p = self.receive_processing(server_p_bytes)
 
         w_local = trainer.weight
         w_glob = convert_to_tensor(server_p["w_glob"])

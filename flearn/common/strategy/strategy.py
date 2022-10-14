@@ -54,7 +54,7 @@ class Strategy(ABC):
         """
         return ensemble_params
 
-    def revice_processing(self, data):
+    def receive_processing(self, data):
         """数据加密并转为二进制流
 
         Args:
@@ -171,7 +171,7 @@ class Strategy(ABC):
         return NotImplemented
 
     @abstractmethod
-    def client_revice(self, trainer, w_glob_b):
+    def client_receive(self, trainer, w_glob_b):
         """客户端更新全局模型参数.
 
         Args:
@@ -206,5 +206,5 @@ class ParentStrategy(Strategy):
     def server(self, ensemble_params_lst, round_):
         return self.strategy.server(ensemble_params_lst, round_)
 
-    def client_revice(self, trainer, w_glob_b):
-        return self.strategy.client_revice(trainer, w_glob_b)
+    def client_receive(self, trainer, w_glob_b):
+        return self.strategy.client_receive(trainer, w_glob_b)

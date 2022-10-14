@@ -34,7 +34,7 @@ class Communicator(object):
         self.app = Flask(__name__)
         self.app.add_url_rule("/train", "/train", EndpointAction(self.client_train), methods=["POST"])
         self.app.add_url_rule("/upload", "/upload", EndpointAction(self.client_upload), methods=["POST"])
-        self.app.add_url_rule("/revice", "/revice", EndpointAction(self.client_revice), methods=["POST"])
+        self.app.add_url_rule("/receive", "/receive", EndpointAction(self.client_receive), methods=["POST"])
         self.app.add_url_rule(
             "/evaluate",
             "/evaluate",
@@ -86,7 +86,7 @@ class Communicator(object):
         upload_json = self.client.upload(i)
         return upload_json
 
-    def client_revice(self):
+    def client_receive(self):
         """接收模型参数.
 
         Returns:
@@ -101,8 +101,8 @@ class Communicator(object):
         r = request.json
         i = r["round"]
         w_glob_b64_str = r["glob_params"]
-        revice_json = self.client.revice(i, w_glob_b64_str)
-        return revice_json
+        receive_json = self.client.receive(i, w_glob_b64_str)
+        return receive_json
 
     def client_evaluate(self):
         """评估模型指令.

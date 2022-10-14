@@ -123,7 +123,7 @@ class FedKD(AVG):
             w_glob[k] = np.divide(w_glob[k], molecular)
         return w_glob
 
-    def client_revice(self, trainer, data_glob_d):
+    def client_receive(self, trainer, data_glob_d):
         w_local = trainer.weight_o
         w_glob = data_glob_d["w_glob"]
 

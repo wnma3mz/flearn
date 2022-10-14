@@ -58,10 +58,10 @@ class TestStrategy(unittest.TestCase):
         self.trainer = MyTrainer()
         self.strategy = setup_strategy("avg", None)
 
-    def test_client_revice(self):
+    def test_client_receive(self):
         upload_res = self.strategy.client(self.trainer)
         global_res = self.strategy.server([upload_res], 0)
-        self.strategy.client_revice(self.trainer, {"w_glob": self.strategy.client(self.trainer)["params"]})
+        self.strategy.client_receive(self.trainer, {"w_glob": self.strategy.client(self.trainer)["params"]})
 
         w_glob = convert_to_tensor(global_res["w_glob"])
         torch.testing.assert_allclose(self.trainer.weight["fc.weight"], w_glob["fc.weight"])
@@ -74,7 +74,7 @@ class TestStrategy(unittest.TestCase):
             s = setup_strategy(strategy, None)
             upload_res = s.client(self.trainer)
             global_res = s.server([upload_res], 0)
-            revice_res = s.client_revice(self.trainer, {"w_glob": s.client(self.trainer)["params"]})
+            receive_res = s.client_receive(self.trainer, {"w_glob": s.client(self.trainer)["params"]})
 
         for strategy, trainer_o in strategy_trainer_d.items():
             if strategy in ["dyn", "moon"]:
@@ -84,10 +84,10 @@ class TestStrategy(unittest.TestCase):
             s = setup_strategy(strategy, None)
             upload_res = s.client(trainer)
             global_res = s.server([upload_res], 0)
-            revice_res = s.client_revice(trainer, global_res)
+            receive_res = s.client_receive(trainer, global_res)
 
 
 if __name__ == "__main__":
-    t = TestStrategy("test_client_revice")
-    t.test_client_revice()
+    t = TestStrategy("test_client_receive")
+    t.test_client_receive()
     t.test_all_strategy()

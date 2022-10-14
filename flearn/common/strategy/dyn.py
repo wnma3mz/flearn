@@ -44,6 +44,6 @@ class Dyn(AVG):
         ensemble_params = super().server(ensemble_params_lst, round_)
         return self.server_post_processing(ensemble_params_lst, ensemble_params)
 
-    def client_revice(self, trainer, server_p_bytes) -> Dict[str, T]:
-        super().client_revice(trainer, server_p_bytes)
+    def client_receive(self, trainer, server_p_bytes) -> Dict[str, T]:
+        super().client_receive(trainer, server_p_bytes)
         trainer.server_state_dict = copy.deepcopy(trainer.weight)

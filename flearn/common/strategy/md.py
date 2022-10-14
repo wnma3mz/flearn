@@ -28,8 +28,8 @@ class MD(LG_R):
         x_lst, logits_lst = self.client_pub_predict(w_local_lst, **kwargs)
         return {"x_lst": x_lst, "logits_lst": logits_lst, "w_glob": ""}
 
-    def client_revice(self, trainer, server_p_bytes):
-        server_p = self.revice_processing(server_p_bytes)
+    def client_receive(self, trainer, server_p_bytes):
+        server_p = self.receive_processing(server_p_bytes)
 
         w_local = trainer.weight
         w_local_bak = copy.deepcopy(w_local)

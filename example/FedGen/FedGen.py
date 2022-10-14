@@ -192,20 +192,20 @@ class Gen(AVG):
         ensemble_params["gen_model"] = self.generative_model.state_dict()
         return ensemble_params
 
-    def client_revice(self, trainer, data_glob_d):
-        w_local = super().client_revice(trainer, data_glob_d)
+    def client_receive(self, trainer, data_glob_d):
+        w_local = super().client_receive(trainer, data_glob_d)
         w_gen_glob = data_glob_d["gen_model"]
         self.generative_model.load_state_dict(w_gen_glob)
         return w_local, self.generative_model
 
 
 class GenClient(Client):
-    def revice(self, i, glob_params):
+    def receive(self, i, glob_params):
         # decode
-        data_glob_d = self.strategy.revice_processing(glob_params)
+        data_glob_d = self.strategy.receive_processing(glob_params)
 
         # update
-        update_w, update_gen = self.strategy.client_revice(self.trainer, data_glob_d)
+        update_w, update_gen = self.strategy.client_receive(self.trainer, data_glob_d)
         if self.scheduler != None:
             self.scheduler.step()
         self.trainer.model.load_state_dict(update_w)

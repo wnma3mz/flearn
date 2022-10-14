@@ -55,7 +55,7 @@ if __name__ == "__main__":
         "trainer": Trainer(model, optim_, nn.CrossEntropyLoss(), device, True),
         "trainloader": trainloader,
         "testloader": testloader,
-        "model_fname": "client{}_round_{}.pth".format(client_id, "{}"),
+        # "model_fname": "client{}_round_{}.pth".format(client_id, "{}"),
         "client_id": client_id,
         "model_fpath": model_fpath,
         "epoch": epoch,
@@ -79,7 +79,6 @@ if __name__ == "__main__":
         "dataset_name": dataset_name,
         "client_lst": client_lst,
     }
-
     test_sc(conf=sc_conf)
 
     # 服务器端进行测试, 但客户端不进行测试

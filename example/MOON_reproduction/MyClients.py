@@ -5,12 +5,12 @@ from flearn.client import Client
 
 
 class LSDClient(Client):
-    def revice(self, i, glob_params):
+    def receive(self, i, glob_params):
         # decode
-        data_glob_d = self.strategy.revice_processing(glob_params)
+        data_glob_d = self.strategy.receive_processing(glob_params)
 
         # update
-        update_w = self.strategy.client_revice(self.trainer, data_glob_d)
+        update_w = self.strategy.client_receive(self.trainer, data_glob_d)
         if self.scheduler != None:
             self.scheduler.step()
         self.trainer.model.load_state_dict(update_w)

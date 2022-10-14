@@ -1,4 +1,6 @@
 # coding: utf-8
+from typing import *
+
 import numpy as np
 
 from flearn.common.utils import setup_strategy
@@ -68,7 +70,7 @@ class Server(object):
     def mean_lst(k, lst):
         return np.mean(list(map(lambda x: x[k], lst)))
 
-    def drop_client(self, data_lst, min_acc=12):
+    def drop_client(self, data_lst: List[Dict[str, str]], min_acc=12):
         # print("精度: {}".format(val_acc_lst))
         # cifar10: 1 / 10 * 100 * 1.2 = 12
         idx_lst = [x["client_id"] for x in data_lst if x["val_acc"] > min_acc]
@@ -84,7 +86,7 @@ class Server(object):
         # 如果存在验证集->drop-worst
         val_acc_lst = list(map(lambda x: x["val_acc"], data_lst))
         if val_acc_lst[0] == -1:
-            return loss, train_acc, list(map(lambda x: x["val_acc"], data_lst))
+            return loss, train_acc, list(map(lambda x: x["client_id"], data_lst))
         else:
             idx_lst = self.drop_client(data_lst)
             return loss, train_acc, idx_lst
@@ -124,7 +126,7 @@ class Server(object):
         for item in data_lst:
             if int(round_) != int(item["round"]):
                 continue
-            model_data = self.strategy.revice_processing(item["datas"])
+            model_data = self.strategy.receive_processing(item["datas"])
 
             client_id_lst.append(item["client_id"])
             ensemble_params_lst.append(model_data)
@@ -139,7 +141,7 @@ class Server(object):
         self.glob_w = glob_params["w_glob"]
         return self.strategy.upload_processing(glob_params)
 
-    def revice(self):
+    def receive(self):
         pass
 
     def evaluate(self, data_lst, is_select=False):

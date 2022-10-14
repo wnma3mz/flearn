@@ -27,8 +27,8 @@ class Distill(AVG):
         ensemble_params["logits_glob"] = self.aggregate_logits(logits_lst)
         return ensemble_params
 
-    def client_revice(self, trainer, server_p_bytes) -> None:
-        server_p = super(Distill, self).client_revice(trainer, server_p_bytes)
+    def client_receive(self, trainer, server_p_bytes) -> None:
+        server_p = super(Distill, self).client_receive(trainer, server_p_bytes)
         trainer.glob_logit = copy.deepcopy(server_p["logits_glob"]).to(trainer.device)
 
     @staticmethod

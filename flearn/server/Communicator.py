@@ -102,19 +102,19 @@ class Communicator(object):
             return client.train(json_d["round"])
         elif command == "upload":
             return client.upload(json_d["round"])
-        elif command == "revice":
-            return client.revice(json_d["round"], json_d["glob_params"])
+        elif command == "receive":
+            return client.receive(json_d["round"], json_d["glob_params"])
         elif command == "evaluate":
             return client.evaluate(json_d["round"])
         else:
-            raise SystemError("command must in ['train', 'upload', 'revice', 'evaluate']")
+            raise SystemError("command must in ['train', 'upload', 'receive', 'evaluate']")
 
     def get_data_lst(self, command, json_d):
         """服务端发送指令
 
         Args:
             command :  str
-                       assert command in ['train', 'upload', 'revice']
+                       assert command in ['train', 'upload', 'receive']
 
             json_d :   dict
                        发送给客户端的参数{'round': ri} or 含全局参数
@@ -202,7 +202,7 @@ class Communicator(object):
 
         # 发送参数，客户端接收
         self.active_client_id_lst = self.client_id_lst
-        _ = self.get_data_lst("revice", json_d)
+        _ = self.get_data_lst("receive", json_d)
 
         test_acc = ""
         # 为避免测试时间过久，间隔x轮进行测试并输出

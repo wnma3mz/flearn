@@ -35,8 +35,8 @@ class AVGM(AVG):
             w_local[k] = w_local[k] + self.v_t[k]
         return w_local
 
-    def client_revice(self, trainer, server_p_bytes, beta=0.9):
-        server_p = self.revice_processing(server_p_bytes)
+    def client_receive(self, trainer, server_p_bytes, beta=0.9):
+        server_p = self.receive_processing(server_p_bytes)
 
         w_local = convert_to_np(trainer.weight)
         w_local = self.mean_momentum(w_local, server_p["w_glob"], beta)

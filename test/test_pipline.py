@@ -72,6 +72,6 @@ if __name__ == "__main__":
     s_model = Server(s_conf)
     data_lst = [upload_res]
     model_b64_str = s_model.ensemble(data_lst, 0)
-    revice_res = c.revice(i, model_b64_str)
+    receive_res = c.receive(i, model_b64_str)
 
     evaluate_res = c.evaluate(i)

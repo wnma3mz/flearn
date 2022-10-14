@@ -64,8 +64,8 @@ class OPT(AVG):
 
         return w_local
 
-    def client_revice(self, trainer, server_p_bytes, method="Adagrad"):
-        server_p = self.revice_processing(server_p_bytes)
+    def client_receive(self, trainer, server_p_bytes, method="Adagrad"):
+        server_p = self.receive_processing(server_p_bytes)
 
         method = method.lower()
         assert method in ["adagrad", "yogi", "adam"]

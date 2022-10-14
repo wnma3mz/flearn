@@ -20,8 +20,8 @@ class SGD(AVG):
         g_shared["params"] = convert_to_np(trainer.grads)
         return g_shared
 
-    def client_revice(self, trainer, server_p_bytes):
-        server_p = self.revice_processing(server_p_bytes)
+    def client_receive(self, trainer, server_p_bytes):
+        server_p = self.receive_processing(server_p_bytes)
 
         g_glob = convert_to_tensor(server_p["w_glob"])
 

@@ -5,9 +5,9 @@ from flearn.client import Client
 
 
 class LGClient(Client):
-    def revice(self, i, glob_params):
+    def receive(self, i, glob_params):
         self.w_local_bak = copy.deepcopy(self.trainer.model.state_dict())
-        return super(LGClient, self).revice(i, glob_params)
+        return super(LGClient, self).receive(i, glob_params)
 
     def evaluate(self, i):
         # 跳过测试
