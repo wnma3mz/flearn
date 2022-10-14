@@ -178,13 +178,15 @@ class Communicator(object):
         # 发送训练指令
         data_lst = self.get_data_lst("train", json_d)
         loss, train_acc, id_lst = self.server.train(data_lst)
-        log_msg = ri, loss, train_acc, ""
+        # id_lst是在选择客户端id的基础上，再做一遍筛选（默认是不筛选）
+        # 筛选条件是如果本地有验证集，如果验证精度低于XX，则不进行上传
+        # 如果id_lst为空，则表示该轮不需要进行聚合
         if id_lst == []:
             if self.log:
+                log_msg = ri, loss, train_acc, ""
                 self.log_server.logger.info(self.log_fmt.format(*log_msg))
-            self.active_client_id_lst = self.client_id_lst
             return loss, train_acc, ""
-        self.active_client_id_lst = [self.active_client_id_lst[idx] for idx in id_lst]
+        self.active_client_id_lst = id_lst
 
         # 选择客户端上传(随机)
         # self.active_client_id_lst = self.server.active_client(self.client_id_lst, k)

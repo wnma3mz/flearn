@@ -14,7 +14,6 @@ except:
 __all__ = [
     "Trainer",
     "ProxTrainer",
-    "TFTrainer",
     "DistillTrainer",
     "DynTrainer",
     "L2Trainer",
@@ -22,3 +21,4 @@ __all__ = [
     "MaxTrainer",
     "MOONTrainer",
 ]
+# "TFTrainer"

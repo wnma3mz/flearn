@@ -1,4 +1,5 @@
 # coding: utf-8
+from dataclasses import dataclass
 from typing import *
 
 from flearn.common import Logger
@@ -36,6 +37,20 @@ str_key_lst = [
     "log_name_fmt",
     "model_name_fmt",
 ]
+
+
+@dataclass
+class LogItem:
+    log_suffix: str
+    log_name_fmt: str
+    log: bool
+
+
+@dataclass
+class DataInfo:
+    label_distribute: Dict[int, int]  # 每个标签对应的样本数量
+    num_class: int  # 训练集有多少个标签
+    data_size: int  # 训练集总数
 
 
 def init_log(log_name_fmt, client_id, dataset_name, log_suffix, strategy_name=None) -> Tuple[str, str]:

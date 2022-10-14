@@ -68,10 +68,10 @@ class Server(object):
     def mean_lst(k, lst):
         return np.mean(list(map(lambda x: x[k], lst)))
 
-    def drop_client(self, val_acc_lst, min_acc=12):
-        print("精度: {}".format(val_acc_lst))
+    def drop_client(self, data_lst, min_acc=12):
+        # print("精度: {}".format(val_acc_lst))
         # cifar10: 1 / 10 * 100 * 1.2 = 12
-        idx_lst = [idx for idx, val_acc in enumerate(val_acc_lst) if val_acc > min_acc]
+        idx_lst = [x["client_id"] for x in data_lst if x["val_acc"] > min_acc]
         # idx_lst = [np.argmax(val_acc_lst)]
         if len(idx_lst) == 0:
             return []
@@ -84,9 +84,9 @@ class Server(object):
         # 如果存在验证集->drop-worst
         val_acc_lst = list(map(lambda x: x["val_acc"], data_lst))
         if val_acc_lst[0] == -1:
-            return loss, train_acc, range(len(data_lst))
+            return loss, train_acc, list(map(lambda x: x["val_acc"], data_lst))
         else:
-            idx_lst = self.drop_client(val_acc_lst)
+            idx_lst = self.drop_client(data_lst)
             return loss, train_acc, idx_lst
 
     def upload(self):

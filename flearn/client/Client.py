@@ -1,9 +1,16 @@
 # coding: utf-8
 import os
+from collections import defaultdict
 from os.path import join as ospj
 from typing import *
 
-from flearn.client.utils import bool_key_lst, init_log, listed_keys, str_key_lst
+from flearn.client.utils import (
+    DataInfo,
+    bool_key_lst,
+    init_log,
+    listed_keys,
+    str_key_lst,
+)
 from flearn.common.utils import setup_strategy
 
 
@@ -110,6 +117,19 @@ class Client(object):
 
         name = "client{}_model_best.pth".format(self.client_id)
         self.best_fpath = ospj(self.model_fpath, name)
+
+        # 统计训练数据集的数据信息
+        label_distribute_info = defaultdict(lambda: 0)
+        for _, y_lst in self.trainloader:
+            for y in y_lst:
+                label_distribute_info[y.item()] += 1
+
+        num_classes = len(label_distribute_info)
+        data_size = sum(label_distribute_info.values())
+        data_info = DataInfo(label_distribute_info, num_classes, data_size)
+        # 策略可能会利用数据分布信息
+        self.strategy.data_info = data_info
+        self.trainer.data_info = data_info
 
     def train(self, i) -> Dict[str, Any]:
         """训练客户端模型.
