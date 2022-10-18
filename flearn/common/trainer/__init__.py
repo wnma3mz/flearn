@@ -1,4 +1,4 @@
-from .DistillTrainer import DistillTrainer, LogitTracker
+from .DistillTrainer import DistillTrainer, LogitsTracker
 from .DynTrainer import DynTrainer
 from .L2Trainer import L2Trainer
 from .MaxTrainer import MaxTrainer
@@ -17,7 +17,7 @@ __all__ = [
     "DistillTrainer",
     "DynTrainer",
     "L2Trainer",
-    "LogitTracker",
+    "LogitsTracker",
     "MaxTrainer",
     "MOONTrainer",
 ]
