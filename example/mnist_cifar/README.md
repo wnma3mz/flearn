@@ -6,7 +6,7 @@
 
 ```bash
 # 使用FedAVG在MNIST上进行训练，同理可替换为SGD、AVGM、BN、OPT
-python3 main.py --strategy_name avg --dataset_name mnist --dataset_fpath /mnt/data-ssd
+uv run python main.py --strategy_name avg --dataset_name mnist --dataset_fpath /mnt/data-ssd
 ```
 
 ### 目录结构

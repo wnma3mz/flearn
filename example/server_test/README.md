@@ -6,7 +6,7 @@
 
 ```bash
 # 使用FedPAV在CIFAR-10上进行训练，公开数据集使用CIFAR-100
-python3 main.py --dataset_fpath /mnt/data-ssd/CIFAR --public_fpath /mnt/data-ssd/CIFAR
+uv run python main.py --dataset_fpath /mnt/data-ssd/CIFAR --public_fpath /mnt/data-ssd/CIFAR
 ```
 
 ### main.py解释

@@ -4,9 +4,14 @@
 
 ### Quickstart
 
-1. 下载最新的[release版本](https://github.com/wnma3mz/flearn/releases/latest) 并使用pip安装。或手动下载源码，在当前目录进行编译 `python setup.py sdist bdist_wheel`。
-2. 切换至运行目录 `cd example/mnist_cifar/`
-3. 运行 `python main.py --strategy_name avg --dataset_name mnist dataset_fpath 数据集路径`
+本项目已切换为 **uv + pyproject.toml** 管理，不再使用 `setup.py` 和 `requirements.txt`。
+
+1. 安装 uv（如未安装）：`curl -LsSf https://astral.sh/uv/install.sh | sh`
+2. 在仓库根目录同步环境：`uv sync --extra dev`
+3. 运行示例：
+   `uv run python example/mnist_cifar/main.py --strategy_name avg --dataset_name mnist --dataset_fpath 数据集路径`
+4. 运行 FedMoE CPU 对比：
+   `uv run python example/benchmark_suite/fedmoe_vs_fedavg_table.py --datasets digits,wine,iris,breast_cancer --models cnn,mlp --rounds 20 --num_clients 10 --frac 0.5`
 
 详细解释见 `example/mnist_cifar`中的[README.md](https://github.com/wnma3mz/flearn/tree/master/example/mnist_cifar)
 

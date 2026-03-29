@@ -6,7 +6,7 @@
 
 ```bash
 # 使用FedMOON在CIFAR10上进行训练
-python3 main.py --strategy_name avg --suffix moon --dataset_name cifar10  --dataset_fpath /mnt/data-ssd
+uv run python main.py --strategy_name avg --suffix moon --dataset_name cifar10  --dataset_fpath /mnt/data-ssd
 ```
 
 ### 目录结构

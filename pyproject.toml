@@ -1,3 +1,37 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "flearn"
+version = "0.0.5"
+description = "Federated Learning Framework"
+readme = "README.md"
+requires-python = ">=3.9"
+authors = [{ name = "wnma3mz", email = "wnma3mz@gmail.com" }]
+dependencies = [
+    "ipython",
+    "tqdm",
+    "flask",
+    "flask-login",
+    "aiohttp",
+    "requests",
+    "psutil",
+    "scikit-learn",
+    "torch",
+    "torchvision",
+    "python-dotenv",
+]
+
+[project.optional-dependencies]
+dev = ["black", "isort"]
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+include = ["flearn*"]
+
 [tool.black]
 line-length = 119
 

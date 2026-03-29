@@ -6,7 +6,7 @@
 
 ```bash
 # 使用LG-FedAVG在MNIST上进行训练
-python3 main.py --strategy_name lg --frac 0.1 --dataset_name mnist --dataset_fpath /mnt/data-ssd
+uv run python main.py --strategy_name lg --frac 0.1 --dataset_name mnist --dataset_fpath /mnt/data-ssd
 ```
 
 ### 目录结构

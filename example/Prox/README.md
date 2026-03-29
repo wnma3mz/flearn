@@ -6,7 +6,7 @@
 
 ```bash
 # 使用基于FedAVG使用Prox在MNIST上进行训练，同理可替换为SGD、AVGM、BN、OPT
-python3 main.py --strategy_name avg --suffix prox --dataset_name mnist --dataset_fpath /mnt/data-ssd
+uv run python main.py --strategy_name avg --suffix prox --dataset_name mnist --dataset_fpath /mnt/data-ssd
 ```
 
 ### main.py
